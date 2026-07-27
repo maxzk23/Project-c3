@@ -475,7 +475,7 @@ export async function createGlobalStudent(
           parentPhone: parentPhone?.trim() || null,
           role: "STUDENT",
           status: "ACTIVE",
-          avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=random&color=fff&size=150`
+          avatarUrl: `preset-${Math.floor(Math.random() * 6) + 1}`
         }
       });
     } else {
@@ -701,7 +701,7 @@ export async function importGlobalStudents(
             studentId: cleanCode,
             role: "STUDENT",
             status: "ACTIVE",
-            avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(cleanName)}&background=random&color=fff&size=150`
+            avatarUrl: `preset-${Math.floor(Math.random() * 6) + 1}`
           }
         });
         importedCount++;

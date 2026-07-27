@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>พจนานุกรมข้อมูล (Data Dictionary) - ระบบ Modern LMS & Gamification</title>
+  
+  <!-- Google Fonts - Sarabun & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Reveal.js styles -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/white.min.css">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Sarabun', 'sans-serif'],
+            heading: ['Plus Jakarta Sans', 'Sarabun', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --r-font-family: 'Sarabun', sans-serif;
+      --r-heading-font: 'Plus Jakarta Sans', 'Sarabun', sans-serif;
+      --r-heading-color: #1e3a8a;
+      --r-main-color: #334155;
+      --r-link-color: #1d4ed8;
+    }
+
+    /* Formal Theme Background */
+    .reveal {
+      background-color: #ffffff;
+      font-family: 'Sarabun', sans-serif;
+    }
+
+    /* Title & Headers in Slide Deck */
+    .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+      font-family: 'Plus Jakarta Sans', 'Sarabun', sans-serif;
+      text-transform: none;
+      letter-spacing: -0.01em;
+      margin-bottom: 20px !important;
+    }
+
+    .reveal h1 {
+      color: #1e3a8a;
+      font-weight: 800;
+    }
+
+    .reveal h2 {
+      color: #1e3a8a;
+      font-weight: 700;
+      border-bottom: 2px solid #3b82f6;
+      padding-bottom: 10px;
+      text-align: left;
+      font-size: 1.8rem;
+    }
+
+    /* Formal Table Styles */
+    .reveal table {
+      width: 100% !important;
+      margin: 20px 0 !important;
+      font-size: 11px !important;
+      border-collapse: collapse !important;
+      border: 1px solid #cbd5e1 !important;
+    }
+
+    .reveal table th {
+      background-color: #1e3a8a !important;
+      color: #ffffff !important;
+      font-weight: 700 !important;
+      padding: 10px 12px !important;
+      border: 1px solid #94a3b8 !important;
+      text-align: left;
+    }
+
+    .reveal table td {
+      padding: 8px 12px !important;
+      border: 1px solid #cbd5e1 !important;
+      text-align: left;
+      color: #334155 !important;
+    }
+
+    .reveal table tr:nth-child(even) {
+      background-color: #f8fafc !important;
+    }
+
+    .reveal table tr:nth-child(odd) {
+      background-color: #ffffff !important;
+    }
+
+    /* Scrollable Container for tables with many fields */
+    .table-wrapper {
+      max-height: 480px;
+      overflow-y: auto;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+    }
+
+    .table-wrapper::-webkit-scrollbar {
+      width: 5px;
+    }
+    .table-wrapper::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .table-wrapper::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+    }
+
+    /* Key Type Styling */
+    .key-label {
+      font-weight: bold;
+      font-size: 9px;
+      font-family: monospace;
+      color: #1e3a8a;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- SLIDE 1: Cover Page -->
+      <section data-transition="none">
+        <div class="max-w-4xl mx-auto text-left py-12 px-8 border-l-8 border-brand-700">
+          <span class="text-sm font-bold text-slate-500 tracking-wider uppercase">เอกสารประกอบการออกแบบระบบ</span>
+          <h1 class="text-4xl md:text-5xl font-extrabold mt-2 mb-6">
+            พจนานุกรมข้อมูล (Data Dictionary)
+          </h1>
+          <p class="text-xl text-slate-600 font-light mb-8">
+            ระบบจัดการเรียนการสอนและการเรียนรู้แบบเกมมิฟิเคชัน (Modern LMS & Gamification System)
+          </p>
+          <div class="w-full h-[1px] bg-slate-200 my-8"></div>
+          <div class="grid grid-cols-2 gap-4 text-xs text-slate-500">
+            <div>
+              <p><strong>ฐานข้อมูล:</strong> PostgreSQL (Prisma ORM)</p>
+              <p class="mt-1"><strong>จำนวนตารางทั้งหมด:</strong> 11 ตาราง</p>
+            </div>
+            <div>
+              <p><strong>มาตรฐานคีย์หลัก:</strong> UUID v4 (Security-focused)</p>
+              <p class="mt-1"><strong>ขอบเขตสิทธิ์ผู้ใช้งาน:</strong> RBAC (Role-based)</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 2: Database Catalog -->
+      <section data-transition="none">
+        <div class="px-6 text-left">
+          <h2>สารบัญตารางฐานข้อมูล (Database Catalog)</h2>
+          <p class="text-xs text-slate-500 mb-4">ตารางทั้งหมด 11 ตาราง แบ่งกลุ่มตามสถาปัตยกรรมโมดูลการใช้งาน</p>
+          
+          <table class="w-full">
+            <thead>
+              <tr>
+                <th style="width: 25%;">ชื่อตาราง (Table Name)</th>
+                <th style="width: 20%;">ประเภทตาราง (Type)</th>
+                <th style="width: 20%;">คีย์หลัก (PK)</th>
+                <th>คำอธิบายหน้าที่ในระบบ (Description)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-mono font-bold">users</td>
+                <td>Master Table</td>
+                <td class="font-mono">id (UUID)</td>
+                <td>เก็บข้อมูลบัญชีผู้ใช้งาน สิทธิ์ผู้ใช้ (ครู, นักเรียน, แอดมิน) และข้อมูลโปรไฟล์</td>
+              </tr>
+              <tr>
+                <td class="font-mono font-bold">classrooms</td>
+                <td>Master Table</td>
+                <td class="font-mono">id (UUID)</td>
+                <td>เก็บข้อมูลวิชาเรียนและห้องเรียนหลักที่ครูสร้างขึ้นรายปีการศึกษา</td>
+              </tr>
+              <tr>
+                <td class="font-mono font-bold">student_classes</td>
+                <td>Junction Table</td>
+                <td class="font-mono">id (UUID)</td>
+                <td>บันทึกคู่การลงทะเบียนของนักเรียนและห้องเรียนวิชาที่เรียนจริง</td>
+              </tr>
+              <tr>
+                <td class="font-mono font-bold">assignments</td>
+                <td>Transaction Table</td>
+                <td class="font-mono">id (UUID)</td>
+                <td>เก็บข้อมูลการสั่งงานการบ้านและลิงก์ข้อสอบ Google Forms ของแต่ละคลาส</td>
+              </tr>
+              <tr>
+                <td class="font-mono font-bold">submissions</td>
+                <td>Transaction Table</td>
+                <td class="font-mono">id (UUID)</td>
+                <td>บันทึกประวัติการส่งการบ้าน คะแนนที่ได้ และฟีดแบคจากครู</td>
+              </tr>
+              <tr>
+                <td class="font-mono font-bold">attendance</td>
+                <td>Transaction Table</td>
+                <td class="font-mono">id (UUID)</td>
+                <td>เก็บสถิติประวัติการเช็คชื่อเข้าชั้นเรียนประจำวัน (มา, ขาด, สาย, ลา)</td>
+              </tr>
+              <tr>
+                <td class="font-mono font-bold">course_materials</td>
+                <td>Transaction Table</td>
+                <td class="font-mono">id (UUID)</td>
+                <td>เก็บข้อมูลสไลด์ วิดีโอ หรือลิงก์สื่อการสอนที่ครูแชร์ในคลาสเรียน</td>
+              </tr>
+              <tr>
+                <td class="font-mono font-bold">game_scores</td>
+                <td>Log Table</td>
+                <td class="font-mono">id (UUID)</td>
+                <td>เก็บบันทึกประวัติคะแนนดิบรายรอบการเล่นมินิเกมของนักเรียน</td>
+              </tr>
+              <tr>
+                <td class="font-mono font-bold">leaderboards</td>
+                <td>Cache Table</td>
+                <td class="font-mono">id (UUID)</td>
+                <td>ตารางแคชสะสมผลคะแนนรวมสุทธิและลำดับอันดับของเด็กภายในห้องเรียน</td>
+              </tr>
+              <tr>
+                <td class="font-mono font-bold">notifications</td>
+                <td>Transaction Table</td>
+                <td class="font-mono">id (UUID)</td>
+                <td>เก็บรายการข้อมูลข้อความการแจ้งเตือนความเคลื่อนไหวรายบุคคล</td>
+              </tr>
+              <tr>
+                <td class="font-mono font-bold">academic_year_logs</td>
+                <td>Log Table</td>
+                <td class="font-mono">id (UUID)</td>
+                <td>เก็บประวัติปิดเทอมเลื่อนระดับชั้นเรียน (Rollover) และสำรอง JSON Snapshot</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SLIDE 3: users table -->
+      <section data-transition="none">
+        <div class="px-6 text-left">
+          <h2>ตาราง users (ข้อมูลบัญชีผู้ใช้งาน)</h2>
+          
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 22%;">ชื่อฟิลด์ (Field Name)</th>
+                  <th style="width: 22%;">ประเภทข้อมูล (Data Type)</th>
+                  <th style="width: 15%;">ข้อจำกัด (Constraints)</th>
+                  <th>คำอธิบายหน้าที่การจัดเก็บ (Description)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-mono font-bold">id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">PRIMARY KEY</td>
+                  <td>รหัสประจำตัวบัญชีผู้ใช้งานที่ระบบสุ่มสร้างขึ้นผ่าน UUID v4 เพื่อความปลอดภัย</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">role</td>
+                  <td class="font-mono text-slate-500">Role (Enum)</td>
+                  <td class="key-label">Default: STUDENT</td>
+                  <td>สิทธิ์ผู้ใช้งานในระบบ: STUDENT | TEACHER | ADMIN</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">name</td>
+                  <td class="font-mono text-slate-500">VarChar(255)</td>
+                  <td class="key-label">REQUIRED</td>
+                  <td>ชื่อจริง - นามสกุลจริงของผู้ใช้</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">password</td>
+                  <td class="font-mono text-slate-500">VarChar(255)</td>
+                  <td class="key-label">REQUIRED</td>
+                  <td>รหัสผ่านสำหรับล็อกอินเข้าระบบที่ผ่านการเข้ารหัสความปลอดภัย (Hashed) ด้วย bcryptjs</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">status</td>
+                  <td class="font-mono text-slate-500">StudentStatus (Enum)</td>
+                  <td class="key-label">Default: ACTIVE</td>
+                  <td>สถานะการเรียนของนักเรียน: ACTIVE | GRADUATED | RETAINED | TRANSFERRED</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">avatar_url</td>
+                  <td class="font-mono text-slate-500">VarChar(255)</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>รหัสรูปประจำตัวอวาตาร์ Preset ของระบบ (preset-1 ถึง preset-6) บล็อกรูปภายนอก</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">password_hint</td>
+                  <td class="font-mono text-slate-500">VarChar(255)</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>คำช่วยจำรหัสผ่าน / รหัสผ่านดั้งเดิมที่ครูแอดมินสร้างไว้ให้กรณีจัดสอบครั้งแรก</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">student_id</td>
+                  <td class="font-mono text-slate-500">VarChar(50)</td>
+                  <td class="key-label">UNIQUE, NULLABLE</td>
+                  <td>รหัสประจำตัวนักเรียน (เฉพาะเด็กนักเรียน) ห้ามลงซ้ำกับคนอื่น</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">nickname</td>
+                  <td class="font-mono text-slate-500">VarChar(50)</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>ชื่อเล่นของนักเรียน</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">gender</td>
+                  <td class="font-mono text-slate-500">VarChar(10)</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>เพศวิถีของผู้เรียน (ชาย / หญิง)</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">roll_number</td>
+                  <td class="font-mono text-slate-500">VarChar(50)</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>เลขที่ห้องเรียนของนักเรียน</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">parent_phone</td>
+                  <td class="font-mono text-slate-500">VarChar(50)</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>เบอร์โทรศัพท์ติดต่อของผู้ปกครองนักเรียน</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">created_at</td>
+                  <td class="font-mono text-slate-500">DateTime</td>
+                  <td class="key-label">Default: now()</td>
+                  <td>วันเวลาที่บันทึกเพิ่มบัญชีผู้ใช้งาน</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 4: classrooms table -->
+      <section data-transition="none">
+        <div class="px-6 text-left">
+          <h2>ตาราง classrooms (ข้อมูลวิชาห้องเรียน)</h2>
+          
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 22%;">ชื่อฟิลด์ (Field Name)</th>
+                  <th style="width: 22%;">ประเภทข้อมูล (Data Type)</th>
+                  <th style="width: 15%;">ข้อจำกัด (Constraints)</th>
+                  <th>คำอธิบายหน้าที่การจัดเก็บ (Description)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-mono font-bold">id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">PRIMARY KEY</td>
+                  <td>รหัสหลักประจำกลุ่มรายวิชาห้องเรียน</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">name</td>
+                  <td class="font-mono text-slate-500">VarChar(255)</td>
+                  <td class="key-label">REQUIRED</td>
+                  <td>ชื่อวิชาเรียนวิชาคอมพิวเตอร์ที่จัดตั้งขึ้น (เช่น วิทยาการคำนวณ)</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">year_level</td>
+                  <td class="font-mono text-slate-500">VarChar(50)</td>
+                  <td class="key-label">REQUIRED</td>
+                  <td>ระดับชั้นเรียนของคลาสเรียน (เช่น ม.1, ม.2, ม.3)</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">room</td>
+                  <td class="font-mono text-slate-500">VarChar(50)</td>
+                  <td class="key-label">REQUIRED</td>
+                  <td>หมายเลขห้องเรียนย่อย (เช่น 1, 2)</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">academic_year</td>
+                  <td class="font-mono text-slate-500">VarChar(4)</td>
+                  <td class="key-label">REQUIRED</td>
+                  <td>ปีการศึกษาที่ดำเนินการเรียนการสอน (เช่น 2568)</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">teacher_id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">FOREIGN KEY (Restrict)</td>
+                  <td>รหัสคุณครูผู้ดูแลห้องเรียนวิชา เชื่อมโยง users.id [ห้ามลบครูถ้าห้องยังมีอยู่]</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">created_at</td>
+                  <td class="font-mono text-slate-500">DateTime</td>
+                  <td class="key-label">Default: now()</td>
+                  <td>วันและเวลาที่ลงบันทึกสร้างห้องเรียนวิชา</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 5: student_classes table -->
+      <section data-transition="none">
+        <div class="px-6 text-left">
+          <h2>ตาราง student_classes (ข้อมูลการลงทะเบียนเรียน)</h2>
+          
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 22%;">ชื่อฟิลด์ (Field Name)</th>
+                  <th style="width: 22%;">ประเภทข้อมูล (Data Type)</th>
+                  <th style="width: 15%;">ข้อจำกัด (Constraints)</th>
+                  <th>คำอธิบายหน้าที่การจัดเก็บ (Description)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-mono font-bold">id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">PRIMARY KEY</td>
+                  <td>รหัสการจับคู่ลงทะเบียนรายบุคคล</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">student_id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">FOREIGN KEY (Cascade)</td>
+                  <td>รหัสนักเรียนผู้สมัครเรียน เชื่อมโยง users.id [ลบอัตโนมัติตามนักเรียน]</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">class_id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">FOREIGN KEY (Cascade)</td>
+                  <td>รหัสห้องเรียนคลาสที่เรียน เชื่อมโยง classrooms.id [ลบอัตโนมัติตามห้องเรียน]</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">joined_at</td>
+                  <td class="font-mono text-slate-500">DateTime</td>
+                  <td class="key-label">Default: now()</td>
+                  <td>วันเวลาที่ลงทะเบียนเข้าร่วมคลาสเรียน</td>
+                </tr>
+                <tr class="bg-amber-50">
+                  <td class="font-mono font-bold text-amber-800">student_id + class_id</td>
+                  <td class="font-mono text-amber-800">Compound Key</td>
+                  <td class="key-label text-amber-700">UNIQUE CONSTRAINT</td>
+                  <td class="text-amber-700">จำกัดกฎห้ามนักเรียนคนเดิมลงทะเบียนวิชาห้องเดิมซ้ำซ้อนกันในฐานข้อมูล</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 6: assignments table -->
+      <section data-transition="none">
+        <div class="px-6 text-left">
+          <h2>ตาราง assignments (ข้อมูลงานที่มอบหมาย)</h2>
+          
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 22%;">ชื่อฟิลด์ (Field Name)</th>
+                  <th style="width: 22%;">ประเภทข้อมูล (Data Type)</th>
+                  <th style="width: 15%;">ข้อจำกัด (Constraints)</th>
+                  <th>คำอธิบายหน้าที่การจัดเก็บ (Description)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-mono font-bold">id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">PRIMARY KEY</td>
+                  <td>รหัสหลักของการบ้านหรืองานมอบหมายแต่ละชิ้น</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">class_id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">FOREIGN KEY (Cascade)</td>
+                  <td>รหัสห้องเรียนต้นสังกัดที่งานนี้ถูกสร้างขึ้น เชื่อมโยง classrooms.id [ลบตามห้อง]</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">title</td>
+                  <td class="font-mono text-slate-500">VarChar(255)</td>
+                  <td class="key-label">REQUIRED</td>
+                  <td>หัวข้อวิชาการสั่งการบ้านหรือหัวเรื่องทำแบบทดสอบ</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">description</td>
+                  <td class="font-mono text-slate-500">Text</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>รายละเอียด คำสั่ง หรือคำอธิบายภารกิจที่มอบหมายเพิ่มเติม</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">max_points</td>
+                  <td class="font-mono text-slate-500">Int</td>
+                  <td class="key-label">Default: 10</td>
+                  <td>จำนวนคะแนนเต็มทั้งหมดของงานชิ้นนั้นๆ</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">is_google_form</td>
+                  <td class="font-mono text-slate-500">Boolean</td>
+                  <td class="key-label">Default: false</td>
+                  <td>ระบุว่างานชิ้นนี้สั่งสอบผ่านการฝังข้อสอบออนไลน์ Google Forms หรือไม่</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">google_form_url</td>
+                  <td class="font-mono text-slate-500">VarChar(500)</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>ลิงก์ปลายทางแบบฟอร์ม Google Forms สำหรับใช้ดึงรันใน Iframe ฝั่งของเด็กนักเรียน</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">due_date</td>
+                  <td class="font-mono text-slate-500">DateTime</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>วันและเวลากำหนดส่งงานสูงสุด หากเกินนี้ระบบจะมาร์กเป็นส่งสาย</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">status</td>
+                  <td class="font-mono text-slate-500">AssignmentStatus</td>
+                  <td class="key-label">Default: DRAFT</td>
+                  <td>สถานะการ์ดการบ้าน: DRAFT (ฉบับร่าง) | PUBLISHED (เผยแพร่) | CLOSED (ปิดรับงาน)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 7: submissions table -->
+      <section data-transition="none">
+        <div class="px-6 text-left">
+          <h2>ตาราง submissions (ข้อมูลประวัติการส่งการบ้าน)</h2>
+          
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 22%;">ชื่อฟิลด์ (Field Name)</th>
+                  <th style="width: 22%;">ประเภทข้อมูล (Data Type)</th>
+                  <th style="width: 15%;">ข้อจำกัด (Constraints)</th>
+                  <th>คำอธิบายหน้าที่การจัดเก็บ (Description)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-mono font-bold">id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">PRIMARY KEY</td>
+                  <td>รหัสประวัติการส่งการบ้านเป็นรอบรายบุคคล</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">student_id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">FOREIGN KEY (Cascade)</td>
+                  <td>รหัสนักเรียนผู้ส่งคำตอบ เชื่อมโยง users.id [ลบตามตัวผู้เรียน]</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">assignment_id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">FOREIGN KEY (Cascade)</td>
+                  <td>รหัสของการบ้านที่นักเรียนต้องการส่งงาน เชื่อมโยง assignments.id [ลบตามงาน]</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">file_url</td>
+                  <td class="font-mono text-slate-500">VarChar(500)</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>ลิงก์ที่อยู่จัดเก็บไฟล์เอกสารการบ้านบนระบบ [เว้นว่างได้เมื่อทำข้อสอบออนไลน์]</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">score</td>
+                  <td class="font-mono text-slate-500">Int</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>คะแนนดิบประเมินผลจริงที่ได้บันทึกตรวจการบ้านแล้ว</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">feedback</td>
+                  <td class="font-mono text-slate-500">Text</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>คำวิจารณ์ แนะนำ หรือฟีดแบคจากคุณครูผู้ประเมิน</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">status</td>
+                  <td class="font-mono text-slate-500">SubmissionStatus</td>
+                  <td class="key-label">Default: SUBMITTED</td>
+                  <td>ขั้นตอนการตรวจงาน: SUBMITTED | LATE (ส่งช้ากว่ากำหนด) | GRADED (ตรวจแล้ว)</td>
+                </tr>
+                <tr class="bg-amber-50">
+                  <td class="font-mono font-bold text-amber-800">student_id + assignment_id</td>
+                  <td class="font-mono text-amber-800">Compound Key</td>
+                  <td class="key-label text-amber-700">UNIQUE CONSTRAINT</td>
+                  <td class="text-amber-700 font-medium">บังคับกติกาห้ามนักเรียนคนเดิมส่งคำตอบการบ้านชิ้นเดิมซ้ำหลายรอบ</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 8: attendance table -->
+      <section data-transition="none">
+        <div class="px-6 text-left">
+          <h2>ตาราง attendance (ข้อมูลการเช็คชื่อเข้าเรียน)</h2>
+          
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 22%;">ชื่อฟิลด์ (Field Name)</th>
+                  <th style="width: 22%;">ประเภทข้อมูล (Data Type)</th>
+                  <th style="width: 15%;">ข้อจำกัด (Constraints)</th>
+                  <th>คำอธิบายหน้าที่การจัดเก็บ (Description)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-mono font-bold">id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">PRIMARY KEY</td>
+                  <td>รหัสหลักประจำรายการประวัติเช็คชื่อ</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">student_id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">FOREIGN KEY (Cascade)</td>
+                  <td>รหัสนักเรียนผู้ได้รับการเช็คชื่อเข้าเรียน เชื่อมโยง users.id [ลบตามตัวผู้เรียน]</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">class_id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">FOREIGN KEY (Cascade)</td>
+                  <td>รหัสกลุ่มห้องเรียนวิชาที่บันทึกเวลาเรียน เชื่อมโยง classrooms.id [ลบตามคลาส]</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">date</td>
+                  <td class="font-mono text-slate-500">Date</td>
+                  <td class="key-label">REQUIRED</td>
+                  <td>วันที่เช็คชื่อ (จัดเก็บเฉพาะ วัน-เดือน-ปี ไม่เก็บเวลา)</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">status</td>
+                  <td class="font-mono text-slate-500">AttendanceStatus</td>
+                  <td class="key-label">Default: PRESENT</td>
+                  <td>สถานะเข้าเรียน: PRESENT (มา) | ABSENT (ขาด) | LATE (สาย) | LEAVE (ลา)</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">note</td>
+                  <td class="font-mono text-slate-500">Text</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>คำบันทึกช่วยจำเพิ่มเติม (เช่น ไปแข่งกีฬาโรงเรียน, ส่วยไม่สบายขอลา)</td>
+                </tr>
+                <tr class="bg-amber-50">
+                  <td class="font-mono font-bold text-amber-800">student_id + class_id + date</td>
+                  <td class="font-mono text-amber-800">Compound Key</td>
+                  <td class="key-label text-amber-700">UNIQUE CONSTRAINT</td>
+                  <td class="text-amber-700 font-medium">บล็อกระบบไม่ให้คุณครูเช็คชื่อนักเรียนคนเดิมซ้ำสองรอบในวันเดียวกัน</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 9: course_materials table -->
+      <section data-transition="none">
+        <div class="px-6 text-left">
+          <h2>ตาราง course_materials (ข้อมูลสื่อบทเรียน)</h2>
+          
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 22%;">ชื่อฟิลด์ (Field Name)</th>
+                  <th style="width: 22%;">ประเภทข้อมูล (Data Type)</th>
+                  <th style="width: 15%;">ข้อจำกัด (Constraints)</th>
+                  <th>คำอธิบายหน้าที่การจัดเก็บ (Description)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-mono font-bold">id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">PRIMARY KEY</td>
+                  <td>รหัสประจำรายการสื่อประกอบการสอนเอกสาร</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">class_id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">FOREIGN KEY (Cascade)</td>
+                  <td>รหัสวิชาห้องเรียนที่ได้รับข้อมูลแชร์สื่อสอน เชื่อมโยง classrooms.id [ลบตามคลาส]</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">title</td>
+                  <td class="font-mono text-slate-500">VarChar(255)</td>
+                  <td class="key-label">REQUIRED</td>
+                  <td>หัวข้อเรื่องหรือหัวประเด็นสไลด์บทเรียนวิชาที่เผยแพร่</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">type</td>
+                  <td class="font-mono text-slate-500">MaterialType (Enum)</td>
+                  <td class="key-label">Default: FILE</td>
+                  <td>ประเภทโครงสร้างของข้อมูลสื่อ: SLIDE | VIDEO | LINK | FILE</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">file_url</td>
+                  <td class="font-mono text-slate-500">VarChar(500)</td>
+                  <td class="key-label">REQUIRED</td>
+                  <td>ลิงก์ URL ปลายทางสำหรับเปิดดูไฟล์ หรือลิงก์สำหรับดาวน์โหลดสไลด์</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">is_locked</td>
+                  <td class="font-mono text-slate-500">Boolean</td>
+                  <td class="key-label">Default: false</td>
+                  <td>เช็คว่าสื่อชิ้นนี้ถูกครูสั่งปิดซ่อนบทเรียนห้ามนักเรียนดูอยู่หรือไม่</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">unlocks_at</td>
+                  <td class="font-mono text-slate-500">DateTime</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>กำหนดวันเวลาปลดล็อกประมวลผลการเข้าดูสื่อศึกษาอัตโนมัติล่วงหน้า</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 10: game_scores table -->
+      <section data-transition="none">
+        <div class="px-6 text-left">
+          <h2>ตาราง game_scores (ข้อมูลคะแนนดิบมินิเกม)</h2>
+          
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 22%;">ชื่อฟิลด์ (Field Name)</th>
+                  <th style="width: 22%;">ประเภทข้อมูล (Data Type)</th>
+                  <th style="width: 15%;">ข้อจำกัด (Constraints)</th>
+                  <th>คำอธิบายหน้าที่การจัดเก็บ (Description)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-mono font-bold">id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">PRIMARY KEY</td>
+                  <td>รหัสหลักประจำตาการเล่นกิจกรรมมินิเกม</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">student_id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">FOREIGN KEY (Cascade)</td>
+                  <td>รหัสนักเรียนผู้ดำเนินเล่นกิจกรรมเกม เชื่อมโยง users.id [ลบตามตัวนักเรียน]</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">game_type</td>
+                  <td class="font-mono text-slate-500">VarChar(100)</td>
+                  <td class="key-label">REQUIRED</td>
+                  <td>ชื่อเกมย่อยที่เด็กเล่นทำคะแนน เช่น typing-diner, bug-hunter</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">session_id</td>
+                  <td class="font-mono text-slate-500">VarChar(100)</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>รหัสรอบเฉพาะของเกมย่อย เพื่อตรวจสอบระบบกันส่งคะแนนซ้ำ</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">points</td>
+                  <td class="font-mono text-slate-500">Int</td>
+                  <td class="key-label">REQUIRED</td>
+                  <td>ยอดแต้มคะแนนสะสมดิบที่ทำได้ในตาการเล่นรอบนั้น</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">metadata</td>
+                  <td class="font-mono text-slate-500">Json</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>จัดเก็บสถิติทางเทคนิคเสริมแบบความเร็วพิมพ์หรือความผิดพลาดในไฟล์ JSON</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">created_at</td>
+                  <td class="font-mono text-slate-500">DateTime</td>
+                  <td class="key-label">Default: now()</td>
+                  <td>วันเวลาส่งบันทึกคะแนนรอบเล่นเกมเข้าระบบ</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 11: leaderboards table -->
+      <section data-transition="none">
+        <div class="px-6 text-left">
+          <h2>ตาราง leaderboards (ข้อมูลแคชลีดเดอร์บอร์ด)</h2>
+          
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 22%;">ชื่อฟิลด์ (Field Name)</th>
+                  <th style="width: 22%;">ประเภทข้อมูล (Data Type)</th>
+                  <th style="width: 15%;">ข้อจำกัด (Constraints)</th>
+                  <th>คำอธิบายหน้าที่การจัดเก็บ (Description)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-mono font-bold">id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">PRIMARY KEY</td>
+                  <td>รหัสอ้างอิงแคชรวมคะแนนสะสม</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">student_id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">FOREIGN KEY (Cascade)</td>
+                  <td>รหัสนักเรียนสะสมคะแนนวิชา เชื่อมโยง users.id [ลบตามนักเรียน]</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">class_id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">FOREIGN KEY (Cascade)</td>
+                  <td>รหัสวิชาห้องเรียนคลาสที่ทำการประเมินอันดับ เชื่อมโยง classrooms.id [ลบตามห้อง]</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">total_points</td>
+                  <td class="font-mono text-slate-500">Int</td>
+                  <td class="key-label">Default: 0</td>
+                  <td>จำนวนผลรวมแต้มคะแนนสะสมสุทธิสำหรับการขึ้นแสดงกระดานเกียรติยศ</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">rank</td>
+                  <td class="font-mono text-slate-500">Int</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>อันดับที่คำนวณเรียงจากมากไปน้อยของผู้เรียนในวิชานั้น (1, 2, 3...)</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">last_synced</td>
+                  <td class="font-mono text-slate-500">DateTime</td>
+                  <td class="key-label">Default: now()</td>
+                  <td>วันเวลาล่าสุดที่ทำการสั่งบวกซิงค์คะแนนสุทธิ</td>
+                </tr>
+                <tr class="bg-amber-50">
+                  <td class="font-mono font-bold text-amber-800">student_id + class_id</td>
+                  <td class="font-mono text-amber-800">Compound Key</td>
+                  <td class="key-label text-amber-700">UNIQUE CONSTRAINT</td>
+                  <td class="text-amber-700">จำกัดกฎไม่ให้นักเรียนหนึ่งคนมีคอลัมน์แคชลีดเดอร์บอร์ดซ้ำซ้อนในห้องเรียนเดียวกัน</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 12: notifications table -->
+      <section data-transition="none">
+        <div class="px-6 text-left">
+          <h2>ตาราง notifications (ข้อมูลแจ้งเตือนข่าวสาร)</h2>
+          
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 22%;">ชื่อฟิลด์ (Field Name)</th>
+                  <th style="width: 22%;">ประเภทข้อมูล (Data Type)</th>
+                  <th style="width: 15%;">ข้อจำกัด (Constraints)</th>
+                  <th>คำอธิบายหน้าที่การจัดเก็บ (Description)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-mono font-bold">id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">PRIMARY KEY</td>
+                  <td>รหัสหลักของการจัดส่งการแจ้งเตือนเดี่ยว</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">recipient_id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">FOREIGN KEY (Cascade)</td>
+                  <td>รหัสบัญชีผู้ใช้งานที่ได้รับการแจ้งข่าวสาร เชื่อมโยง users.id [ลบตามตัวผู้รับ]</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">type</td>
+                  <td class="font-mono text-slate-500">NotificationType (Enum)</td>
+                  <td class="key-label">Default: INFO</td>
+                  <td>ประเภทความสําคัญ: INFO (ข้อมูล) | WARNING (เตือน) | SUCCESS (สำเร็จ) | ALERT (ด่วน)</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">title / message</td>
+                  <td class="font-mono text-slate-500">VarChar(255) / Text</td>
+                  <td class="key-label">REQUIRED</td>
+                  <td>หัวเรื่องข้อมูลแจงอย่างย่อ และข้อความอธิบายข้อมูลการแจ้งเตือนละเอียด</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">related_type / related_id</td>
+                  <td class="font-mono text-slate-500">VarChar / UUID</td>
+                  <td class="key-label">NULLABLE</td>
+                  <td>ตารางต้นสังกัดเหตุการณ์แนะไอดีอ้างอิง สำหรับใช้ในการกดดูเชื่อมต่อหน้าระบบ</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">is_read</td>
+                  <td class="font-mono text-slate-500">Boolean</td>
+                  <td class="key-label">Default: false</td>
+                  <td>สลับประวัติใช้ระบุว่า ผู้เรียนได้เปิดคลิกอ่านแจ้งเตือนข่าวชิ้นนั้นๆ แล้วหรือไม่</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">created_at</td>
+                  <td class="font-mono text-slate-500">DateTime</td>
+                  <td class="key-label">Default: now()</td>
+                  <td>วันและเวลาที่ระบบสั่งยิงข้อมูลการแจ้งข้อความเข้าระบบ</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 13: academic_year_logs table -->
+      <section data-transition="none">
+        <div class="px-6 text-left">
+          <h2>ตาราง academic_year_logs (ข้อมูลบันทึกประวัติปิดปีเรียน)</h2>
+          
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 22%;">ชื่อฟิลด์ (Field Name)</th>
+                  <th style="width: 22%;">ประเภทข้อมูล (Data Type)</th>
+                  <th style="width: 15%;">ข้อจำกัด (Constraints)</th>
+                  <th>คำอธิบายหน้าที่การจัดเก็บ (Description)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="font-mono font-bold">id</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">PRIMARY KEY</td>
+                  <td>รหัสหลักประจำรายการล็อกประวัติการปิดรอบปิดปีศึกษา</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">executed_by</td>
+                  <td class="font-mono text-slate-500">String (UUID)</td>
+                  <td class="key-label">FOREIGN KEY (Cascade)</td>
+                  <td>คุณครู/ผู้ดูแลระบบผู้รันกระบวนการปิดปีศึกษา เชื่อมโยง users.id</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">from_year / to_year</td>
+                  <td class="font-mono text-slate-500">VarChar(4)</td>
+                  <td class="key-label">REQUIRED</td>
+                  <td>ปีการศึกษาก่อนเลื่อนระดับชั้น และปีการศึกษาถัดไปใหม่หลังเลื่อนระดับ</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">retained_count / graduated_count</td>
+                  <td class="font-mono text-slate-500">Int</td>
+                  <td class="key-label">REQUIRED</td>
+                  <td>สถิติจำนวนรวมของนักเรียนเรียนซ้ำชั้นเดิม และนักเรียน ม.3 สำเร็จจบการศึกษา (คน)</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">promoted_count</td>
+                  <td class="font-mono text-slate-500">Int</td>
+                  <td class="key-label">REQUIRED</td>
+                  <td>สถิติจำนวนรวมนักเรียน ม.1, ม.2 ที่ได้รับการประเมินเลื่อนขึ้นชั้นสำเร็จ (คน)</td>
+                </tr>
+                <tr>
+                  <td class="font-mono font-bold">executed_at</td>
+                  <td class="font-mono text-slate-500">DateTime</td>
+                  <td class="key-label">Default: now()</td>
+                  <td>วันและเวลาที่ตัวเซิร์ฟเวอร์รันการเลื่อนชั้นเรียนสำเร็จเรียบร้อย</td>
+                </tr>
+                <tr class="bg-sky-50">
+                  <td class="font-mono font-bold text-brand-800">backup_json</td>
+                  <td class="font-mono text-brand-800">Json</td>
+                  <td class="key-label text-brand-700">NULLABLE</td>
+                  <td class="text-brand-900">ตัวสำรองเก็บ Snapshot โครงสร้างนักเรียนและห้องวิชาเก่า เพื่อรันเรียกคืน (Rollback)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 14: Constraints & Database Rules -->
+      <section data-transition="none">
+        <div class="px-8 text-left">
+          <h2>กฎความถูกต้องฐานข้อมูล (Constraints & Rules)</h2>
+          <div class="w-full h-[1px] bg-slate-200 my-4"></div>
+          
+          <div class="space-y-6 text-sm text-slate-600">
+            <div>
+              <h3 class="text-base font-bold text-slate-800 mb-1">1. มาตรฐานการระบุตัวตน (Entity Identity)</h3>
+              <p class="font-light">ตารางข้อมูลทั้งหมดใช้ชนิดข้อมูลสุ่ม UUID v4 เพื่อป้องกันความเสี่ยงด้านความปลอดภัยจากการดักจับ (ID Enumeration Vulnerability) เพื่อความเป็นส่วนตัวและความมั่นคงสูงสุดของระบบ</p>
+            </div>
+            
+            <div>
+              <h3 class="text-base font-bold text-slate-800 mb-1">2. การลบข้อมูลเกี่ยวโยง (Referential Actions)</h3>
+              <ul class="list-disc pl-5 font-light space-y-1">
+                <li><strong>ON DELETE CASCADE (ลบตาม):</strong> ใช้กับข้อมูลประวัติย่อย เช่น submissions, attendance, course_materials เพื่อล้างขยะข้อมูลเมื่อลบตารางหลัก</li>
+                <li><strong>ON DELETE RESTRICT (ห้ามลบ):</strong> ใช้กับความสัมพันธ์ของ classrooms และ users เพื่อจำกัดไม่ให้ลบบัญชีครูผู้สอนหากวิชานั้นยังรันระบบสอนอยู่</li>
+              </ul>
+            </div>
+
+            <div>
+              <h3 class="text-base font-bold text-slate-800 mb-1">3. กฎความสมบูรณ์จำเพาะ (Compound Unique Indexes)</h3>
+              <p class="font-light">คุมความถูกต้องของข้อมูลเชิงตรรกะธุรกิจ เช่น จำกัดการลงชื่อเข้าห้องซ้ำซ้อนใน student_classes (studentId + classId) และการเช็คชื่อเข้าชั้นเรียนประจำวัน (studentId + classId + date)</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Reveal.js script -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.js"></script>
+  <script>
+    Reveal.initialize({
+      width: 1000,
+      height: 700,
+      margin: 0.1,
+      minScale: 0.2,
+      maxScale: 2.0,
+      controls: true,
+      progress: true,
+      history: true,
+      center: true,
+      transition: 'none', // Formal style uses none or simple fade transitions
+      transitionSpeed: 'fast',
+      backgroundTransition: 'none'
+    });
+  </script>
+</body>
+</html>

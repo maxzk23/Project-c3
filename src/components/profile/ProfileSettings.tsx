@@ -64,9 +64,11 @@ interface ProfileSettingsProps {
 export default function ProfileSettings({ initialUser }: ProfileSettingsProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [selectedAvatar, setSelectedAvatar] = useState(initialUser.avatarUrl || "preset-1");
-  const [customUrl, setCustomUrl] = useState(initialUser.avatarUrl?.startsWith("http") ? initialUser.avatarUrl : "");
-  const [activeTab, setActiveTab] = useState<"avatar" | "url">(initialUser.avatarUrl?.startsWith("http") ? "url" : "avatar");
+  const [selectedAvatar, setSelectedAvatar] = useState(
+    initialUser.avatarUrl && AVATAR_PRESETS.some(p => p.id === initialUser.avatarUrl)
+      ? initialUser.avatarUrl
+      : "preset-1"
+  );
   
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -81,13 +83,9 @@ export default function ProfileSettings({ initialUser }: ProfileSettingsProps) {
 
     const formData = new FormData(event.currentTarget);
     
-    // ตั้งค่ารูปอวาตาร์ที่เลือกส่งไปหลังบ้าน
+    // ตั้งค่ารูปอวาตาร์ที่เลือกส่งไปหลังบ้าน (เฉพาะ Preset ในระบบ)
     if (canEditInfo) {
-      if (activeTab === "avatar") {
-        formData.set("avatarUrl", selectedAvatar);
-      } else {
-        formData.set("avatarUrl", customUrl);
-      }
+      formData.set("avatarUrl", selectedAvatar);
     }
 
     startTransition(async () => {
@@ -140,7 +138,7 @@ export default function ProfileSettings({ initialUser }: ProfileSettingsProps) {
         {/* คอลัมน์ซ้าย: บัตรข้อมูลส่วนตัวย่อ */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center text-center space-y-4 self-start">
           {renderAvatarHelper(
-            canEditInfo ? (activeTab === "avatar" ? selectedAvatar : customUrl) : initialUser.avatarUrl,
+            canEditInfo ? selectedAvatar : initialUser.avatarUrl,
             initialUser.name,
             "w-24 h-24 text-4xl"
           )}
@@ -196,56 +194,26 @@ export default function ProfileSettings({ initialUser }: ProfileSettingsProps) {
                 <div className="space-y-3">
                   <label className="text-sm font-bold text-slate-700">เลือกรูปภาพประจำตัว (Avatar)</label>
                   
-                  {/* แถบเลือกโหมด (Preset vs Link) */}
-                  <div className="flex gap-2 p-1 bg-slate-100 rounded-lg w-fit">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("avatar")}
-                      className={`px-3 py-1.5 text-xs font-bold rounded-md transition ${activeTab === "avatar" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500"}`}
-                    >
-                      รูปอวาตาร์ Preset
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("url")}
-                      className={`px-3 py-1.5 text-xs font-bold rounded-md transition ${activeTab === "url" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500"}`}
-                    >
-                      ใส่ลิงก์ภาพภายนอก
-                    </button>
+                  {/* การ์ดสไตล์สำหรับการเลือก Preset */}
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 pt-2">
+                    {AVATAR_PRESETS.map((avatar) => (
+                      <button
+                        key={avatar.id}
+                        type="button"
+                        onClick={() => setSelectedAvatar(avatar.id)}
+                        className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition hover:scale-105 active:scale-95 ${
+                          selectedAvatar === avatar.id 
+                            ? "border-sky-500 bg-sky-50 ring-2 ring-sky-500/20" 
+                            : "border-slate-200 bg-white hover:border-slate-300"
+                        }`}
+                      >
+                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${avatar.gradient} text-white flex items-center justify-center text-lg`}>
+                          {avatar.emoji}
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-500 truncate w-full text-center">{avatar.label}</span>
+                      </button>
+                    ))}
                   </div>
-
-                  {activeTab === "avatar" ? (
-                    /* การ์ดสไตล์สำหรับการเลือก Preset */
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 pt-2">
-                      {AVATAR_PRESETS.map((avatar) => (
-                        <button
-                          key={avatar.id}
-                          type="button"
-                          onClick={() => setSelectedAvatar(avatar.id)}
-                          className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition hover:scale-105 active:scale-95 ${
-                            selectedAvatar === avatar.id 
-                              ? "border-sky-500 bg-sky-50 ring-2 ring-sky-500/20" 
-                              : "border-slate-200 bg-white hover:border-slate-300"
-                          }`}
-                        >
-                          <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${avatar.gradient} text-white flex items-center justify-center text-lg`}>
-                            {avatar.emoji}
-                          </div>
-                          <span className="text-[10px] font-bold text-slate-500 truncate w-full text-center">{avatar.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    /* ช่องใส่ URL */
-                    <input
-                      type="url"
-                      value={customUrl}
-                      onChange={(e) => setCustomUrl(e.target.value)}
-                      disabled={isPending}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:bg-white transition"
-                      placeholder="https://example.com/avatar.jpg"
-                    />
-                  )}
                 </div>
               ) : (
                 <div className="space-y-1.5">

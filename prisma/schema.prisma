@@ -80,7 +80,7 @@ model User {
   name       String        @db.VarChar(255) // ชื่อจริง-นามสกุลของผู้ใช้ (ขนาดไม่เกิน 255 ตัวอักษร)
   password   String        @db.VarChar(255) // รหัสผ่านที่ผ่านการเข้ารหัสแล้ว (Hashed Password)
   status     StudentStatus @default(ACTIVE) // สถานะนักเรียนปัจจุบัน (ค่าเริ่มต้นกำลังเรียนปกติ)
-  avatarUrl    String?       @map("avatar_url") @db.VarChar(255) // ลิงก์รูปโปรไฟล์ (กรอกหรือไม่กรอกก็ได้)
+  avatarUrl    String?       @map("avatar_url") @db.VarChar(255) // รหัสรูปโปรไฟล์ Preset ของระบบ เช่น preset-1 (กรอกหรือไม่กรอกก็ได้)
   passwordHint String?       @map("password_hint") @db.VarChar(255) // รหัสผ่านดิบสำหรับแสดงผลให้ครู/แอดมินดู (สำหรับบัญชีจำลอง/เพิ่มใหม่)
   studentId    String?       @map("student_id") @db.VarChar(50) // รหัสประจำตัวนักเรียน (เช่น 680101)
   nickname     String?       @db.VarChar(50) // ชื่อเล่น

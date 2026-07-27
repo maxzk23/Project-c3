@@ -37,10 +37,7 @@ async function main() {
     data: {
       name: "แอดมินระบบ",
       role: "ADMIN",
-      password: adminPasswordHash,
-      passwordHint: "admin",
-      status: "ACTIVE",
-      avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"
+      avatarUrl: "preset-1"
     }
   });
   console.log(`สร้างแอดมินสำเร็จ: ${admin.name}`);
@@ -50,10 +47,7 @@ async function main() {
     data: {
       name: "คุณครูสมชาย รักเรียน",
       role: "TEACHER",
-      password: teacherPasswordHash,
-      passwordHint: "teacher",
-      status: "ACTIVE",
-      avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150"
+      avatarUrl: "preset-4"
     }
   });
   console.log(`สร้างครูสำเร็จ: ${teacher.name}`);
@@ -104,8 +98,9 @@ async function main() {
     { name: 'ดรุณี มีนา', score: 790, yearLevel: 'ม.1', room: '2', studentId: '680202' }
   ];
 
-  const students = [];
+  let sIdx = 0;
   for (const s of studentsList) {
+    sIdx++;
     const student = await prisma.user.create({
       data: {
         name: s.name,
@@ -114,7 +109,7 @@ async function main() {
         passwordHint: "1234",
         status: "ACTIVE",
         studentId: s.studentId,
-        avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(s.name)}&background=random&color=fff&size=150`
+        avatarUrl: `preset-${(sIdx % 6) + 1}`
       }
     });
     students.push(student);

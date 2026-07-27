@@ -1,0 +1,1798 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LMS Database - Interactive ER Diagram & Dictionary</title>
+  <!-- Google Fonts - Sarabun & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sarabun:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Vis.js standalone for Chen's & Table ERD -->
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  
+  <style>
+    :root {
+      --bg-gradient-start: #f8fafc;
+      --bg-gradient-end: #f1f5f9;
+      --panel-bg: rgba(255, 255, 255, 0.9);
+      --panel-border: rgba(148, 163, 184, 0.2);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+      
+      --color-primary: #3b82f6; /* Blue */
+      --color-primary-glow: rgba(59, 130, 246, 0.08);
+      --color-secondary: #8b5cf6; /* Purple */
+      --color-success: #10b981; /* Green */
+      --color-warning: #f59e0b; /* Amber */
+      
+      /* Chen ERD standard colors */
+      --color-entity: #a3e635;
+      --color-entity-border: #4d7c0f;
+      --color-relationship: #38bdf8;
+      --color-relationship-border: #0369a1;
+      --color-attribute: #ffedd5;
+      --color-attribute-border: #ea580c;
+      --color-pk: #fee2e2;
+      --color-pk-border: #dc2626;
+
+      --font-display: 'Plus Jakarta Sans', sans-serif;
+      --font-sans: 'Sarabun', sans-serif;
+    }
+
+    .dark-theme {
+      --bg-gradient-start: #0f172a;
+      --bg-gradient-end: #020617;
+      --panel-bg: rgba(15, 23, 42, 0.85);
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      
+      --color-primary: #60a5fa;
+      --color-primary-glow: rgba(96, 165, 250, 0.1);
+      --color-secondary: #a78bfa;
+      
+      --color-entity: #bef264;
+      --color-relationship: #7dd3fc;
+      --color-attribute: #ffedd5;
+      --color-pk: #fee2e2;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+      color: var(--text-primary);
+      height: 100vh !important;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.5rem;
+      border-bottom: 1px solid var(--panel-border);
+      background: var(--panel-bg);
+      backdrop-filter: blur(12px);
+      z-index: 10;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .brand-logo {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 0.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+    }
+
+    .brand-title h1 {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      color: var(--text-primary);
+    }
+
+    .brand-title p {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Main Navigation Modules */
+    .module-selector-tabs {
+      display: flex;
+      background: rgba(0, 0, 0, 0.05);
+      padding: 0.25rem;
+      border-radius: 0.6rem;
+      border: 1px solid var(--panel-border);
+      gap: 0.15rem;
+    }
+
+    .module-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 0.45rem 0.9rem;
+      border-radius: 0.45rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+      font-family: var(--font-sans);
+    }
+
+    .module-tab:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .module-tab.active {
+      background: #ffffff;
+      color: var(--color-primary);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .dark-theme .module-tab.active {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--color-primary);
+    }
+
+    .controls-top {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      color: var(--text-primary);
+      padding: 0.4rem 0.8rem;
+      border-radius: 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: var(--font-sans);
+    }
+
+    .btn:hover {
+      border-color: var(--color-primary);
+      background: var(--color-primary-glow);
+    }
+
+    .btn.active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: white;
+    }
+
+    /* App Workspace Layout */
+    .app-container {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Left Sidebar */
+    .sidebar-left {
+      width: 280px;
+      border-right: 1px solid var(--panel-border);
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      z-index: 5;
+    }
+
+    .search-box {
+      padding: 1rem;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input-wrapper i {
+      position: absolute;
+      left: 0.75rem;
+      color: var(--text-muted);
+      width: 14px;
+      height: 14px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--panel-border);
+      color: var(--text-primary);
+      padding: 0.5rem 1rem 0.5rem 2rem;
+      border-radius: 0.4rem;
+      font-size: 0.8rem;
+      outline: none;
+      transition: all 0.2s;
+      font-family: var(--font-sans);
+    }
+
+    .search-input:focus {
+      border-color: var(--color-primary);
+      background: #ffffff;
+    }
+
+    .table-list-wrapper {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.75rem;
+    }
+
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      padding-left: 0.5rem;
+    }
+
+    .table-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem;
+      border-radius: 0.4rem;
+      cursor: pointer;
+      margin-bottom: 0.2rem;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .table-list-item:hover {
+      background: rgba(0, 0, 0, 0.03);
+    }
+
+    .table-list-item.active {
+      background: var(--color-primary-glow);
+      border-color: rgba(59, 130, 246, 0.2);
+    }
+
+    .table-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .table-icon {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 0.3rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.05);
+      color: var(--text-secondary);
+    }
+
+    .table-list-item.active .table-icon {
+      background: var(--color-primary);
+      color: white;
+    }
+
+    .table-meta {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .table-name {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .table-model-name {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+    }
+
+    .table-badge {
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 0.1rem 0.35rem;
+      border-radius: 1rem;
+      text-transform: uppercase;
+    }
+
+    .badge-master { background: rgba(34, 197, 94, 0.15); color: var(--color-success); }
+    .badge-transaction { background: rgba(59, 130, 246, 0.15); color: var(--color-primary); }
+    .badge-junction { background: rgba(139, 92, 246, 0.15); color: var(--color-secondary); }
+
+    /* Center Content Area */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Views Panels */
+    .view-pane {
+      display: none;
+      flex: 1;
+      height: 100%;
+      width: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .view-pane.active {
+      display: flex;
+    }
+
+    #chen-pane {
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+    }
+
+    #chen-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #ffffff; /* Clean white graph background like in sample */
+    }
+
+    /* HUD Legend Overlay (Top Left) */
+    .legend-hud {
+      position: absolute;
+      top: 1rem;
+      left: 1rem;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid var(--panel-border);
+      border-radius: 0.5rem;
+      padding: 0.65rem;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      pointer-events: none;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .legend-color {
+      width: 1.1rem;
+      height: 0.7rem;
+      border-radius: 0.15rem;
+      border: 1px solid rgba(0,0,0,0.15);
+    }
+
+    /* Controls HUD Overlay (Bottom Left) */
+    .controls-hud {
+      position: absolute;
+      bottom: 1.5rem;
+      left: 1.5rem;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid var(--panel-border);
+      border-radius: 0.5rem;
+      padding: 0.35rem;
+      display: flex;
+      gap: 0.25rem;
+      z-index: 3;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .hud-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 0.4rem 0.6rem;
+      border-radius: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: all 0.15s ease;
+      font-family: var(--font-sans);
+    }
+
+    .hud-btn:hover {
+      background: rgba(0, 0, 0, 0.05);
+      color: var(--text-primary);
+    }
+
+    .hud-btn.active {
+      background: var(--color-primary);
+      color: white;
+    }
+
+    /* Data Dictionary View */
+    .dictionary-view {
+      padding: 1.5rem 1.5rem 6rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      width: 100%;
+    }
+
+    #dictionary-view-pane.active {
+      display: block !important;
+      position: absolute !important;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      overflow-y: auto !important;
+    }
+
+    #dictionary-view-pane .dictionary-view {
+      height: auto !important;
+      overflow-y: visible !important;
+    }
+
+    .dict-table-container {
+      background: var(--panel-bg);
+      border: 1px solid var(--panel-border);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    }
+
+    .dict-table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      border-bottom: 1px solid var(--panel-border);
+      padding-bottom: 0.5rem;
+    }
+
+    .dict-table-header h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    .dict-table-header p {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    /* Sidebar - Right (Details panel) */
+    .sidebar-right {
+      width: 420px;
+      border-left: 1px solid var(--panel-border);
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      z-index: 5;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar-right.closed {
+      transform: translateX(100%);
+      position: absolute;
+      right: 0;
+      height: 100%;
+    }
+
+    .details-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--panel-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .details-title h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .details-title p {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .details-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .info-card {
+      background: rgba(0, 0, 0, 0.02);
+      border: 1px solid var(--panel-border);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+    }
+
+    .info-card h4 {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .info-card p {
+      font-size: 0.8rem;
+      line-height: 1.4;
+      color: var(--text-secondary);
+    }
+
+    /* Columns Specifications Table */
+    .columns-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.75rem;
+      text-align: left;
+    }
+
+    .columns-table th {
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 0.4rem;
+      border-bottom: 1px solid var(--panel-border);
+    }
+
+    .columns-table td {
+      padding: 0.5rem 0.4rem;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+      vertical-align: top;
+    }
+
+    .col-name {
+      font-family: monospace;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .col-type {
+      font-family: monospace;
+      color: var(--color-primary);
+    }
+
+    .col-constraint {
+      display: inline-flex;
+      gap: 0.25rem;
+    }
+
+    .constraint-pill {
+      font-size: 0.55rem;
+      font-weight: 800;
+      padding: 0.05rem 0.3rem;
+      border-radius: 0.2rem;
+      font-family: monospace;
+    }
+
+    .pill-pk { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+    .pill-fk { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+    .pill-uq { background: #fffbeb; color: #d97706; border: 1px solid #fde68a; }
+
+    /* Tabs details pane */
+    .tab-header {
+      display: flex;
+      border-bottom: 1px solid var(--panel-border);
+      margin-bottom: 0.75rem;
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      padding: 0.5rem;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      font-family: var(--font-sans);
+    }
+
+    .tab-btn.active {
+      color: var(--color-primary);
+      border-bottom-color: var(--color-primary);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    pre.code-block {
+      background: #0f172a !important;
+      border: 1px solid var(--panel-border);
+      border-radius: 0.5rem;
+      padding: 0.75rem;
+      overflow-x: auto;
+      font-family: monospace;
+      font-size: 0.75rem;
+      line-height: 1.4;
+      color: #cbd5e1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header & Module Selector Tab Controls -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">
+        <i data-lucide="database"></i>
+      </div>
+      <div class="brand-title">
+        <h1>LMS Database System</h1>
+        <p>Interactive Database Table Diagram (Relational Model ERD)</p>
+      </div>
+    </div>
+    
+    <!-- MODULAR SYSTEM SELECTOR -->
+    <div class="module-selector-tabs">
+      <button class="module-tab active" onclick="switchModule('conceptual')">
+        <i data-lucide="layout-grid" style="width: 14px; height: 14px;"></i>
+        <span>ภาพรวมระบบ (Overview)</span>
+      </button>
+      <button class="module-tab" onclick="switchModule('classroom')">
+        <i data-lucide="school" style="width: 14px; height: 14px;"></i>
+        <span>ชั้นเรียนและการเข้าเรียน</span>
+      </button>
+      <button class="module-tab" onclick="switchModule('assignments')">
+        <i data-lucide="file-text" style="width: 14px; height: 14px;"></i>
+        <span>การบ้านและสื่อการเรียน</span>
+      </button>
+      <button class="module-tab" onclick="switchModule('gamification')">
+        <i data-lucide="award" style="width: 14px; height: 14px;"></i>
+        <span>คะแนนเกมและประวัติ</span>
+      </button>
+    </div>
+    
+    <div class="controls-top">
+      <button class="btn" id="view-diagram-btn" onclick="setViewMode('diagram')">
+        <i data-lucide="network"></i>
+        <span>ผัง ERD</span>
+      </button>
+      <button class="btn" id="view-dict-btn" onclick="setViewMode('dictionary')">
+        <i data-lucide="book-open"></i>
+        <span>พจนานุกรมข้อมูล</span>
+      </button>
+      <button class="btn btn-icon" id="theme-toggle" title="สลับโหมดสี">
+        <i data-lucide="sun"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- App Wrapper -->
+  <div class="app-container">
+    
+    <!-- Left Sidebar (Tables List, filters dynamically based on selected module) -->
+    <div class="sidebar-left">
+      <div class="search-box">
+        <div class="search-input-wrapper">
+          <i data-lucide="search"></i>
+          <input type="text" class="search-input" id="search-input" placeholder="ค้นหาตารางหรือฟิลด์...">
+        </div>
+      </div>
+      
+      <div class="table-list-wrapper">
+        <h3 class="section-title" id="sidebar-section-title">ตารางข้อมูล</h3>
+        <div id="table-list">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Center/Main Content -->
+    <div class="main-content">
+      
+      <!-- VIEW 1: Chen's / Relational Table View (Vis.js Canvas) -->
+      <div class="view-pane active" id="diagram-view-pane">
+        <div id="chen-container"></div>
+        
+        <!-- Legend HUD -->
+        <div class="legend-hud" id="legend-hud-pane">
+          <!-- Populated by JS based on Style mode -->
+        </div>
+
+        <!-- Controls HUD Overlay -->
+        <div class="controls-hud">
+          <button class="hud-btn active" id="toggle-erd-style-btn"><i data-lucide="toggle-left"></i><span>สลับประเภทผัง: ตารางฐานข้อมูล (Table)</span></button>
+          <button class="hud-btn" id="toggle-physics-btn"><i data-lucide="play"></i><span>แช่แข็งการจัดวาง (Physics)</span></button>
+          <button class="hud-btn" id="reset-chen-btn"><i data-lucide="refresh-cw"></i><span>จัดวางผังใหม่</span></button>
+        </div>
+      </div>
+
+      <!-- VIEW 2: Data Dictionary Tab -->
+      <div class="view-pane" id="dictionary-view-pane">
+        <div class="dictionary-view" id="dictionary-container">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Sidebar (Details panel) -->
+    <div class="sidebar-right" id="right-sidebar">
+      <div class="details-header">
+        <div class="details-title">
+          <h2 id="active-table-title">เลือกตารางข้อมูล</h2>
+          <p id="active-table-subtitle">คลิกในผังเพื่อดูรายละเอียดคอลัมน์</p>
+        </div>
+        <button class="btn btn-icon" onclick="closeSidebar()"><i data-lucide="x"></i></button>
+      </div>
+      
+      <div class="details-body">
+        
+        <!-- Tab selector -->
+        <div class="tab-header">
+          <button class="tab-btn active" id="tab-fields-btn" onclick="switchDetailTab('fields')">โครงสร้างคอลัมน์</button>
+          <button class="tab-btn" id="tab-code-btn" onclick="switchDetailTab('code')">Prisma Model</button>
+        </div>
+
+        <!-- Column Specifications Tab -->
+        <div class="tab-content active" id="tab-fields-content">
+          <div class="info-card" style="margin-bottom: 1rem;">
+            <h4><i data-lucide="info" style="width: 12px; height: 12px;"></i> รายละเอียดตาราง</h4>
+            <p id="active-table-desc">คลิกเลือกตารางในโมเดลเพื่อดูประเภทคอลัมน์ คีย์หลัก (PK) คีย์นอก (FK) และคำจำกัดความทั้งหมดครับ</p>
+          </div>
+
+          <div class="info-card">
+            <h4><i data-lucide="list" style="width: 12px; height: 12px;"></i> รายการฟิลด์ข้อมูล</h4>
+            <div style="overflow-x: auto; margin-top: 0.4rem;">
+              <table class="columns-table">
+                <thead>
+                  <tr>
+                    <th>ฟิลด์</th>
+                    <th>ประเภท</th>
+                    <th>ข้อจำกัด</th>
+                    <th>คำอธิบาย</th>
+                  </tr>
+                </thead>
+                <tbody id="columns-list-body">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Code Snippet Tab -->
+        <div class="tab-content" id="tab-code-content">
+          <pre class="code-block"><code id="prisma-code-view">// เลือกตารางเพื่อแสดงโค้ด Model</code></pre>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // System definitions mapped into sub-system domains (Modularization)
+    const activeModuleDomains = {
+      conceptual: {
+        title: "ระบบภาพรวมแนวคิด (Overview)",
+        tables: ["users", "classrooms", "student_classes", "assignments", "submissions", "attendance", "course_materials", "game_scores", "leaderboards", "notifications", "academic_year_logs"],
+        showAttributesDefault: false
+      },
+      classroom: {
+        title: "โมดูลชั้นเรียนและเวลาเรียน (Classroom & Attendance)",
+        tables: ["users", "classrooms", "student_classes", "attendance"],
+        showAttributesDefault: true
+      },
+      assignments: {
+        title: "โมดูลการบ้านและสื่อการเรียน (Assignments & Materials)",
+        tables: ["users", "classrooms", "assignments", "submissions", "course_materials"],
+        showAttributesDefault: true
+      },
+      gamification: {
+        title: "โมดูลคะแนนเกมและประวัติศึกษา (Gamification & History)",
+        tables: ["users", "game_scores", "leaderboards", "notifications", "academic_year_logs", "classrooms"],
+        showAttributesDefault: true
+      }
+    };
+
+    const schemaData = {
+      users: {
+        name: "users",
+        modelName: "ผู้ใช้งาน (User)",
+        type: "master",
+        description: "ตารางสำหรับจัดเก็บบัญชีข้อมูลผู้ใช้งานระบบทั้งหมด รวมถึงนักเรียน ครู และผู้ดูแลระบบ รองรับการเข้าสู่ระบบและการกู้คืนปีการศึกษา",
+        columns: [
+          { name: "id", type: "Uuid", constraints: ["PK"], desc: "รหัสไอดีประจำตัวผู้ใช้ (UUID)", isPk: true },
+          { name: "role", type: "Role (Enum)", constraints: ["Default: STUDENT"], desc: "สิทธิ์ระดับผู้ใช้ในระบบ: STUDENT, TEACHER, ADMIN" },
+          { name: "name", type: "VarChar(255)", constraints: ["Required"], desc: "ชื่อจริง-นามสกุลจริงของผู้ใช้งาน" },
+          { name: "password", type: "VarChar(255)", constraints: ["Required"], desc: "รหัสผ่านที่เข้ารหัสความปลอดภัยแล้ว (Hashed Password)" },
+          { name: "status", type: "StudentStatus (Enum)", constraints: ["Default: ACTIVE"], desc: "สถานะการเรียนของนักเรียน: ACTIVE, GRADUATED, RETAINED, TRANSFERRED" },
+          { name: "avatar_url", type: "VarChar(255)", constraints: ["Nullable"], desc: "รหัสรูปภาพโปรไฟล์ Preset ของระบบ (เช่น preset-1)" },
+          { name: "password_hint", type: "VarChar(255)", constraints: ["Nullable"], desc: "ตัวช่วยจำรหัสผ่าน / รหัสผ่านดิบ (สำหรับบัญชีครูสร้างใหม่ให้นักเรียน)" },
+          { name: "student_id", type: "VarChar(50)", constraints: ["Nullable", "Unique"], desc: "รหัสประจำตัวนักเรียน (เช่น 680101)" },
+          { name: "nickname", type: "VarChar(50)", constraints: ["Nullable"], desc: "ชื่อเล่นของนักเรียน" },
+          { name: "gender", type: "VarChar(10)", constraints: ["Nullable"], desc: "เพศของผู้ใช้งาน (ชาย / หญิง)" },
+          { name: "roll_number", type: "VarChar(50)", constraints: ["Nullable"], desc: "เลขที่ประจำชั้นเรียน" },
+          { name: "parent_phone", type: "VarChar(50)", constraints: ["Nullable"], desc: "เบอร์โทรศัพท์ติดต่อของผู้ปกครอง" },
+          { name: "created_at", type: "DateTime", constraints: ["Default: now()"], desc: "วันเวลาที่บัญชีผู้ใช้ถูกสร้างขึ้นในระบบ" },
+          { name: "updated_at", type: "DateTime", constraints: ["AutoUpdate"], desc: "วันเวลาที่มีการแก้ไขข้อมูลล่าสุด" }
+        ],
+        prisma: `model User {
+  id           String        @id @default(uuid()) @db.Uuid
+  role         Role          @default(STUDENT)
+  name         String        @db.VarChar(255)
+  password     String        @db.VarChar(255)
+  status       StudentStatus @default(ACTIVE)
+  avatarUrl    String?       @map("avatar_url") @db.VarChar(255)
+  passwordHint String?       @map("password_hint") @db.VarChar(255)
+  studentId    String?       @map("student_id") @db.VarChar(50)
+  nickname     String?       @db.VarChar(50)
+  gender       String?       @db.VarChar(10)
+  rollNumber   String?       @map("roll_number") @db.VarChar(50)
+  parentPhone  String?       @map("parent_phone") @db.VarChar(50)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  classroomsTaught Classroom[]       @relation("TeacherClassrooms")
+  studentClasses   StudentClass[]
+  submissions      Submission[]
+  attendance       Attendance[]
+  gameScores       GameScore[]
+  leaderboard      Leaderboard[]
+  notifications    Notification[]    @relation("UserNotifications")
+  executedLogs     AcademicYearLog[] @relation("ExecutedBy")
+
+  @@map("users")
+}`
+      },
+      classrooms: {
+        name: "classrooms",
+        modelName: "ห้องเรียน (Classroom)",
+        type: "master",
+        description: "ตารางบันทึกข้อมูลและวิชาเรียนห้องเรียนหลักในระบบที่คุณครูแต่ละท่านดูแลรับผิดชอบ",
+        columns: [
+          { name: "id", type: "Uuid", constraints: ["PK"], desc: "รหัสไอดีประจำตัวห้องเรียน (UUID)", isPk: true },
+          { name: "name", type: "VarChar(255)", constraints: ["Required"], desc: "ชื่อกลุ่มวิชาเรียน/ห้องเรียนเรียน (เช่น วิทยาการคำนวณ)" },
+          { name: "year_level", type: "VarChar(50)", constraints: ["Required"], desc: "ระดับชั้นการศึกษา (เช่น ม.1, ม.2, ม.3)" },
+          { name: "room", type: "VarChar(50)", constraints: ["Required"], desc: "รหัสกลุ่มย่อยหรือเลขที่ห้องเรียน (เช่น ห้อง 1)" },
+          { name: "academic_year", type: "VarChar(4)", constraints: ["Required"], desc: "ปีการศึกษาประจำห้องเรียน (เช่น 2568)" },
+          { name: "teacher_id", type: "Uuid", constraints: ["FK"], desc: "รหัสคีย์นอกอ้างอิงคุณครูผู้ควบคุมดูแลวิชานี้", isFk: true },
+          { name: "created_at", type: "DateTime", constraints: ["Default: now()"], desc: "วันเวลาที่ห้องเรียนนี้ถูกสร้างขึ้นในระบบ" }
+        ],
+        prisma: `model Classroom {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String   @db.VarChar(255)
+  yearLevel    String   @map("year_level") @db.VarChar(50)
+  room         String   @db.VarChar(50)
+  academicYear String   @map("academic_year") @db.VarChar(4)
+  teacherId    String   @map("teacher_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  teacher         User             @relation("TeacherClassrooms", fields: [teacherId], references: [id], onDelete: Restrict)
+  studentClasses  StudentClass[]
+  assignments     Assignment[]
+  attendance      Attendance[]
+  courseMaterials CourseMaterial[]
+  leaderboards    Leaderboard[]
+
+  @@map("classrooms")
+}`
+      },
+      student_classes: {
+        name: "student_classes",
+        modelName: "การลงทะเบียน (StudentClass)",
+        type: "junction",
+        description: "ตารางเชื่อมความสัมพันธ์แบบ N:M (Junction Table) ทำหน้าที่บอกสถานะการเข้าลงทะเบียนวิชาเรียนของนักเรียนเข้าสู่ห้องเรียน",
+        columns: [
+          { name: "id", type: "Uuid", constraints: ["PK"], desc: "รหัสไอดีรายการลงทะเบียนเรียน (UUID)", isPk: true },
+          { name: "student_id", type: "Uuid", constraints: ["FK"], desc: "รหัสไอดีตัวนักเรียนผู้ลงทะเบียนเรียน", isFk: true },
+          { name: "class_id", type: "Uuid", constraints: ["FK"], desc: "รหัสห้องเรียนที่นักเรียนลงทะเบียนเรียนวิชาเข้ากลุ่ม", isFk: true },
+          { name: "joined_at", type: "DateTime", constraints: ["Default: now()"], desc: "วันเวลาเข้าร่วมห้องเรียนวิชานี้" }
+        ],
+        prisma: `model StudentClass {
+  id        String   @id @default(uuid()) @db.Uuid
+  studentId String   @map("student_id") @db.Uuid
+  classId   String   @map("class_id") @db.Uuid
+  joinedAt  DateTime @default(now()) @map("joined_at")
+
+  student   User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classroom Classroom @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, classId])
+  @@map("student_classes")
+}`
+      },
+      assignments: {
+        name: "assignments",
+        modelName: "การบ้าน (Assignment)",
+        type: "transaction",
+        description: "ตารางรวบรวมรายการคำสั่งสั่งงานการบ้าน หรือการฝังแบบทดสอบผ่าน Google Forms ที่มอบหมายแก่นักเรียนรายห้อง",
+        columns: [
+          { name: "id", type: "Uuid", constraints: ["PK"], desc: "รหัสคีย์หลักประจำแบบฝึกหัด (UUID)", isPk: true },
+          { name: "class_id", type: "Uuid", constraints: ["FK"], desc: "รหัสคีย์นอกเชื่อมโยงหาห้องเรียนที่สั่งการบ้านนี้", isFk: true },
+          { name: "title", type: "VarChar(255)", constraints: ["Required"], desc: "หัวข้อหรือชื่องานที่ครูสั่งการ" },
+          { name: "description", type: "Text", constraints: ["Nullable"], desc: "คำอธิบาย รายละเอียด หรือลิงก์โจทย์เพิ่มเดิม" },
+          { name: "max_points", type: "Int", constraints: ["Default: 10"], desc: "คะแนนเต็มสำหรับการประเมินผลงานชิ้นนี้" },
+          { name: "is_google_form", type: "Boolean", constraints: ["Default: false"], desc: "ระบุว่าเป็นแบบทดสอบลิงก์ภายนอก Google Forms หรือไม่" },
+          { name: "google_form_url", type: "VarChar(500)", constraints: ["Nullable"], desc: "ลิงก์ Embed iframe สำหรับเข้าทำข้อสอบผ่านหน้าเว็บโดยตรง" },
+          { name: "due_date", type: "DateTime", constraints: ["Nullable"], desc: "กำหนดการหมดเวลาส่งงานการบ้าน" },
+          { name: "status", type: "AssignmentStatus (Enum)", constraints: ["Default: DRAFT"], desc: "สถานะงาน: DRAFT (ฉบับร่างครูเห็นคนเดียว), PUBLISHED (เผยแพร่), CLOSED (ปิดการส่ง)" },
+          { name: "created_at", type: "DateTime", constraints: ["Default: now()"], desc: "วันเวลาที่สร้างรายการงานนี้" }
+        ],
+        prisma: `model Assignment {
+  id            String           @id @default(uuid()) @db.Uuid
+  classId       String           @map("class_id") @db.Uuid
+  title         String           @db.VarChar(255)
+  description   String?          @db.Text
+  maxPoints     Int              @default(10) @map("max_points")
+  isGoogleForm  Boolean          @default(false) @map("is_google_form")
+  googleFormUrl String?          @map("google_form_url") @db.VarChar(500)
+  dueDate       DateTime?        @map("due_date")
+  status        AssignmentStatus @default(DRAFT)
+  createdAt     DateTime         @default(now()) @map("created_at")
+
+  classroom   Classroom    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  submissions Submission[]
+
+  @@map("assignments")
+}`
+      },
+      submissions: {
+        name: "submissions",
+        modelName: "การส่งงาน (Submission)",
+        type: "transaction",
+        description: "ตารางบันทึกการทำแบบฝึกหัดและการส่งการบ้านของนักเรียน พร้อมฟีดแบคคำแนะนำและคะแนนตรวจจากคุณครู",
+        columns: [
+          { name: "id", type: "Uuid", constraints: ["PK"], desc: "รหัสคีย์หลักบันทึกข้อมูลการส่งการบ้าน (UUID)", isPk: true },
+          { name: "student_id", type: "Uuid", constraints: ["FK"], desc: "รหัสนักเรียนผู้ส่งงานการบ้าน", isFk: true },
+          { name: "assignment_id", type: "Uuid", constraints: ["FK"], desc: "รหัสหัวข้องานส่งการบ้านที่ต้องการจับคู่", isFk: true },
+          { name: "file_url", type: "VarChar(500)", constraints: ["Nullable"], desc: "ลิงก์เก็บไฟล์เอกสารการบ้านนักเรียน" },
+          { name: "score", type: "Int", constraints: ["Nullable"], desc: "คะแนนจริงที่ครูผู้มีสิทธิ์ให้หลังจากตรวจสอบผลงาน" },
+          { name: "feedback", type: "Text", constraints: ["Nullable"], desc: "คำเสนอแนะ ปรับปรุง ติชมข้อบกพร่องจากครูตรวจงาน" },
+          { name: "status", type: "SubmissionStatus (Enum)", constraints: ["Default: SUBMITTED"], desc: "สถานะการส่ง: SUBMITTED (ส่งแล้วรอตรวจ), LATE (ส่งช้าเลทเดดไลน์), GRADED (ตรวจเสร็จเรียบร้อย)" },
+          { name: "submitted_at", type: "DateTime", constraints: ["Default: now()"], desc: "วันเวลาจริงที่นักเรียนกดยืนยันอัปโหลดงานส่งสำเร็จ" }
+        ],
+        prisma: `model Submission {
+  id           String           @id @default(uuid()) @db.Uuid
+  studentId    String           @map("student_id") @db.Uuid
+  assignmentId String           @map("assignment_id") @db.Uuid
+  fileUrl      String?          @map("file_url") @db.VarChar(500)
+  score        Int?
+  feedback     String?          @db.Text
+  status       SubmissionStatus @default(SUBMITTED)
+  submittedAt  DateTime         @default(now()) @map("submitted_at")
+
+  student    User       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, assignmentId])
+  @@map("submissions")
+}`
+      },
+      attendance: {
+        name: "attendance",
+        modelName: "การเข้าเรียน (Attendance)",
+        type: "transaction",
+        description: "ตารางสำหรับเก็บบันทึกประวัติการเช็คชื่อเข้าเรียนของนักเรียนแต่ละวันแยกตามรายวิชา/คาบเรียนห้องเรียน",
+        columns: [
+          { name: "id", type: "Uuid", constraints: ["PK"], desc: "รหัสไอดีบันทึกประวัติการเข้าชั้นเรียนประจำวัน (UUID)", isPk: true },
+          { name: "student_id", type: "Uuid", constraints: ["FK"], desc: "รหัสไอดีประจำตัวนักเรียน", isFk: true },
+          { name: "class_id", type: "Uuid", constraints: ["FK"], desc: "รหัสไอดีระบุห้องเรียนที่ทำการเช็คชื่อ", isFk: true },
+          { name: "date", type: "Date", constraints: ["Required"], desc: "วันที่เข้าชั้นเรียน (ระบุเฉพาะ วัน-เดือน-ปี เท่านั้น เช่น 2026-07-01)" },
+          { name: "status", type: "AttendanceStatus (Enum)", constraints: ["Default: PRESENT"], desc: "สถานะเข้าเรียน: PRESENT (มาปกติ), ABSENT (ขาดเรียน), LATE (สาย), LEAVE (ลาเรียน)" },
+          { name: "note", type: "Text", constraints: ["Nullable"], desc: "รายละเอียดบันทึกสาเหตุการหยุดเรียนเพิ่มเติม" }
+        ],
+        prisma: `model Attendance {
+  id        String           @id @default(uuid()) @db.Uuid
+  studentId String           @map("student_id") @db.Uuid
+  classId   String           @map("class_id") @db.Uuid
+  date      DateTime         @db.Date
+  status    AttendanceStatus @default(PRESENT)
+  note      String?          @db.Text
+
+  student   User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classroom Classroom @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, classId, date])
+  @@map("attendance")
+}`
+      },
+      course_materials: {
+        name: "course_materials",
+        modelName: "สื่อการสอน (CourseMaterial)",
+        type: "transaction",
+        description: "ตารางจัดเก็บเอกสารประกอบการสอน สไลด์บทเรียนสอน ลิงก์ข้อมูลเพิ่มเติม หรือวิดีโอ YouTube ที่คุณครูโพสต์แบ่งปัน",
+        columns: [
+          { name: "id", type: "Uuid", constraints: ["PK"], desc: "รหัสคีย์หลักสื่อบทเรียน (UUID)", isPk: true },
+          { name: "class_id", type: "Uuid", constraints: ["FK"], desc: "รหัสห้องเรียนวิชาเรียนที่แชร์สื่อชุดนี้", isFk: true },
+          { name: "title", type: "VarChar(255)", constraints: ["Required"], desc: "ชื่อเอกสาร สื่อ หรือหัวเรื่องบทบรรยายสอน" },
+          { name: "type", type: "MaterialType (Enum)", constraints: ["Default: FILE"], desc: "ชนิดบทเรียน: SLIDE, VIDEO, LINK, FILE" },
+          { name: "file_url", type: "VarChar(500)", constraints: ["Required"], desc: "ลิงก์ดาวน์โหลดเอกสารหรือทางเชื่อมชมวิดีโอ" },
+          { name: "is_locked", type: "Boolean", constraints: ["Default: false"], desc: "สถานะตัวล็อกสื่อ เพื่อไม่ให้นักเรียนเข้าถึงศึกษาล่วงหน้าก่อนกำหนดการครูระบุ" },
+          { name: "unlocks_at", type: "DateTime", constraints: ["Nullable"], desc: "วันและเวลาที่จะปลดล็อกสื่อประกอบการสอนนี้ให้เผยแพร่อัตโนมัติ" },
+          { name: "created_at", type: "DateTime", constraints: ["Default: now()"], desc: "วันเวลาอัปโหลดแชร์เอกสารเข้าห้องเรียน" }
+        ],
+        prisma: `model CourseMaterial {
+  id        String       @id @default(uuid()) @db.Uuid
+  classId   String       @map("class_id") @db.Uuid
+  title     String       @db.VarChar(255)
+  type      MaterialType @default(FILE)
+  fileUrl   String       @map("file_url") @db.VarChar(500)
+  isLocked  Boolean      @default(false) @map("is_locked")
+  unlocksAt DateTime?    @map("unlocks_at")
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  classroom Classroom @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@map("course_materials")
+}`
+      },
+      game_scores: {
+        name: "game_scores",
+        modelName: "คะแนนเกม (GameScore)",
+        type: "transaction",
+        description: "ตารางสำหรับเก็บบันทึกประวัติและผลลัพธ์คะแนนเก็บดิบรายรอบการเล่นมินิเกมแต่ละเกมของเด็กนักเรียน",
+        columns: [
+          { name: "id", type: "Uuid", constraints: ["PK"], desc: "รหัสไอดีรายการจัดเก็บคะแนนเกมครั้งนั้นๆ (UUID)", isPk: true },
+          { name: "student_id", type: "Uuid", constraints: ["FK"], desc: "รหัสไอดีประจำตัวนักเรียนผู้เล่นเกม", isFk: true },
+          { name: "game_type", type: "VarChar(100)", constraints: ["Required"], desc: "ชื่อประเภทเกมที่เปิดบันทึก (เช่น space-waves, typing-diner)" },
+          { name: "session_id", type: "VarChar(100)", constraints: ["Nullable"], desc: "รหัสกลุ่มรอบในการส่งคะแนน (Session ID) สำหรับจัดประเภทหรือป้องกันสแปม" },
+          { name: "points", type: "Int", constraints: ["Required"], desc: "จำนวนคะแนนสะสมที่ได้รับในการเล่นเกมรอบนั้น" },
+          { name: "metadata", type: "Json", constraints: ["Nullable"], desc: "ข้อมูลทางสถิติละเอียดของผลเกมในรูป JSON (เช่น สถิติคำนวณ ความเร็วกด แป้นพิมพ์)" },
+          { name: "earned_at", type: "DateTime", constraints: ["Default: now()"], desc: "วันเวลาที่ได้รับคะแนน (เมื่อเล่นจบเกม)" }
+        ],
+        prisma: `model GameScore {
+  id        String   @id @default(uuid()) @db.Uuid
+  studentId String   @map("student_id") @db.Uuid
+  gameType  String   @map("game_type") @db.VarChar(100)
+  sessionId String?  @map("session_id") @db.VarChar(100)
+  points    Int
+  metadata  Json?
+  earnedAt  DateTime @default(now()) @map("earned_at")
+
+  student User @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("game_scores")
+}`
+      },
+      leaderboards: {
+        name: "leaderboards",
+        modelName: "ลีดเดอร์บอร์ด (Leaderboard)",
+        type: "junction",
+        description: "ตารางจัดอันดับ (CACHE DATA) เก็บคะแนนสะสมคะแนนรวมทั้งหมดของนักเรียนแต่ละคนในห้องเรียนวิชาเพื่อจัดลำดับคะแนนสุทธิอย่างรวดเร็ว",
+        columns: [
+          { name: "id", type: "Uuid", constraints: ["PK"], desc: "รหัสไอดีแถวประเมินคะแนนของลีดเดอร์บอร์ด (UUID)", isPk: true },
+          { name: "student_id", type: "Uuid", constraints: ["FK"], desc: "รหัสนักเรียนผู้ได้รับการจัดอันดับ", isFk: true },
+          { name: "class_id", type: "Uuid", constraints: ["FK"], desc: "รหัสห้องเรียนที่ถูกนำมาคิดจัดลำดับ", isFk: true },
+          { name: "total_points", type: "Int", constraints: ["Required"], desc: "ผลรวมคะแนนสะสมที่อัปเดตอิงการเล่นเกมทั้งหมด (Cached Data)" },
+          { name: "rank", type: "Int", constraints: ["Nullable"], desc: "ตำแหน่งลำดับที่ในการประเมินผลคะแนน (เช่น 1, 2, 3)" },
+          { name: "last_synced", type: "DateTime", constraints: ["Default: now()"], desc: "วันเวลาล่าสุดที่มีการกดอัปเดตหรือซิงค์ข้อมูลมาจากตารางดิบ GameScore" }
+        ],
+        prisma: `model Leaderboard {
+  id          String   @id @default(uuid()) @db.Uuid
+  studentId   String   @map("student_id") @db.Uuid
+  classId     String   @map("class_id") @db.Uuid
+  totalPoints Int      @map("total_points")
+  rank        Int?
+  lastSynced  DateTime @default(now()) @map("last_synced")
+
+  student   User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classroom Classroom @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, classId])
+  @@index([classId, totalPoints(sort: Desc)])
+  @@map("leaderboards")
+}`
+      },
+      notifications: {
+        name: "notifications",
+        modelName: "การแจ้งเตือน (Notification)",
+        type: "transaction",
+        description: "ตารางสำหรับเก็บบันทึกประวัติและตัวเลือกการแจ้งเตือนภายในระบบ สำหรับคุณครูและนักเรียนรับข้อมูลสำคัญ",
+        columns: [
+          { name: "id", type: "Uuid", constraints: ["PK"], desc: "รหัสคีย์หลักข้อความการเตือน (UUID)", isPk: true },
+          { name: "recipient_id", type: "Uuid", constraints: ["FK"], desc: "รหัสคีย์นอก อ้างอิงหาผู้รับข้อมูลแจ้งเตือน", isFk: true },
+          { name: "type", type: "NotificationType (Enum)", constraints: ["Default: INFO"], desc: "ระดับความสำคัญของการแจ้งเตือน: INFO, WARNING, SUCCESS, ALERT" },
+          { name: "title", type: "VarChar(255)", constraints: ["Required"], desc: "หัวข้อข้อความการเตือนเพื่อแสดงผลโดยย่อ" },
+          { name: "message", type: "Text", constraints: ["Required"], desc: "รายละเอียดข่าวสาร / ข้อมูลเชิงลึกในการแจ้งเตือน" },
+          { name: "related_type", type: "VarChar(100)", constraints: ["Nullable"], desc: "ตารางเป้าหมายที่ทำให้เกิดการเตือนนี้ขึ้นมา (เช่น ASSIGNMENT)" },
+          { name: "related_id", type: "Uuid", constraints: ["Nullable"], desc: "ไอดีต้นตอตารางข้างต้น เพื่อเปิดดูหรือลิงก์เข้าดูข้อมูลโดยตรง" },
+          { name: "is_read", type: "Boolean", constraints: ["Default: false"], desc: "ระบุสถานะอ่านแจ้งเตือนแล้วหรือไม่" },
+          { name: "created_at", type: "DateTime", constraints: ["Default: now()"], desc: "วันเวลาที่ระบบรันแจ้งเตือนขึ้นมา" }
+        ],
+        prisma: `model Notification {
+  id          String           @id @default(uuid()) @db.Uuid
+  recipientId String           @map("recipient_id") @db.Uuid
+  type        NotificationType @default(INFO)
+  title       String           @db.VarChar(255)
+  message     String           @db.Text
+  relatedType String?          @map("related_type") @db.VarChar(100)
+  relatedId   String?          @map("related_id") @db.Uuid
+  isRead      Boolean          @default(false) @map("is_read")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  recipient User @relation("UserNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}`
+      },
+      academic_year_logs: {
+        name: "academic_year_logs",
+        modelName: "ประวัติเลื่อนปีศึกษา (AcademicYearLog)",
+        type: "transaction",
+        description: "ตารางเก็บบันทึกประวัติและสถิติภาพรวมของการกดปรับระดับการศึกษาของระบบคุณครู (Rollover History Log)",
+        columns: [
+          { name: "id", type: "Uuid", constraints: ["PK"], desc: "รหัสคีย์หลักประวัติการทำระดับเลื่อนการศึกษา (UUID)", isPk: true },
+          { name: "executed_by", type: "Uuid", constraints: ["FK"], desc: "รหัสไอดีคุณครูผู้คลิกทำประวัติรายการ", isFk: true },
+          { name: "from_year", type: "VarChar(4)", constraints: ["Required"], desc: "ปีการศึกษาตั้งต้นวิเคราะห์", isPk: false },
+          { name: "to_year", type: "VarChar(4)", constraints: ["Required"], desc: "ปีการศึกษาปลายทางเป้าหมายใหม่" },
+          { name: "retained_count", type: "Int", constraints: ["Required"], desc: "สถิตินักเรียนชั้นเรียนที่ต้องเรียนซ้ำชั้น (คน)" },
+          { name: "graduated_count", type: "Int", constraints: ["Required"], desc: "สถิตินักเรียน ม.3 ที่กดจบสำเร็จการศึกษา (คน)" },
+          { name: "promoted_count", type: "Int", constraints: ["Required"], desc: "สถิตินักเรียนที่ได้เลื่อนชั้นเรียน (คน)" },
+          { name: "executed_at", type: "DateTime", constraints: ["Default: now()"], desc: "วันเวลาดำเนินการปรับข้อมูลการศึกษาเสร็จสิ้น" },
+          { name: "backup_json", type: "Json", constraints: ["Nullable"], desc: "ไฟล์ Snapshot บันทึกข้อมูลเก่าทั้งหมดแบบ JSON เพื่อใช้ในการกู้คืนระบบย้อนกลับ" }
+        ],
+        prisma: `model AcademicYearLog {
+  id             String   @id @default(uuid()) @db.Uuid
+  executedBy     String   @map("executed_by") @db.Uuid
+  fromYear       String   @map("from_year") @db.VarChar(4)
+  toYear         String   @map("to_year") @db.VarChar(4)
+  retainedCount  Int      @map("retained_count")
+  graduatedCount Int      @map("graduated_count")
+  promotedCount  Int      @map("promoted_count")
+  executedAt     DateTime @default(now()) @map("executed_at")
+  backupJson     Json?    @map("backup_json")
+
+  executor User @relation("ExecutedBy", fields: [executedBy], references: [id], onDelete: Restrict)
+
+  @@map("academic_year_logs")
+}`
+      }
+    };
+
+    // 14 Relationships mappings with cardinality values and custom curving to avoid overlapping nodes
+    const relationships = [
+      { id: 'rel_teaches', label: 'สอน\n(Teaches)', from: 'users', fromLabel: '1', to: 'classrooms', toLabel: 'M' },
+      { id: 'rel_enrolled', label: 'ลงทะเบียนเรียน\n(Enrolled)', from: 'users', fromLabel: '1', to: 'student_classes', toLabel: 'M', smooth: { enabled: true, type: 'curvedCW', roundness: 0.15 } },
+      { id: 'rel_has_class', label: 'มีห้องเรียน\n(Has)', from: 'classrooms', fromLabel: '1', to: 'student_classes', toLabel: 'M' },
+      { id: 'rel_has_assign', label: 'มอบหมายการบ้าน\n(Has)', from: 'classrooms', fromLabel: '1', to: 'assignments', toLabel: 'M' },
+      { id: 'rel_submits', label: 'ส่งงานส่งโจทย์\n(Submits)', from: 'users', fromLabel: '1', to: 'submissions', toLabel: 'M', smooth: { enabled: true, type: 'curvedCW', roundness: 0.3 } },
+      { id: 'rel_has_sub', label: 'มีประวัติส่งงาน\n(Has)', from: 'assignments', fromLabel: '1', to: 'submissions', toLabel: 'M' },
+      { id: 'rel_attends', label: 'เช็คชื่อเรียน\n(Attends)', from: 'users', fromLabel: '1', to: 'attendance', toLabel: 'M', smooth: { enabled: true, type: 'curvedCCW', roundness: 0.15 } },
+      { id: 'rel_tracks', label: 'บันทึกเข้าชั้นเรียน\n(Tracks)', from: 'classrooms', fromLabel: '1', to: 'attendance', toLabel: 'M' },
+      { id: 'rel_shares', label: 'แบ่งปันสื่อการสอน\n(Shares)', from: 'classrooms', fromLabel: '1', to: 'course_materials', toLabel: 'M' },
+      { id: 'rel_scores', label: 'ทำคะแนนเกม\n(Scores)', from: 'users', fromLabel: '1', to: 'game_scores', toLabel: 'M' },
+      { id: 'rel_ranks', label: 'จัดลีดเดอร์บอร์ด\n(Ranks)', from: 'users', fromLabel: '1', to: 'leaderboards', toLabel: 'M', smooth: { enabled: true, type: 'curvedCCW', roundness: 0.2 } },
+      { id: 'rel_hosts', label: 'มีผลสรุปห้องเรียน\n(Hosts)', from: 'classrooms', fromLabel: '1', to: 'leaderboards', toLabel: 'M' },
+      { id: 'rel_receives', label: 'รับการแจ้งเตือน\n(Receives)', from: 'users', fromLabel: '1', to: 'notifications', toLabel: 'M' },
+      { id: 'rel_triggers', label: 'รันข้อมูลปีการศึกษา\n(Triggers)', from: 'users', fromLabel: '1', to: 'academic_year_logs', toLabel: 'M' }
+    ];
+
+    let network = null;
+    let currentModule = 'conceptual';
+    let erdStyle = 'table'; // DEFAULT STYLE IS NOW DATABASE TABLE ERD! Can toggle to 'chen'
+    let showKeysOnly = true;
+    let physicsEnabled = true;
+    
+    const nodesDataset = new vis.DataSet();
+    const edgesDataset = new vis.DataSet();
+
+    // Helper to generate a clean, premium visual Database Table box as a PURE SVG data URL
+    function generateTableSVG(table) {
+      const headerColor = table.type === 'master' ? '#10b981' : (table.type === 'transaction' ? '#3b82f6' : '#8b5cf6');
+      const rowHeight = 22;
+      const headerHeight = 32;
+      const totalHeight = headerHeight + (table.columns.length * rowHeight) + 8;
+      const width = 240;
+
+      let rowsSvg = "";
+      table.columns.forEach((col, index) => {
+        const y = headerHeight + (index * rowHeight);
+        
+        // Draw divider line
+        rowsSvg += `<line x1="0" y1="${y}" x2="${width}" y2="${y}" stroke="#e2e8f0" stroke-width="1" />`;
+
+        // Draw key constraint label or bullet circle
+        if (col.isPk) {
+          rowsSvg += `<text x="10" y="${y + 15}" fill="#ef4444" font-family="sans-serif" font-size="9" font-weight="900">PK</text>`;
+        } else if (col.isFk) {
+          rowsSvg += `<text x="10" y="${y + 15}" fill="#3b82f6" font-family="sans-serif" font-size="9" font-weight="900">FK</text>`;
+        } else {
+          rowsSvg += `<circle cx="16" cy="${y + 11}" r="2.5" fill="#cbd5e1" />`;
+        }
+
+        // Column Name
+        const colColor = col.isPk ? "#ef4444" : (col.isFk ? "#3b82f6" : "#0f172a");
+        const colFontWeight = col.isPk || col.isFk ? "bold" : "normal";
+        rowsSvg += `<text x="30" y="${y + 15}" fill="${colColor}" font-family="'Sarabun', sans-serif" font-size="10.5" font-weight="${colFontWeight}">${col.name}</text>`;
+
+        // Column Data Type
+        rowsSvg += `<text x="${width - 10}" y="${y + 15}" fill="#64748b" font-family="monospace" font-size="9.5" text-anchor="end">${col.type}</text>`;
+      });
+
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${totalHeight}">
+          <!-- Background container -->
+          <rect x="1" y="1" width="${width-2}" height="${totalHeight-2}" rx="8" ry="8" fill="#ffffff" stroke="${headerColor}" stroke-width="2" />
+          
+          <!-- Header shape (rounded top corners) -->
+          <path d="M 1 9 A 8 8 0 0 1 9 1 L ${width-9} 1 A 8 8 0 0 1 ${width-1} 9 L ${width-1} ${headerHeight} L 1 ${headerHeight} Z" fill="${headerColor}" />
+          
+          <!-- Header Text -->
+          <text x="12" y="20" fill="#ffffff" font-family="'Sarabun', sans-serif" font-size="12" font-weight="bold">${table.name}</text>
+          
+          <!-- Badge background -->
+          <rect x="${width - 65}" y="7" width="53" height="15" rx="3" ry="3" fill="rgba(255,255,255,0.22)" />
+          <!-- Badge Text -->
+          <text x="${width - 38}" y="17" fill="#ffffff" font-family="sans-serif" font-size="8.5" font-weight="bold" text-anchor="middle">${table.type.toUpperCase()}</text>
+          
+          <!-- Rows -->
+          ${rowsSvg}
+        </svg>
+      `;
+
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    }
+
+    function updateLegend() {
+      const legendContainer = document.getElementById('legend-hud-pane');
+      if (erdStyle === 'table') {
+        legendContainer.innerHTML = `
+          <div class="legend-title" style="font-weight: bold; font-size: 0.8rem; margin-bottom: 0.3rem;">ประเภทตารางฐานข้อมูล</div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: #10b981; border-color: #059669;"></div>
+            <span>Master Table (ตารางหลัก)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: #3b82f6; border-color: #2563eb;"></div>
+            <span>Transaction Table (ตารางบันทึก)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: #8b5cf6; border-color: #7c3aed;"></div>
+            <span>Junction Table (ตารางร่วม)</span>
+          </div>
+          <div style="font-size: 0.65rem; color: var(--text-muted); border-top: 1px solid var(--panel-border); margin-top: 0.3rem; padding-top: 0.3rem;">
+            🔑 คีย์หลัก (PK) &bull; 🔗 คีย์นอก (FK)
+          </div>
+        `;
+      } else {
+        legendContainer.innerHTML = `
+          <div class="legend-title" style="font-weight: bold; font-size: 0.8rem; margin-bottom: 0.3rem;">สัญกรณ์เฉิน (Chen's)</div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: var(--color-entity); border-color: var(--color-entity-border);"></div>
+            <span>Entity (ตารางข้อมูลหลัก)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: var(--color-relationship); border-color: var(--color-relationship-border); transform: rotate(45deg); width: 0.7rem; height: 0.7rem; margin: 0 0.2rem;"></div>
+            <span>Relationship (ความสัมพันธ์)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: var(--color-attribute); border-color: var(--color-attribute-border);"></div>
+            <span>Attribute (ฟิลด์ทั่วไป)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: var(--color-pk); border-color: var(--color-pk-border); text-decoration: underline;"></div>
+            <span>Primary Key (คีย์หลัก)</span>
+          </div>
+        `;
+      }
+    }
+
+    // Coordinate positions optimized to prevent edge crossings and node overlap
+    const tableCoordinates = {
+      users: { x: 250, y: 400 },
+      academic_year_logs: { x: -150, y: 400 },
+      game_scores: { x: 100, y: 50 },
+      classrooms: { x: 750, y: 400 },
+      notifications: { x: 500, y: 50 },
+      course_materials: { x: 750, y: 50 },
+      student_classes: { x: 1100, y: 200 },
+      attendance: { x: 1100, y: 600 },
+      assignments: { x: 1200, y: 400 },
+      leaderboards: { x: 750, y: 750 },
+      submissions: { x: 1600, y: 400 }
+    };
+
+    function renderActiveModuleDiagram() {
+      if (network) {
+        network.destroy();
+        network = null;
+      }
+      nodesDataset.clear();
+      edgesDataset.clear();
+
+      const domain = activeModuleDomains[currentModule];
+      const isConceptual = currentModule === 'conceptual';
+
+      updateLegend();
+
+      if (erdStyle === 'table') {
+        // --- 1. RENDER DATABASE TABLE STYLE ERD ---
+        domain.tables.forEach(tableName => {
+          const table = schemaData[tableName];
+          if (!table) return;
+
+          const coords = tableCoordinates[tableName];
+
+          // Add Table as high-resolution SVG Node with FIXED layout coordinates
+          nodesDataset.add({
+            id: tableName,
+            shape: 'image',
+            image: generateTableSVG(table),
+            shapeProperties: {
+              useImageSize: true
+            },
+            x: coords ? coords.x : undefined,
+            y: coords ? coords.y : undefined,
+            type: 'entity'
+          });
+        });
+
+        // Add Direct edges between tables with 1:M cardinality badges and custom curving (rendered natively by Vis.js!)
+        relationships.forEach(rel => {
+          if (domain.tables.includes(rel.from) && domain.tables.includes(rel.to)) {
+            edgesDataset.add({
+              from: rel.from,
+              to: rel.to,
+              label: `${rel.fromLabel} : ${rel.toLabel}`,
+              font: { face: 'Sarabun', size: 12, bold: true, color: '#334155', background: '#ffffff', strokeWidth: 2, strokeColor: '#ffffff' },
+              color: { color: '#94a3b8', highlight: '#3b82f6', hover: '#3b82f6' },
+              width: 2.2,
+              selectionWidth: 3.5,
+              smooth: rel.smooth ? rel.smooth : { enabled: false }
+            });
+          }
+        });
+
+      } else {
+        // --- 2. RENDER CHEN'S NOTATION ERD (Entities, Relationships, Attributes) ---
+        const colorEntity = { background: '#a3e635', border: '#4d7c0f', highlight: { background: '#bef264', border: '#3f6212' } };
+        const colorRel = { background: '#38bdf8', border: '#0369a1', highlight: { background: '#7dd3fc', border: '#075985' } };
+        const colorAttr = { background: '#ffedd5', border: '#ea580c', highlight: { background: '#fff7ed', border: '#c2410c' } };
+        const colorPK = { background: '#fee2e2', border: '#dc2626', highlight: { background: '#fef2f2', border: '#991b1b' } };
+
+        domain.tables.forEach(tableName => {
+          const table = schemaData[tableName];
+          if (!table) return;
+
+          // Add Entity Box
+          nodesDataset.add({
+            id: tableName,
+            label: table.modelName,
+            shape: 'box',
+            margin: { top: 15, bottom: 15, left: 22, right: 22 },
+            font: { face: 'Sarabun', color: '#000000', size: 18, bold: true },
+            color: colorEntity,
+            shadow: { enabled: true, color: 'rgba(0,0,0,0.06)', size: 4, x: 2, y: 2 },
+            type: 'entity'
+          });
+
+          // Add Attribute Ovals (Skip if Conceptual overview)
+          if (!isConceptual) {
+            table.columns.forEach(col => {
+              if (showKeysOnly && !col.isPk && !col.isFk) return;
+
+              const attrId = `attr_${tableName}_${col.name}`;
+              nodesDataset.add({
+                id: attrId,
+                label: col.isPk ? `<b><u>${col.name} (PK)</u></b>` : col.name,
+                shape: 'ellipse',
+                font: { face: 'Sarabun', color: '#000000', size: 13, bold: true, multi: 'html', background: '#ffffff' },
+                color: col.isPk ? colorPK : colorAttr,
+                type: 'attribute',
+                parentId: tableName
+              });
+
+              // Connect attribute to entity
+              edgesDataset.add({
+                from: tableName,
+                to: attrId,
+                length: 90,
+                color: { color: '#cbd5e1' },
+                width: 1.2
+              });
+            });
+          }
+        });
+
+        // Add Relationship Diamonds
+        relationships.forEach(rel => {
+          if (domain.tables.includes(rel.from) && domain.tables.includes(rel.to)) {
+            nodesDataset.add({
+              id: rel.id,
+              label: rel.label,
+              shape: 'diamond',
+              size: 40,
+              font: { face: 'Sarabun', color: '#000000', size: 13, bold: true, background: '#ffffff', strokeWidth: 3, strokeColor: '#ffffff' },
+              color: colorRel,
+              shadow: { enabled: true, color: 'rgba(0,0,0,0.06)', size: 4, x: 2, y: 2 },
+              type: 'relationship'
+            });
+
+            // Connect 1
+            edgesDataset.add({
+              from: rel.from,
+              to: rel.id,
+              length: 220,
+              label: rel.fromLabel,
+              font: { face: 'Sarabun', size: 18, bold: true, color: '#d32f2f', background: '#ffffff', strokeWidth: 3, strokeColor: '#ffffff' },
+              color: { color: '#000000' },
+              width: 2.5
+            });
+
+            // Connect M
+            edgesDataset.add({
+              from: rel.id,
+              to: rel.to,
+              length: 220,
+              label: rel.toLabel,
+              font: { face: 'Sarabun', size: 18, bold: true, color: '#1976d2', background: '#ffffff', strokeWidth: 3, strokeColor: '#ffffff' },
+              color: { color: '#000000' },
+              width: 2.5
+            });
+          }
+        });
+      }
+
+      // Vis.js configuration
+      const container = document.getElementById('chen-container');
+      const data = { nodes: nodesDataset, edges: edgesDataset };
+      const options = {
+        nodes: { borderWidth: 1.2 },
+        edges: { smooth: { enabled: false } },
+        physics: {
+          enabled: erdStyle === 'chen' ? physicsEnabled : false, // Disable physics entirely for Table layout
+          stabilization: { iterations: 250, fit: true },
+          barnesHut: {
+            gravitationalConstant: erdStyle === 'table' ? -22000 : (isConceptual ? -14000 : -26000),
+            centralGravity: 0.15,
+            springLength: erdStyle === 'table' ? 220 : 200,
+            springConstant: 0.025,
+            damping: 0.1
+          }
+        },
+        interaction: {
+          dragNodes: false, // COMPLETELY DISABLE NODE DRAGGING to enforce fixed layout!
+          dragView: true,
+          zoomView: true,
+          hover: true
+        }
+      };
+
+      network = new vis.Network(container, data, options);
+
+      // Native lines are rendered by Vis.js directly. No custom afterDraw painting needed.
+
+      // Fit the network on load for Table layout since physics is disabled
+      if (erdStyle === 'table') {
+        setTimeout(() => {
+          if (network) network.fit({ animation: false });
+        }, 50);
+      }
+
+      // Node selection listener
+      network.on("selectNode", function (params) {
+        if (params.nodes.length > 0) {
+          const selectedNodeId = params.nodes[0];
+          const node = nodesDataset.get(selectedNodeId);
+          if (node) {
+            if (node.type === 'entity') {
+              selectTable(selectedNodeId);
+            } else if (node.type === 'attribute') {
+              selectTable(node.parentId);
+            }
+          }
+        }
+      });
+    }
+
+    // Switch Modules
+    function switchModule(moduleId) {
+      currentModule = moduleId;
+      
+      // Update Active Tab style
+      document.querySelectorAll('.module-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      const activeTabBtn = document.querySelector(`.module-tab[onclick*="${moduleId}"]`);
+      if (activeTabBtn) activeTabBtn.classList.add('active');
+
+      // Populate Table List sidebar
+      populateTableList();
+      
+      // Render graph
+      renderActiveModuleDiagram();
+    }
+
+    // Populate Sidebar table list
+    const tableListEl = document.getElementById('table-list');
+    function populateTableList(filterText = "") {
+      tableListEl.innerHTML = "";
+      const domain = activeModuleDomains[currentModule];
+      
+      document.getElementById('sidebar-section-title').textContent = activeModuleDomains[currentModule].title;
+
+      domain.tables.forEach(tableName => {
+        const table = schemaData[tableName];
+        if (!table) return;
+
+        const hasMatch = table.name.toLowerCase().includes(filterText.toLowerCase()) || 
+                         table.modelName.toLowerCase().includes(filterText.toLowerCase()) ||
+                         table.columns.some(col => col.name.toLowerCase().includes(filterText.toLowerCase()));
+                         
+        if (!hasMatch) return;
+        
+        const badgeClass = table.type === "master" ? "badge-master" : 
+                           table.type === "transaction" ? "badge-transaction" : "badge-junction";
+        const badgeLabel = table.type === "master" ? "Master" : 
+                           table.type === "transaction" ? "Transaction" : "Junction";
+                           
+        const itemEl = document.createElement('div');
+        itemEl.className = 'table-list-item';
+        itemEl.id = `list-item-${table.name}`;
+        itemEl.innerHTML = `
+          <div class="table-info">
+            <div class="table-icon">
+              <i data-lucide="table"></i>
+            </div>
+            <div class="table-meta">
+              <span class="table-name">${table.name}</span>
+              <span class="table-model-name">${table.modelName.replace('\n', ' ')}</span>
+            </div>
+          </div>
+          <span class="table-badge ${badgeClass}">${badgeLabel}</span>
+        `;
+        
+        itemEl.addEventListener('click', () => {
+          selectTable(table.name);
+          if (network) {
+            network.selectNodes([table.name]);
+            network.focus(table.name, { scale: 0.95, animation: true });
+          }
+        });
+        
+        tableListEl.appendChild(itemEl);
+      });
+      lucide.createIcons();
+    }
+
+    // Select Table details
+    let activeTable = null;
+    function selectTable(tableName) {
+      activeTable = tableName;
+      const table = schemaData[tableName];
+      if (!table) return;
+
+      document.getElementById('active-table-title').textContent = table.name;
+      document.getElementById('active-table-subtitle').textContent = `Model: ${table.modelName.replace('\n', ' ')}`;
+      document.getElementById('active-table-desc').textContent = table.description;
+
+      const listBody = document.getElementById('columns-list-body');
+      listBody.innerHTML = "";
+      
+      table.columns.forEach(col => {
+        let constraintPills = "";
+        if (col.isPk) constraintPills += `<span class="constraint-pill pill-pk">PK</span> `;
+        if (col.isFk) constraintPills += `<span class="constraint-pill pill-fk">FK</span> `;
+        if (col.constraints && col.constraints.includes("Unique")) constraintPills += `<span class="constraint-pill pill-uq">UQ</span> `;
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="col-name">${col.name}</td>
+          <td class="col-type">${col.type}</td>
+          <td class="col-constraint">${constraintPills}</td>
+          <td style="color: var(--text-secondary);">${col.desc}</td>
+        `;
+        listBody.appendChild(row);
+      });
+
+      document.getElementById('prisma-code-view').textContent = table.prisma;
+
+      document.querySelectorAll('.table-list-item').forEach(item => {
+        item.classList.remove('active');
+      });
+      const listItem = document.getElementById(`list-item-${tableName}`);
+      if (listItem) listItem.classList.add('active');
+
+      document.getElementById('right-sidebar').classList.remove('closed');
+    }
+
+    // View Modes switches (Diagram vs. Data Dictionary)
+    let currentViewMode = 'diagram';
+    function setViewMode(mode) {
+      currentViewMode = mode;
+      
+      document.getElementById('view-diagram-btn').classList.toggle('active', mode === 'diagram');
+      document.getElementById('view-dict-btn').classList.toggle('active', mode === 'dictionary');
+      
+      document.getElementById('diagram-view-pane').classList.toggle('active', mode === 'diagram');
+      document.getElementById('dictionary-view-pane').classList.toggle('active', mode === 'dictionary');
+
+      if (mode === 'dictionary') {
+        buildDataDictionary();
+      } else {
+        setTimeout(() => { if (network) network.fit(); }, 50);
+      }
+    }
+
+    // Switch right sidebar tabs
+    function switchDetailTab(tab) {
+      document.getElementById('tab-fields-btn').classList.toggle('active', tab === 'fields');
+      document.getElementById('tab-code-btn').classList.toggle('active', tab === 'code');
+      document.getElementById('tab-fields-content').classList.toggle('active', tab === 'fields');
+      document.getElementById('tab-code-content').classList.toggle('active', tab === 'code');
+    }
+
+    function closeSidebar() {
+      document.getElementById('right-sidebar').classList.add('closed');
+    }
+
+    // Build Data Dictionary dynamically
+    function buildDataDictionary() {
+      const dictContainer = document.getElementById('dictionary-container');
+      dictContainer.innerHTML = "";
+      const domain = activeModuleDomains[currentModule];
+
+      domain.tables.forEach(tableName => {
+        const table = schemaData[tableName];
+        if (!table) return;
+
+        const card = document.createElement('div');
+        card.className = 'dict-table-container';
+        
+        let rowsHtml = "";
+        table.columns.forEach(col => {
+          let constraintLabels = col.constraints ? col.constraints.join(', ') : '';
+          if (col.isPk && !constraintLabels.includes('PK')) constraintLabels = 'PK, ' + constraintLabels;
+          if (col.isFk && !constraintLabels.includes('FK')) constraintLabels = 'FK, ' + constraintLabels;
+
+          rowsHtml += `
+            <tr style="border-bottom: 1px solid rgba(0, 0, 0, 0.03);">
+              <td style="padding: 0.5rem 0.4rem; font-family: monospace; font-weight: 700; color: var(--text-primary);">${col.name}</td>
+              <td style="padding: 0.5rem 0.4rem; font-family: monospace; color: var(--color-primary);">${col.type}</td>
+              <td style="padding: 0.5rem 0.4rem; color: var(--color-secondary); font-size: 0.7rem;">${constraintLabels}</td>
+              <td style="padding: 0.5rem 0.4rem; color: var(--text-secondary);">${col.desc}</td>
+            </tr>
+          `;
+        });
+
+        card.innerHTML = `
+          <div class="dict-table-header">
+            <div>
+              <h3>${table.name}</h3>
+              <p>Model: ${table.modelName.replace('\n', ' ')} &bull; ${table.description}</p>
+            </div>
+            <span class="table-badge ${table.type === 'master' ? 'badge-master' : table.type === 'transaction' ? 'badge-transaction' : 'badge-junction'}">${table.type}</span>
+          </div>
+          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.75rem;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--panel-border); color: var(--text-muted);">
+                <th style="padding: 0.5rem 0.4rem; width: 25%;">ฟิลด์</th>
+                <th style="padding: 0.5rem 0.4rem; width: 15%;">ชนิดข้อมูล</th>
+                <th style="padding: 0.5rem 0.4rem; width: 20%;">คุณสมบัติ</th>
+                <th style="padding: 0.5rem 0.4rem; width: 40%;">คำอธิบายรายละเอียด</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        `;
+        dictContainer.appendChild(card);
+      });
+    }
+
+    // Toggle ERD Styles: Table-style vs Chen-style
+    document.getElementById('toggle-erd-style-btn').addEventListener('click', function() {
+      erdStyle = erdStyle === 'table' ? 'chen' : 'table';
+      
+      const span = this.querySelector('span');
+      const icon = this.querySelector('i');
+      
+      if (erdStyle === 'table') {
+        span.textContent = "สลับประเภทผัง: ตารางฐานข้อมูล (Table)";
+        this.classList.add('active');
+        icon.setAttribute('data-lucide', 'toggle-left');
+      } else {
+        span.textContent = "สลับประเภทผัง: สัญกรณ์เฉิน (Chen's)";
+        this.classList.remove('active');
+        icon.setAttribute('data-lucide', 'toggle-right');
+      }
+      
+      lucide.createIcons();
+      renderActiveModuleDiagram();
+    });
+
+    // Toggle Physics
+    document.getElementById('toggle-physics-btn').addEventListener('click', function() {
+      physicsEnabled = !physicsEnabled;
+      this.classList.toggle('active', !physicsEnabled);
+      this.querySelector('span').textContent = physicsEnabled ? "แช่แข็งการจัดวาง (Physics)" : "เปิดใช้งานแรงดึง (Physics)";
+      if (network) {
+        network.setOptions({ physics: { enabled: physicsEnabled } });
+      }
+    });
+
+    // Reset Layout
+    document.getElementById('reset-chen-btn').addEventListener('click', function() {
+      renderActiveModuleDiagram();
+    });
+
+    // Search bar filter listener
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      populateTableList(e.target.value);
+    });
+
+    // Theme Management
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = themeToggle.querySelector('i');
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-theme');
+      const isDark = document.body.classList.contains('dark-theme');
+      themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+      lucide.createIcons();
+    });
+
+    // DOM Initial Load
+    window.addEventListener('DOMContentLoaded', () => {
+      switchModule('conceptual');
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
