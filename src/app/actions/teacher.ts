@@ -39,23 +39,25 @@ export async function getDashboardSummaryData(classId: string) {
     const day = String(d.getDate()).padStart(2, "0");
     const today = new Date(`${year}-${month}-${day}`);
 
-    // 1. นับจำนวนนักเรียนในห้องเรียนนี้
-    const totalStudentsCount = await db.studentClass.count({
-      where: { classId }
-    });
+    const isAll = classId === "ALL";
 
-    // 2. นับการบ้านที่รอดำเนินการตรวจ (score == null) ของห้องนี้
+    // 1. นับจำนวนนักเรียนทั้งหมด (หรือในห้องเรียนนี้)
+    const totalStudentsCount = isAll
+      ? await db.user.count({ where: { role: "STUDENT" } })
+      : await db.studentClass.count({ where: { classId } });
+
+    // 2. นับการบ้านที่รอดำเนินการตรวจ (score == null)
     const pendingGradingCount = await db.submission.count({
       where: {
         score: null,
-        assignment: { classId }
+        ...(isAll ? {} : { assignment: { classId } })
       }
     });
 
-    // 3. นับจำนวนบทเรียน/สื่อการสอนที่เปิดอยู่ (isLocked == false) ของห้องนี้
+    // 3. นับจำนวนบทเรียน/สื่อการสอนที่เปิดอยู่ (isLocked == false)
     const unlockedMaterialsCount = await db.courseMaterial.count({
       where: {
-        classId,
+        ...(isAll ? {} : { classId }),
         isLocked: false
       }
     });
@@ -63,7 +65,7 @@ export async function getDashboardSummaryData(classId: string) {
     // 4. สรุปเช็คชื่อรายสถานะประจำวันนี้
     const attendanceRecords = await db.attendance.findMany({
       where: {
-        classId,
+        ...(isAll ? {} : { classId }),
         date: today
       }
     });
@@ -73,30 +75,30 @@ export async function getDashboardSummaryData(classId: string) {
     const leaveCount = attendanceRecords.filter(r => r.status === "LEAVE").length;
     const absentCount = attendanceRecords.filter(r => r.status === "ABSENT").length;
 
-    // 5. ดึงรายการส่งงานการบ้านล่าสุดที่ยังไม่ได้ตรวจ (สูงสุด 3 รายการ)
+    // 5. ดึงรายการส่งงานการบ้านล่าสุดที่ยังไม่ได้ตรวจ (สูงสุด 5 รายการ)
     const recentSubmissions = await db.submission.findMany({
       where: {
         score: null,
-        assignment: { classId }
+        ...(isAll ? {} : { assignment: { classId } })
       },
       include: {
         student: { select: { name: true } },
         assignment: { select: { title: true } }
       },
       orderBy: { submittedAt: "desc" },
-      take: 3
+      take: 5
     });
 
-    // 6. ดึงสิทธิ์เปิดเผยสื่อบทเรียน (แสดง 3 รายการล่าสุดเพื่อความคล่องตัว)
+    // 6. ดึงสิทธิ์เปิดเผยสื่อบทเรียน (แสดง 5 รายการล่าสุดเพื่อความคล่องตัว)
     const materials = await db.courseMaterial.findMany({
-      where: { classId },
+      where: isAll ? {} : { classId },
       orderBy: { createdAt: "desc" },
-      take: 3
+      take: 5
     });
 
     // 7. ดึงบอร์ดเกียรติยศ (Leaderboard) 5 อันดับแรก
     const leaderboard = await db.leaderboard.findMany({
-      where: { classId },
+      where: isAll ? {} : { classId },
       include: {
         student: { select: { name: true } }
       },
@@ -153,11 +155,33 @@ export async function getAttendanceData(classId: string, dateStr: string) {
   const date = new Date(dateStr);
 
   try {
+    const teacher = await db.user.findUnique({
+      where: { id: teacherId },
+      select: { role: true }
+    });
+
+    let classWhereClause: any = { classId };
+
+    if (classId === "ALL" || !classId) {
+      if (teacher?.role === "ADMIN") {
+        classWhereClause = {};
+      } else {
+        const teacherClassrooms = await db.classroom.findMany({
+          where: { teacherId },
+          select: { id: true }
+        });
+        classWhereClause = { classId: { in: teacherClassrooms.map(c => c.id) } };
+      }
+    }
+
     const studentClasses = await db.studentClass.findMany({
-      where: { classId },
+      where: classWhereClause,
       include: {
         student: {
           select: { id: true, name: true, avatarUrl: true }
+        },
+        classroom: {
+          select: { id: true, name: true, yearLevel: true, room: true }
         }
       },
       orderBy: { student: { name: "asc" } }
@@ -165,7 +189,7 @@ export async function getAttendanceData(classId: string, dateStr: string) {
 
     const attendanceRecords = await db.attendance.findMany({
       where: {
-        classId,
+        ...(classId === "ALL" || !classId ? classWhereClause : { classId }),
         date: {
           equals: date
         }
@@ -173,9 +197,11 @@ export async function getAttendanceData(classId: string, dateStr: string) {
     });
 
     return studentClasses.map(sc => {
-      const record = attendanceRecords.find(r => r.studentId === sc.studentId);
+      const record = attendanceRecords.find(r => r.studentId === sc.studentId && r.classId === sc.classId);
       return {
         student: sc.student,
+        classId: sc.classId,
+        classroomName: `${sc.classroom.name} (${sc.classroom.yearLevel}/${sc.classroom.room})`,
         status: record ? record.status : null,
         note: record ? record.note : ""
       };
@@ -190,7 +216,7 @@ export async function getAttendanceData(classId: string, dateStr: string) {
 export async function saveAttendance(
   classId: string,
   dateStr: string,
-  records: { studentId: string; status: AttendanceStatus; note?: string }[]
+  records: { studentId: string; classId?: string; status: AttendanceStatus; note?: string }[]
 ) {
   const teacherId = await getSessionTeacher();
   if (!teacherId) return { success: false, error: "ไม่มีสิทธิ์ทำรายการ" };
@@ -199,11 +225,14 @@ export async function saveAttendance(
 
   try {
     for (const record of records) {
+      const targetClassId = record.classId || classId;
+      if (!targetClassId || targetClassId === "ALL") continue;
+
       await db.attendance.upsert({
         where: {
           studentId_classId_date: {
             studentId: record.studentId,
-            classId,
+            classId: targetClassId,
             date
           }
         },
@@ -213,7 +242,7 @@ export async function saveAttendance(
         },
         create: {
           studentId: record.studentId,
-          classId,
+          classId: targetClassId,
           date,
           status: record.status,
           note: record.note || null
@@ -228,6 +257,41 @@ export async function saveAttendance(
   }
 }
 
+/**
+ * ยืนยันรหัสผ่านเพื่อปลดล็อกการแก้ไขการเช็คชื่อ
+ */
+export async function verifyTeacherUnlockPassword(password: string) {
+  const teacherId = await getSessionTeacher();
+  if (!teacherId) return { success: false, error: "ไม่มีสิทธิ์ทำรายการ" };
+
+  if (!password || !password.trim()) {
+    return { success: false, error: "กรุณากรอกรหัสผ่านปลดล็อก" };
+  }
+
+  try {
+    const teacher = await db.user.findUnique({
+      where: { id: teacherId },
+      select: { password: true }
+    });
+
+    if (!teacher) {
+      return { success: false, error: "ไม่พบบัญชีผู้ใช้ครูในระบบ" };
+    }
+
+    // ยอมรับรหัสผ่านประจำตัวครูผู้ใช้ หรือ PIN เริ่มต้น "1234"
+    const isValid = bcrypt.compareSync(password.trim(), teacher.password) || password.trim() === "1234";
+
+    if (!isValid) {
+      return { success: false, error: "รหัสผ่านปลดล็อกไม่ถูกต้อง" };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("Failed to verify unlock password:", err);
+    return { success: false, error: "เกิดข้อผิดพลาดในการตรวจสอบรหัสผ่าน" };
+  }
+}
+
 // ==========================================
 // 2. MODULE: COURSE MATERIALS (จัดการบทเรียน)
 // ==========================================
@@ -235,6 +299,17 @@ export async function saveAttendance(
 export async function getCourseMaterials(classIdOrYear: string) {
   const teacherId = await getSessionTeacher();
   if (!teacherId) return [];
+
+  if (classIdOrYear === "ALL" || !classIdOrYear) {
+    try {
+      return await db.courseMaterial.findMany({
+        orderBy: { createdAt: "desc" }
+      });
+    } catch (err) {
+      console.error("Failed to get all materials:", err);
+      return [];
+    }
+  }
 
   const isInputUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(classIdOrYear);
 
@@ -405,8 +480,27 @@ export async function getAssignmentsWithSubmissions(classId: string) {
   if (!teacherId) return [];
 
   try {
+    const teacher = await db.user.findUnique({
+      where: { id: teacherId },
+      select: { role: true }
+    });
+
+    let whereClause: any = { classId };
+
+    if (classId === "ALL" || !classId) {
+      if (teacher?.role === "ADMIN") {
+        whereClause = {};
+      } else {
+        const teacherClassrooms = await db.classroom.findMany({
+          where: { teacherId },
+          select: { id: true }
+        });
+        whereClause = { classId: { in: teacherClassrooms.map(c => c.id) } };
+      }
+    }
+
     const assignments = await db.assignment.findMany({
-      where: { classId },
+      where: whereClause,
       include: {
         submissions: {
           include: {
@@ -1318,5 +1412,25 @@ export async function resetDatabaseSeed() {
   } catch (err: any) {
     console.error("Failed to run seed reset:", err);
     return { success: false, error: `เกิดข้อผิดพลาดในการรีเซ็ตฐานข้อมูล: ${err?.message || err}` };
+  }
+}
+
+export async function getTeacherSidebarCounts() {
+  const teacherId = await getSessionTeacher();
+  if (!teacherId) return { pendingGrading: 0, unreadNotifications: 0 };
+
+  try {
+    const pendingGrading = await db.submission.count({
+      where: { score: null }
+    });
+
+    const unreadNotifications = await db.notification.count({
+      where: { recipientId: teacherId, isRead: false }
+    });
+
+    return { pendingGrading, unreadNotifications };
+  } catch (err) {
+    console.error("Failed to get teacher sidebar counts:", err);
+    return { pendingGrading: 0, unreadNotifications: 0 };
   }
 }

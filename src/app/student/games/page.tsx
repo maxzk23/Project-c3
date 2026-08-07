@@ -189,38 +189,11 @@ export default function StudentGamesPage() {
           </h1>
           <p className="text-sm text-slate-500 mt-1">ท้าทายตนเองด้วยมินิเกมเก็บคะแนนเสริมเพื่ออัปอันดับลีดเดอร์บอร์ดชั้นเรียน</p>
         </div>
-
-        {/* ห้องเรียนที่เก็บแต้มสะสม */}
-        {classrooms.length > 0 && selectedClassId && (
-          <div className="flex items-center gap-2">
-            <select
-              value={selectedClassId}
-              onChange={(e) => setSelectedClassId(e.target.value)}
-              className="px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition shadow-sm"
-            >
-              {classrooms.map((c) => (
-                <option key={c.id} value={c.id}>
-                  ห้อง {c.name} ({c.yearLevel}/{c.room})
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
 
       {/* คอนเทนต์หลัก */}
       {isLoading ? (
         <div className="py-20 text-center text-slate-400 font-medium animate-pulse">กำลังโหลดรายชื่อมินิเกม...</div>
-      ) : classrooms.length === 0 ? (
-        <div className="bg-white p-12 rounded-3xl border border-slate-100 shadow-sm text-center text-slate-500 max-w-md mx-auto space-y-4">
-          <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto border border-amber-100 text-amber-500 text-3xl">
-            <FaExclamationCircle />
-          </div>
-          <div>
-            <p className="text-base font-bold text-slate-800">ยังไม่ได้ลงทะเบียนเข้าเรียน</p>
-            <p className="text-xs text-slate-400 mt-1 font-semibold">กรุณารอคุณครูลงทะเบียนสิทธิ์เพื่อให้เข้ามาท้าทายเก็บแต้มได้ครับ</p>
-          </div>
-        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {GAMES.map((game) => (

@@ -762,6 +762,7 @@ export async function getCurrentTeacherProfile() {
     return {
       name: dbUser.name,
       role: dbUser.role,
+      avatarUrl: dbUser.avatarUrl,
       avatarChar: dbUser.name.charAt(0) || "ค"
     };
   } catch (err) {

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -14,8 +15,9 @@ import {
   FaBell, 
   FaSignOutAlt,
   FaTimes
-} from "react-icons/fa"; // ใช้ไอคอนที่ตรงกับเดโม่ที่สุด
+} from "react-icons/fa";
 import { logout } from "@/app/actions/auth";
+import { getTeacherSidebarCounts } from "@/app/actions/teacher";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -24,11 +26,39 @@ interface SidebarProps {
 
 export default function TeacherSidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
+  const [counts, setCounts] = useState({ pendingGrading: 0, unreadNotifications: 0 });
 
-  // ปรับสไตล์ปุ่ม Active ให้เป็นปุ่มสีฟ้าโค้งมนตัวหนังสือขาวเหมือนตัวเดโม่จริง
-  const isActive = (path: string) => {
-    return pathname === path 
-      ? "bg-sky-600 text-white font-semibold shadow-sm" 
+  const fetchCounts = async () => {
+    const data = await getTeacherSidebarCounts();
+    if (data) setCounts(data);
+  };
+
+  useEffect(() => {
+    fetchCounts();
+    const interval = setInterval(fetchCounts, 3000);
+
+    const bc = new BroadcastChannel("lms-channel");
+    bc.onmessage = () => {
+      fetchCounts();
+    };
+
+    return () => {
+      clearInterval(interval);
+      bc.close();
+    };
+  }, []);
+
+  // เช็คว่าหน้าปัจจุบันตรงกับเมนูใด
+  const isItemActive = (path: string) => {
+    if (path === "/teacher/classrooms") {
+      return pathname.startsWith("/teacher/classrooms");
+    }
+    return pathname === path;
+  };
+
+  const getItemClass = (path: string) => {
+    return isItemActive(path)
+      ? "bg-sky-500 text-white font-semibold shadow-sm shadow-sky-200" 
       : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 font-medium";
   };
 
@@ -52,13 +82,14 @@ export default function TeacherSidebar({ isOpen = false, onClose }: SidebarProps
         </button>
       </div>
 
-      {/* เมนูทั้งหมดตามในรูปเดโม่ 100% */}
+      {/* เมนูทั้งหมด */}
       <nav className="flex-1 py-4 flex flex-col gap-1 overflow-y-auto px-3">
         
         {/* 1. แดชบอร์ดสรุปผล */}
         <Link 
           href="/teacher/dashboard" 
-          className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${isActive("/teacher/dashboard")}`}
+          onClick={onClose}
+          className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${getItemClass("/teacher/dashboard")}`}
         >
           <FaChartPie className="text-base w-5 text-center" />
           <span>แดชบอร์ดสรุปผล</span>
@@ -67,7 +98,8 @@ export default function TeacherSidebar({ isOpen = false, onClose }: SidebarProps
         {/* 2. เช็คชื่อเข้าเรียน */}
         <Link 
           href="/teacher/attendance" 
-          className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${isActive("/teacher/attendance")}`}
+          onClick={onClose}
+          className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${getItemClass("/teacher/attendance")}`}
         >
           <FaUserCheck className="text-base w-5 text-center" />
           <span>เช็คชื่อเข้าเรียน</span>
@@ -76,16 +108,29 @@ export default function TeacherSidebar({ isOpen = false, onClose }: SidebarProps
         {/* 3. ตรวจการบ้าน */}
         <Link 
           href="/teacher/grading" 
-          className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${isActive("/teacher/grading")}`}
+          onClick={onClose}
+          className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${getItemClass("/teacher/grading")}`}
         >
-          <FaCheckSquare className="text-base w-5 text-center" />
-          <span>ตรวจการบ้าน</span>
+          <div className="flex items-center gap-3.5">
+            <FaCheckSquare className="text-base w-5 text-center" />
+            <span>ตรวจการบ้าน</span>
+          </div>
+          {counts.pendingGrading > 0 && (
+            <span className={`px-2 py-0.5 text-[11px] font-black rounded-full shadow-sm ${
+              isItemActive("/teacher/grading") 
+                ? "bg-white text-rose-600" 
+                : "bg-rose-500 text-white shadow-rose-200"
+            }`}>
+              {counts.pendingGrading}
+            </span>
+          )}
         </Link>
 
         {/* 4. การมอบหมายงาน */}
         <Link 
           href="/teacher/assignments" 
-          className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${isActive("/teacher/assignments")}`}
+          onClick={onClose}
+          className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${getItemClass("/teacher/assignments")}`}
         >
           <FaTasks className="text-base w-5 text-center" />
           <span>การมอบหมายงาน</span>
@@ -94,16 +139,18 @@ export default function TeacherSidebar({ isOpen = false, onClose }: SidebarProps
         {/* 5. ลีดเดอร์บอร์ด */}
         <Link 
           href="/teacher/leaderboard" 
-          className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${isActive("/teacher/leaderboard")}`}
+          onClick={onClose}
+          className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${getItemClass("/teacher/leaderboard")}`}
         >
-          <FaTrophy className="text-base w-5 text-center text-yellow-500" />
+          <FaTrophy className="text-base w-5 text-center" />
           <span>ลีดเดอร์บอร์ด</span>
         </Link>
 
         {/* 6. จัดการสื่อ/บทเรียน */}
         <Link 
           href="/teacher/materials" 
-          className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${isActive("/teacher/materials")}`}
+          onClick={onClose}
+          className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${getItemClass("/teacher/materials")}`}
         >
           <FaBookOpen className="text-base w-5 text-center" />
           <span>จัดการสื่อ/บทเรียน</span>
@@ -115,7 +162,8 @@ export default function TeacherSidebar({ isOpen = false, onClose }: SidebarProps
         {/* 7. บัญชีนักเรียน */}
         <Link 
           href="/teacher/classrooms" 
-          className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${isActive("/teacher/classrooms")}`}
+          onClick={onClose}
+          className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${getItemClass("/teacher/classrooms")}`}
         >
           <FaAddressBook className="text-base w-5 text-center" />
           <span>บัญชีนักเรียน</span>
@@ -124,16 +172,29 @@ export default function TeacherSidebar({ isOpen = false, onClose }: SidebarProps
         {/* 8. การแจ้งเตือน */}
         <Link 
           href="/teacher/notifications" 
-          className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${isActive("/teacher/notifications")}`}
+          onClick={onClose}
+          className={`flex items-center justify-between gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${getItemClass("/teacher/notifications")}`}
         >
-          <FaBell className="text-base w-5 text-center" />
-          <span>การแจ้งเตือน</span>
+          <div className="flex items-center gap-3.5">
+            <FaBell className="text-base w-5 text-center" />
+            <span>การแจ้งเตือน</span>
+          </div>
+          {counts.unreadNotifications > 0 && (
+            <span className={`px-2 py-0.5 text-[11px] font-black rounded-full shadow-sm ${
+              isItemActive("/teacher/notifications") 
+                ? "bg-white text-rose-600" 
+                : "bg-rose-500 text-white shadow-rose-200"
+            }`}>
+              {counts.unreadNotifications}
+            </span>
+          )}
         </Link>
 
         {/* 9. จัดการปีการศึกษา */}
         <Link 
           href="/teacher/settings" 
-          className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${isActive("/teacher/settings")}`}
+          onClick={onClose}
+          className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm transition-all duration-150 ${getItemClass("/teacher/settings")}`}
         >
           <FaGraduationCap className="text-base w-5 text-center" />
           <span>จัดการปีการศึกษา</span>

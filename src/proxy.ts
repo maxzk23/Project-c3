@@ -4,7 +4,7 @@ import { decrypt } from "@/lib/auth";
 // กำหนดเส้นทาง URL ที่อนุญาตให้เข้าถึงได้โดยไม่ต้องล็อกอิน (Public Routes)
 const publicRoutes = ["/login"];
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const path = req.nextUrl.pathname;
   
   // ตรวจหาคุกกี้เซสชันความปลอดภัยจากคำร้องขอที่ส่งเข้ามา
@@ -46,17 +46,9 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-// กำหนด Config ให้ Middleware ทำงานเฉพาะส่วนของเพจหลัก (หลีกเลี่ยงการเช็คไฟล์รูปภาพ, static assets, และไฟล์ api)
+// กำหนด Config ให้ Proxy ทำงานเฉพาะส่วนของเพจหลัก (หลีกเลี่ยงการเช็คไฟล์รูปภาพ, static assets, และไฟล์ api)
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - images, symbols, assets
-     */
     "/((?!api|_next/static|_next/image|favicon.ico|.*\\.svg|.*\\.png|.*\\.jpg|.*\\.html).*)",
   ],
 };

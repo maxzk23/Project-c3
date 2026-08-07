@@ -12,6 +12,7 @@ import {
 import { AttendanceStatus } from "@prisma/client";
 import AttendanceCheckTab from "@/components/teacher/attendance/AttendanceCheckTab";
 import AttendanceHistoryTab from "@/components/teacher/attendance/AttendanceHistoryTab";
+import UnlockModal from "@/components/teacher/attendance/UnlockModal";
 
 interface Classroom {
   id: string;
@@ -51,6 +52,10 @@ export default function TeacherAttendancePage() {
   const [isPending, startTransition] = useTransition();
   const [toastMsg, setToastMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
+  // === State สำหรับการล็อกและปลดล็อกการแก้ไขข้อมูล ===
+  const [isLocked, setIsLocked] = useState(false);
+  const [isUnlockModalOpen, setIsUnlockModalOpen] = useState(false);
+
   // === State สำหรับระบบประวัติการเช็คชื่อย้อนหลัง ===
   const [activeTab, setActiveTab] = useState<"check" | "history">("check");
   const [historyLogs, setHistoryLogs] = useState<any[]>([]);
@@ -61,9 +66,7 @@ export default function TeacherAttendancePage() {
     const fetchClasses = async () => {
       const classes = await getTeacherClassrooms();
       setClassrooms(classes);
-      if (classes.length > 0) {
-        setSelectedClassId(classes[0].id);
-      }
+      setSelectedClassId("ALL");
     };
     fetchClasses();
   }, []);
@@ -91,7 +94,12 @@ export default function TeacherAttendancePage() {
     setIsLoading(true);
     const data = await getAttendanceData(selectedClassId, selectedDate);
     if (data) {
-      setStudents(data as AttendanceStudent[]);
+      const studentList = data as AttendanceStudent[];
+      setStudents(studentList);
+      
+      // หากพบว่ามีประวัติการเช็คชื่อเดิมบันทึกในวันดังกล่าวแล้ว ให้ล็อกฟอร์มไม่ให้แก้ไขอัตโนมัติ
+      const hasSavedRecords = studentList.some(s => s.status !== null);
+      setIsLocked(hasSavedRecords);
     }
     setIsLoading(false);
   };
@@ -103,6 +111,7 @@ export default function TeacherAttendancePage() {
 
   // เปลี่ยนสถานะรายคนในสเตต
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
+    if (isLocked) return;
     setStudents(prev => prev.map(s => 
       s.student.id === studentId 
         ? { ...s, status: s.status === status ? null : status } 
@@ -112,6 +121,7 @@ export default function TeacherAttendancePage() {
 
   // เปลี่ยนหมายเหตุรายคนในสเตต
   const handleNoteChange = (studentId: string, note: string) => {
+    if (isLocked) return;
     setStudents(prev => prev.map(s => 
       s.student.id === studentId ? { ...s, note } : s
     ));
@@ -119,11 +129,13 @@ export default function TeacherAttendancePage() {
 
   // เลือกเช็คชื่อสถานะเดียวกันให้กับนักเรียนทุกคน
   const markAllAs = (status: AttendanceStatus) => {
+    if (isLocked) return;
     setStudents(prev => prev.map(s => ({ ...s, status })));
   };
 
   // บันทึกการเข้าเรียน
   const handleSave = () => {
+    if (isLocked) return;
     const records = students.map(s => ({
       studentId: s.student.id,
       status: s.status || AttendanceStatus.PRESENT,
@@ -134,6 +146,7 @@ export default function TeacherAttendancePage() {
       const res = await saveAttendance(selectedClassId, selectedDate, records);
       if (res.success) {
         showToast("success", "บันทึกข้อมูลการเช็คชื่อเรียบร้อยแล้ว");
+        setIsLocked(true); // ล็อกการแก้ไขทันทีหลังจากบันทึกสำเร็จ!
         loadAttendance();
       } else {
         showToast("error", res.error || "เกิดข้อผิดพลาด");
@@ -161,6 +174,16 @@ export default function TeacherAttendancePage() {
           <span className="text-sm font-semibold">{toastMsg.text}</span>
         </div>
       )}
+
+      {/* Unlock Passcode Modal */}
+      <UnlockModal
+        isOpen={isUnlockModalOpen}
+        onClose={() => setIsUnlockModalOpen(false)}
+        onUnlockSuccess={() => {
+          setIsLocked(false);
+          showToast("success", "ปลดล็อกสำเร็จแล้ว สามารถแก้ไขข้อมูลการเช็คชื่อได้");
+        }}
+      />
 
       {/* ส่วนหัวและตัวเลือกแท็บ */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 border-b border-slate-200 pb-5">
@@ -199,13 +222,14 @@ export default function TeacherAttendancePage() {
           </div>
 
           {activeTab === "check" && classrooms.length > 0 && (
-            <div className="flex items-center gap-2.5">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
               {/* ตัวเลือกห้องเรียน */}
               <select
                 value={selectedClassId}
                 onChange={(e) => setSelectedClassId(e.target.value)}
-                className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none cursor-pointer text-slate-700 shadow-sm"
+                className="w-full sm:w-auto px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none cursor-pointer text-slate-700 shadow-xs"
               >
+                <option value="ALL">ดูทั้งหมด (ทุกห้องเรียน)</option>
                 {classrooms.map((cls) => (
                   <option key={cls.id} value={cls.id}>
                     {cls.name} ({cls.yearLevel}/{cls.room})
@@ -214,12 +238,12 @@ export default function TeacherAttendancePage() {
               </select>
 
               {/* เลือกวันที่ */}
-              <div className="relative">
+              <div className="w-full sm:w-auto">
                 <input
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none text-slate-700 shadow-sm"
+                  className="w-full sm:w-auto px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none text-slate-700 shadow-xs"
                 />
               </div>
             </div>
@@ -238,6 +262,8 @@ export default function TeacherAttendancePage() {
           students={students}
           isLoading={isLoading}
           isPending={isPending}
+          isLocked={isLocked}
+          onUnlockClick={() => setIsUnlockModalOpen(true)}
           markAllAs={markAllAs}
           handleStatusChange={handleStatusChange}
           handleNoteChange={handleNoteChange}

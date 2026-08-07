@@ -26,11 +26,16 @@ interface LeaderboardEntry {
     name: string;
     avatarUrl: string | null;
   };
+  classroom?: {
+    name: string;
+    yearLevel: string;
+    room: string;
+  };
 }
 
 export default function TeacherLeaderboardPage() {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
-  const [selectedClassId, setSelectedClassId] = useState<string>("");
+  const [selectedClassId, setSelectedClassId] = useState<string>("ALL");
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -40,14 +45,13 @@ export default function TeacherLeaderboardPage() {
         const classes = await getTeacherClassrooms();
         setClassrooms(classes);
         
-        // อ่านค่าห้องเรียนล่าสุดจาก localStorage ถ้าเคยเลือกไว้
         const savedClassId = localStorage.getItem("teacher-leaderboard-classId");
-        if (savedClassId && classes.some(c => c.id === savedClassId)) {
+        if (savedClassId && (savedClassId === "ALL" || classes.some(c => c.id === savedClassId))) {
           setSelectedClassId(savedClassId);
-        } else if (classes.length > 0) {
-          setSelectedClassId(classes[0].id);
+          loadLeaderboard(savedClassId);
         } else {
-          setIsLoading(false);
+          setSelectedClassId("ALL");
+          loadLeaderboard("ALL");
         }
       } catch (e) {
         console.error("Failed to load teacher classrooms for leaderboard", e);
@@ -60,14 +64,15 @@ export default function TeacherLeaderboardPage() {
   useEffect(() => {
     if (selectedClassId) {
       localStorage.setItem("teacher-leaderboard-classId", selectedClassId);
-      loadLeaderboard();
+      loadLeaderboard(selectedClassId);
     }
   }, [selectedClassId]);
 
-  const loadLeaderboard = async () => {
+  const loadLeaderboard = async (classId?: string) => {
     setIsLoading(true);
     try {
-      const data = await getClassLeaderboard(selectedClassId);
+      const targetClassId = classId || selectedClassId || "ALL";
+      const data = await getClassLeaderboard(targetClassId);
       setLeaderboard(data as unknown as LeaderboardEntry[]);
     } catch (e) {
       console.error("Failed to load class leaderboard for teacher", e);
@@ -123,8 +128,9 @@ export default function TeacherLeaderboardPage() {
             <select
               value={selectedClassId}
               onChange={(e) => setSelectedClassId(e.target.value)}
-              className="px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition shadow-sm"
+              className="px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition shadow-xs cursor-pointer"
             >
+              <option value="ALL">ดูทั้งหมด (ทุกห้องเรียน)</option>
               {classrooms.map((c) => (
                 <option key={c.id} value={c.id}>
                   ห้อง {c.name} ({c.yearLevel}/{c.room})
@@ -176,10 +182,17 @@ export default function TeacherLeaderboardPage() {
                         </td>
                         <td className="py-4 font-bold text-slate-700">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-slate-155 flex items-center justify-center font-bold text-xs">
+                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs">
                               {entry.student.name.charAt(0)}
                             </div>
-                            <span>{entry.student.name}</span>
+                            <div>
+                              <span className="block font-bold text-slate-800">{entry.student.name}</span>
+                              {entry.classroom && (
+                                <span className="text-[10px] text-slate-400 font-semibold block">
+                                  {entry.classroom.name} ({entry.classroom.yearLevel}/{entry.classroom.room})
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="py-4 text-right pr-2 font-mono text-base font-black text-sky-600">

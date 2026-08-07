@@ -221,11 +221,28 @@ export async function submitStudentAssignment(assignmentId: string, formData: Fo
 // 5. ดึงคะแนนบอร์ดเกียรติยศ (Leaderboard) ของห้องเรียนนั้นๆ
 export async function getClassLeaderboard(classId: string) {
   try {
+    if (!classId || classId === "ALL") {
+      return await db.leaderboard.findMany({
+        include: {
+          student: {
+            select: { name: true, avatarUrl: true }
+          },
+          classroom: {
+            select: { name: true, yearLevel: true, room: true }
+          }
+        },
+        orderBy: { totalPoints: "desc" }
+      });
+    }
+
     return await db.leaderboard.findMany({
       where: { classId },
       include: {
         student: {
           select: { name: true, avatarUrl: true }
+        },
+        classroom: {
+          select: { name: true, yearLevel: true, room: true }
         }
       },
       orderBy: { totalPoints: "desc" }
@@ -470,10 +487,53 @@ export async function getCurrentStudentProfile() {
       name: student.name,
       nickname: student.nickname || "",
       classLabel: classLabel,
+      avatarUrl: student.avatarUrl,
       avatarChar: student.name.charAt(0) || "น"
     };
   } catch (err) {
     console.error("Failed to get current student profile:", err);
     return null;
+  }
+}
+
+export async function getStudentSidebarCounts() {
+  const studentId = await getSessionStudent();
+  if (!studentId) return { pendingAssignments: 0, unlockedLessons: 0, unreadNotifications: 0 };
+
+  try {
+    const studentClasses = await db.studentClass.findMany({
+      where: { studentId },
+      select: { classId: true }
+    });
+    const classIds = studentClasses.map(c => c.classId);
+
+    // 1. นับจำนวนการบ้านที่ยังไม่ได้ส่ง
+    const totalAssignments = await db.assignment.count({
+      where: classIds.length > 0 ? { classId: { in: classIds } } : {}
+    });
+
+    const submittedCount = await db.submission.count({
+      where: { studentId }
+    });
+
+    const pendingAssignments = Math.max(0, totalAssignments - submittedCount);
+
+    // 2. นับบทเรียนที่เปิดให้ดู
+    const unlockedLessons = await db.courseMaterial.count({
+      where: {
+        isLocked: false,
+        ...(classIds.length > 0 ? { classId: { in: classIds } } : {})
+      }
+    });
+
+    // 3. การแจ้งเตือนที่ยังไม่อ่าน
+    const unreadNotifications = await db.notification.count({
+      where: { recipientId: studentId, isRead: false }
+    });
+
+    return { pendingAssignments, unlockedLessons, unreadNotifications };
+  } catch (err) {
+    console.error("Failed to get student sidebar counts:", err);
+    return { pendingAssignments: 0, unlockedLessons: 0, unreadNotifications: 0 };
   }
 }

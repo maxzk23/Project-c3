@@ -81,10 +81,12 @@ export default function StudentDashboard() {
   // ดึงห้องเรียนในการรันหน้าครั้งแรก
   useEffect(() => {
     const initData = async () => {
-      const classes = await getStudentClassrooms();
+      const [classes, defaultClass] = await Promise.all([
+        getStudentClassrooms(),
+        getStudentDefaultClass(),
+      ]);
       setClassrooms(classes);
       
-      const defaultClass = await getStudentDefaultClass();
       if (defaultClass) {
         setSelectedClassId(defaultClass.id);
       } else if (classes.length > 0) {
@@ -98,12 +100,12 @@ export default function StudentDashboard() {
 
   useEffect(() => {
     if (selectedClassId) {
-      loadDashboard();
+      loadDashboard(false);
 
-      // ดึงข้อมูลอัตโนมัติทุกๆ 3 วินาที (Polling) เพื่ออัปเดตเรียลไทม์ข้ามเบราว์เซอร์
+      // ดึงข้อมูลอัตโนมัติแบบเงียบๆ (Silent Polling) เพื่ออัปเดตเรียลไทม์โดยไม่กระตุก UI
       const interval = setInterval(() => {
-        loadDashboard();
-      }, 3000);
+        loadDashboard(true);
+      }, 5000);
 
       return () => clearInterval(interval);
     }
@@ -114,7 +116,7 @@ export default function StudentDashboard() {
     const bc = new BroadcastChannel("lms-channel");
     bc.onmessage = (event) => {
       if (event.data?.type === "MATERIAL_TOGGLED") {
-        loadDashboard();
+        loadDashboard(true);
       }
     };
     return () => {
@@ -122,13 +124,13 @@ export default function StudentDashboard() {
     };
   }, [selectedClassId]);
 
-  const loadDashboard = async () => {
-    setIsLoading(true);
+  const loadDashboard = async (isSilent = false) => {
+    if (!isSilent) setIsLoading(true);
     const res = await getStudentDashboardSummary(selectedClassId);
     if (res) {
       setSummary(res as DashboardData);
     }
-    setIsLoading(false);
+    if (!isSilent) setIsLoading(false);
   };
 
   const activeClassroom = classrooms.find(c => c.id === selectedClassId);
@@ -189,23 +191,6 @@ export default function StudentDashboard() {
 
   return (
     <div className="space-y-6 text-left animate-in fade-in duration-300">
-      
-      {/* ส่วนหัวขวาบน: สำหรับสลับเปลี่ยนวิชาเรียนตามสิทธิ์จริง */}
-      <div className="flex justify-end mb-4">
-        {classrooms.length > 0 && (
-          <select
-            value={selectedClassId}
-            onChange={(e) => setSelectedClassId(e.target.value)}
-            className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none cursor-pointer text-slate-700 shadow-sm"
-          >
-            {classrooms.map((cls) => (
-              <option key={cls.id} value={cls.id}>
-                {cls.name} ({cls.yearLevel}/{cls.room})
-              </option>
-            ))}
-          </select>
-        )}
-      </div>
 
       {classrooms.length === 0 ? (
         <div className="bg-white p-12 rounded-2xl border text-center text-slate-500">

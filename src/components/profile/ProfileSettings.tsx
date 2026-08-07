@@ -24,7 +24,7 @@ export const AVATAR_PRESETS = [
 ];
 
 // Helper สำหรับเรนเดอร์อวาตาร์
-export function renderAvatarHelper(avatarUrl: string | null, name: string, className = "w-16 h-16 text-2xl") {
+export function renderAvatarHelper(avatarUrl: string | null | undefined, name: string, className = "w-16 h-16 text-2xl") {
   const preset = AVATAR_PRESETS.find(p => p.id === avatarUrl);
   if (preset) {
     return (
@@ -92,6 +92,19 @@ export default function ProfileSettings({ initialUser }: ProfileSettingsProps) {
       const res = await updateProfile(null, formData);
       if (res.success) {
         setSuccessMsg(res.message || "อัปเดตข้อมูลสำเร็จ");
+
+        // ส่งสัญญาณบอก Topbar และคอมโพเนนต์อื่นให้รีเฟรชโปรไฟล์ทันที
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("profile-updated"));
+          try {
+            const bc = new BroadcastChannel("lms-channel");
+            bc.postMessage({ type: "PROFILE_UPDATED" });
+            bc.close();
+          } catch (e) {
+            console.error("BroadcastChannel error:", e);
+          }
+        }
+
         router.refresh(); // รีเฟรชข้อมูลหน้าบ้านทั้งหมด
       } else {
         setErrorMsg(res.error || "เกิดข้อผิดพลาดในการอัปเดต");

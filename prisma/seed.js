@@ -37,6 +37,7 @@ async function main() {
     data: {
       name: "แอดมินระบบ",
       role: "ADMIN",
+      password: adminPasswordHash,
       avatarUrl: "preset-1"
     }
   });
@@ -47,6 +48,7 @@ async function main() {
     data: {
       name: "คุณครูสมชาย รักเรียน",
       role: "TEACHER",
+      password: teacherPasswordHash,
       avatarUrl: "preset-4"
     }
   });
@@ -98,6 +100,7 @@ async function main() {
     { name: 'ดรุณี มีนา', score: 790, yearLevel: 'ม.1', room: '2', studentId: '680202' }
   ];
 
+  const students = [];
   let sIdx = 0;
   for (const s of studentsList) {
     sIdx++;

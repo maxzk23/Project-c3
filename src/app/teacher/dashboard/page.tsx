@@ -83,12 +83,8 @@ export default function TeacherDashboard() {
     const fetchClasses = async () => {
       const classes = await getTeacherClassrooms();
       setClassrooms(classes);
-      if (classes.length > 0) {
-        setSelectedClassId(classes[0].id);
-        setSelectedYearLevel(classes[0].yearLevel);
-      } else {
-        setIsLoading(false);
-      }
+      setSelectedClassId("ALL");
+      setSelectedYearLevel("ALL");
     };
     fetchClasses();
   }, []);
@@ -97,14 +93,20 @@ export default function TeacherDashboard() {
   const uniqueYearLevels = Array.from(new Set(classrooms.map(c => c.yearLevel))).sort();
 
   // ดึงห้องเรียนย่อยที่อยู่ในระดับชั้นปีที่เลือก
-  const availableRooms = classrooms.filter(c => c.yearLevel === selectedYearLevel);
+  const availableRooms = selectedYearLevel === "ALL" 
+    ? classrooms 
+    : classrooms.filter(c => c.yearLevel === selectedYearLevel);
 
   // เมื่อผู้ใช้เปลี่ยนระดับชั้นปี
   const handleYearLevelChange = (year: string) => {
     setSelectedYearLevel(year);
-    const firstClassInYear = classrooms.find(c => c.yearLevel === year);
-    if (firstClassInYear) {
-      setSelectedClassId(firstClassInYear.id);
+    if (year === "ALL") {
+      setSelectedClassId("ALL");
+    } else {
+      const firstClassInYear = classrooms.find(c => c.yearLevel === year);
+      if (firstClassInYear) {
+        setSelectedClassId(firstClassInYear.id);
+      }
     }
   };
 
@@ -213,14 +215,16 @@ export default function TeacherDashboard() {
             <h3 className="text-[25px] font-black text-slate-800 tracking-tight">
               {summaryData?.stats.totalStudents ?? 0} คน
             </h3>
-            <p className="text-[11px] font-bold text-slate-400">จำนวนนักเรียนในระบบทั้งหมด</p>
+            <p className="text-[11px] font-bold text-slate-400">
+              {selectedClassId === "ALL" ? "จำนวนนักเรียนในระบบทั้งหมด" : "จำนวนนักเรียนในห้องเรียนนี้"}
+            </p>
           </div>
           <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-lg shrink-0">
             <FaUsers />
           </div>
         </div>
 
-        {/* สถิติ 2: งานรอตรวจ */}
+        {/* สถิติ 2: การบ้านรอตรวจ */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-sky-500 flex items-center justify-between group hover:shadow-md transition">
           <div className="space-y-1">
             <h3 className="text-[25px] font-black text-slate-800 tracking-tight">
@@ -233,7 +237,7 @@ export default function TeacherDashboard() {
           </div>
         </div>
 
-        {/* สถิติ 3: บทเรียนที่เปิดอยู่ */}
+        {/* สถิติ 3: บทเรียนที่เปิดให้ดู */}
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-purple-500 flex items-center justify-between group hover:shadow-md transition">
           <div className="space-y-1">
             <h3 className="text-[25px] font-black text-slate-800 tracking-tight">
@@ -262,7 +266,7 @@ export default function TeacherDashboard() {
       </div>
 
       {/* 
-        ส่วนที่ 2: แบนเนอร์ภาพรวมพร้อมปุ่มเชื่อมต่อ และดรอปดาวน์เลือกห้องเรียน ม.3/1 (เหมือนสไลด์ดีไซน์)
+        ส่วนที่ 2: แบนเนอร์ภาพรวมพร้อมปุ่มเชื่อมต่อ และดรอปดาวน์เลือกห้องเรียน
       */}
       <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1.5 text-left w-full md:w-auto">
@@ -271,13 +275,14 @@ export default function TeacherDashboard() {
               ภาพรวมการเรียนการสอนรายวิชา วิทยาการคำนวณ
             </h2>
             
-            {/* ดรอปดาวน์เลือกวิชาเรียนและห้องย่อยตามเดโม่ */}
+            {/* ดรอปดาวน์เลือกวิชาเรียนและห้องย่อย */}
             <div className="flex items-center gap-1.5 w-full sm:w-auto">
               <select
                 value={selectedYearLevel}
                 onChange={(e) => handleYearLevelChange(e.target.value)}
                 className="flex-1 sm:flex-initial px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold outline-none cursor-pointer text-slate-700 hover:bg-slate-100 transition"
               >
+                <option value="ALL">ทุกระดับชั้นปี</option>
                 {uniqueYearLevels.map((year) => (
                   <option key={year} value={year}>
                     {year === "ม.3" ? "มัธยมศึกษาปีที่ 3" : year === "ม.2" ? "มัธยมศึกษาปีที่ 2" : "มัธยมศึกษาปีที่ 1"}
@@ -290,9 +295,10 @@ export default function TeacherDashboard() {
                 onChange={(e) => setSelectedClassId(e.target.value)}
                 className="flex-1 sm:flex-initial px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold outline-none cursor-pointer text-slate-700 hover:bg-slate-100 transition"
               >
+                <option value="ALL">ดูทั้งหมด (ทุกห้องเรียน)</option>
                 {availableRooms.map((cls) => (
                   <option key={cls.id} value={cls.id}>
-                    ห้อง {cls.room}
+                    ห้อง {cls.yearLevel}/{cls.room}
                   </option>
                 ))}
               </select>

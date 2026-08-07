@@ -60,10 +60,12 @@ export default function StudentAttendanceHistoryPage() {
   // โหลดห้องเรียนทั้งหมด
   useEffect(() => {
     const load = async () => {
-      const classes = await getStudentClassrooms();
+      const [classes, defaultClass] = await Promise.all([
+        getStudentClassrooms(),
+        getStudentDefaultClass(),
+      ]);
       setClassrooms(classes);
 
-      const defaultClass = await getStudentDefaultClass();
       if (defaultClass) {
         setSelectedClassId(defaultClass.id);
       } else if (classes.length > 0) {

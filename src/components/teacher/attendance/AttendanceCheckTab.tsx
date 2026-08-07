@@ -1,7 +1,7 @@
 "use client";
 
 import { AttendanceStatus } from "@prisma/client";
-import { FaSave, FaExclamationCircle } from "react-icons/fa";
+import { FaSave, FaExclamationCircle, FaLock, FaUnlockAlt } from "react-icons/fa";
 
 interface Student {
   id: string;
@@ -11,6 +11,8 @@ interface Student {
 
 interface AttendanceStudent {
   student: Student;
+  classId?: string;
+  classroomName?: string;
   status: AttendanceStatus | null;
   note: string;
 }
@@ -19,6 +21,8 @@ interface AttendanceCheckTabProps {
   students: AttendanceStudent[];
   isLoading: boolean;
   isPending: boolean;
+  isLocked: boolean;
+  onUnlockClick: () => void;
   markAllAs: (status: AttendanceStatus) => void;
   handleStatusChange: (studentId: string, status: AttendanceStatus) => void;
   handleNoteChange: (studentId: string, note: string) => void;
@@ -29,6 +33,8 @@ export default function AttendanceCheckTab({
   students,
   isLoading,
   isPending,
+  isLocked,
+  onUnlockClick,
   markAllAs,
   handleStatusChange,
   handleNoteChange,
@@ -51,20 +57,48 @@ export default function AttendanceCheckTab({
       {/* === ส่วนซ้าย: ตารางรายชื่อเช็คชื่อ === */}
       <div className="lg:col-span-2 space-y-6 text-left">
         <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+          
+          {/* แถบแจ้งเตือนสถานะล็อก */}
+          {isLocked && (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl mb-5 flex justify-between items-center flex-wrap gap-3">
+              <div className="flex items-center gap-2.5 text-amber-900 text-xs font-bold">
+                <FaLock className="text-amber-600 text-sm shrink-0" />
+                <span>รายการเช็คชื่อของวันนี้ถูกล็อกไว้แล้ว (ป้องกันการแก้ไขโดยไม่ได้รับอนุญาต)</span>
+              </div>
+              <button
+                type="button"
+                onClick={onUnlockClick}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg text-xs font-bold shadow-sm hover:shadow hover:scale-[1.02] active:scale-[0.98] transition cursor-pointer"
+              >
+                <FaUnlockAlt />
+                <span>ปลดล็อกเพื่อแก้ไข</span>
+              </button>
+            </div>
+          )}
+
           <div className="flex justify-between items-center mb-5 flex-wrap gap-3">
-            <h3 className="font-bold text-slate-800">รายชื่อนักเรียนเช็คชื่อ</h3>
+            <h3 className="font-bold text-slate-800 flex items-center gap-2">
+              <span>รายชื่อนักเรียนเช็คชื่อ</span>
+              {isLocked && (
+                <span className="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded-full font-bold border">
+                  🔒 Locked
+                </span>
+              )}
+            </h3>
 
             {/* ดำเนินการเช็คชื่อทั้งหมด */}
             <div className="flex gap-2">
               <button
                 onClick={() => markAllAs(AttendanceStatus.PRESENT)}
-                className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold hover:bg-emerald-100 transition"
+                disabled={isLocked || isPending}
+                className="px-3 py-1.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-bold hover:bg-emerald-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 เช็คมาทุกคน
               </button>
               <button
                 onClick={() => markAllAs(AttendanceStatus.ABSENT)}
-                className="px-3 py-1.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold hover:bg-rose-100 transition"
+                disabled={isLocked || isPending}
+                className="px-3 py-1.5 bg-rose-50 text-rose-700 border border-rose-200 rounded-lg text-xs font-bold hover:bg-rose-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 เช็คขาดทุกคน
               </button>
@@ -76,98 +110,196 @@ export default function AttendanceCheckTab({
           ) : students.length === 0 ? (
             <div className="py-12 text-center text-slate-400">ไม่มีนักเรียนในห้องเรียนนี้</div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead>
-                  <tr className="text-slate-400 border-b border-slate-200">
-                    <th className="pb-3 font-medium">ชื่อ-นามสกุล</th>
-                    <th className="pb-3 font-medium">ทำรายการเช็คชื่อ</th>
-                    <th className="pb-3 font-medium">หมายเหตุ (ถ้ามี)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {students.map((item) => (
-                    <tr key={item.student.id} className="hover:bg-slate-50/50 transition">
-                      <td className="py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs">
-                            {item.student.name.charAt(0)}
-                          </div>
-                          <span className="font-bold text-slate-700">{item.student.name}</span>
-                        </div>
-                      </td>
-                      <td className="py-3.5">
-                        <div className="flex gap-1.5">
-                          {/* มาเรียน */}
-                          <button
-                            onClick={() => handleStatusChange(item.student.id, AttendanceStatus.PRESENT)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
-                              item.status === "PRESENT"
-                                ? "bg-emerald-500 text-white border-emerald-500 shadow-sm"
-                                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                            }`}
-                          >
-                            มา
-                          </button>
-                          {/* สาย */}
-                          <button
-                            onClick={() => handleStatusChange(item.student.id, AttendanceStatus.LATE)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
-                              item.status === "LATE"
-                                ? "bg-amber-500 text-white border-amber-500 shadow-sm"
-                                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                            }`}
-                          >
-                            สาย
-                          </button>
-                          {/* ลา */}
-                          <button
-                            onClick={() => handleStatusChange(item.student.id, AttendanceStatus.LEAVE)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
-                              item.status === "LEAVE"
-                                ? "bg-purple-500 text-white border-purple-500 shadow-sm"
-                                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                            }`}
-                          >
-                            ลา
-                          </button>
-                          {/* ขาด */}
-                          <button
-                            onClick={() => handleStatusChange(item.student.id, AttendanceStatus.ABSENT)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
-                              item.status === "ABSENT"
-                                ? "bg-rose-500 text-white border-rose-500 shadow-sm"
-                                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                            }`}
-                          >
-                            ขาด
-                          </button>
-                        </div>
-                      </td>
-                      <td className="py-3.5">
-                        <input
-                          type="text"
-                          value={item.note || ""}
-                          disabled={isPending}
-                          onChange={(e) => handleNoteChange(item.student.id, e.target.value)}
-                          placeholder="ป่วย, ติดธุระ..."
-                          className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs w-full focus:outline-none focus:bg-white focus:border-sky-500"
-                        />
-                      </td>
+            <>
+              {/* Mobile Card List (< md) */}
+              <div className="space-y-3.5 md:hidden">
+                {students.map((item) => (
+                  <div key={item.student.id} className="p-4 bg-slate-50/70 border border-slate-200/80 rounded-2xl space-y-3 shadow-2xs">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center font-bold text-sm border border-sky-200 shrink-0">
+                        {item.student.name.charAt(0)}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="font-bold text-slate-800 text-sm block truncate">{item.student.name}</span>
+                        {item.classroomName && (
+                          <span className="text-[11px] text-slate-400 font-semibold block truncate">{item.classroomName}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 4 ปุ่มเลือกสถานะ */}
+                    <div className="grid grid-cols-4 gap-1.5 pt-1">
+                      <button
+                        onClick={() => handleStatusChange(item.student.id, AttendanceStatus.PRESENT)}
+                        disabled={isLocked || isPending}
+                        className={`py-2 rounded-xl text-xs font-extrabold border transition flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed ${
+                          item.status === "PRESENT"
+                            ? "bg-emerald-500 text-white border-emerald-500 shadow-xs"
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        มา
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange(item.student.id, AttendanceStatus.LATE)}
+                        disabled={isLocked || isPending}
+                        className={`py-2 rounded-xl text-xs font-extrabold border transition flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed ${
+                          item.status === "LATE"
+                            ? "bg-amber-500 text-white border-amber-500 shadow-xs"
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        สาย
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange(item.student.id, AttendanceStatus.LEAVE)}
+                        disabled={isLocked || isPending}
+                        className={`py-2 rounded-xl text-xs font-extrabold border transition flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed ${
+                          item.status === "LEAVE"
+                            ? "bg-purple-500 text-white border-purple-500 shadow-xs"
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        ลา
+                      </button>
+                      <button
+                        onClick={() => handleStatusChange(item.student.id, AttendanceStatus.ABSENT)}
+                        disabled={isLocked || isPending}
+                        className={`py-2 rounded-xl text-xs font-extrabold border transition flex items-center justify-center disabled:opacity-60 disabled:cursor-not-allowed ${
+                          item.status === "ABSENT"
+                            ? "bg-rose-500 text-white border-rose-500 shadow-xs"
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        ขาด
+                      </button>
+                    </div>
+
+                    {/* ช่องระบุหมายเหตุ */}
+                    <input
+                      type="text"
+                      value={item.note || ""}
+                      disabled={isLocked || isPending}
+                      onChange={(e) => handleNoteChange(item.student.id, e.target.value)}
+                      placeholder="หมายเหตุ (ถ้ามี)..."
+                      className="w-full px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium outline-none focus:border-sky-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table View (>= md) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead>
+                    <tr className="text-slate-400 border-b border-slate-200">
+                      <th className="pb-3 font-medium">ชื่อ-นามสกุล</th>
+                      <th className="pb-3 font-medium">ทำรายการเช็คชื่อ</th>
+                      <th className="pb-3 font-medium">หมายเหตุ (ถ้ามี)</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {students.map((item) => (
+                      <tr key={item.student.id} className="hover:bg-slate-50/50 transition">
+                        <td className="py-3.5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs">
+                              {item.student.name.charAt(0)}
+                            </div>
+                            <div>
+                              <span className="font-bold text-slate-700 block">{item.student.name}</span>
+                              {item.classroomName && (
+                                <span className="text-[10px] text-slate-400 font-semibold">{item.classroomName}</span>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3.5">
+                          <div className="flex gap-1.5">
+                            {/* มาเรียน */}
+                            <button
+                              onClick={() => handleStatusChange(item.student.id, AttendanceStatus.PRESENT)}
+                              disabled={isLocked || isPending}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition disabled:opacity-60 disabled:cursor-not-allowed ${
+                                item.status === "PRESENT"
+                                  ? "bg-emerald-500 text-white border-emerald-500 shadow-sm"
+                                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                              }`}
+                            >
+                              มา
+                            </button>
+                            {/* สาย */}
+                            <button
+                              onClick={() => handleStatusChange(item.student.id, AttendanceStatus.LATE)}
+                              disabled={isLocked || isPending}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition disabled:opacity-60 disabled:cursor-not-allowed ${
+                                item.status === "LATE"
+                                  ? "bg-amber-500 text-white border-amber-500 shadow-sm"
+                                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                              }`}
+                            >
+                              สาย
+                            </button>
+                            {/* ลา */}
+                            <button
+                              onClick={() => handleStatusChange(item.student.id, AttendanceStatus.LEAVE)}
+                              disabled={isLocked || isPending}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition disabled:opacity-60 disabled:cursor-not-allowed ${
+                                item.status === "LEAVE"
+                                  ? "bg-purple-500 text-white border-purple-500 shadow-sm"
+                                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                              }`}
+                            >
+                              ลา
+                            </button>
+                            {/* ขาด */}
+                            <button
+                              onClick={() => handleStatusChange(item.student.id, AttendanceStatus.ABSENT)}
+                              disabled={isLocked || isPending}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition disabled:opacity-60 disabled:cursor-not-allowed ${
+                                item.status === "ABSENT"
+                                  ? "bg-rose-500 text-white border-rose-500 shadow-sm"
+                                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                              }`}
+                            >
+                              ขาด
+                            </button>
+                          </div>
+                        </td>
+                        <td className="py-3.5">
+                          <input
+                            type="text"
+                            value={item.note || ""}
+                            disabled={isLocked || isPending}
+                            onChange={(e) => handleNoteChange(item.student.id, e.target.value)}
+                            placeholder="ป่วย, ติดธุระ..."
+                            className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs w-full focus:outline-none focus:bg-white focus:border-sky-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
 
           {/* ปุ่มบันทึกการเช็คชื่อ */}
           {students.length > 0 && (
-            <div className="pt-6 border-t border-slate-100 mt-4 flex justify-end">
+            <div className="pt-6 border-t border-slate-100 mt-4 flex justify-between items-center flex-wrap gap-3">
+              {isLocked ? (
+                <div className="flex items-center gap-2 text-xs text-amber-700 font-bold bg-amber-50 px-3 py-2 rounded-xl border border-amber-200">
+                  <FaLock />
+                  <span>รายการนี้ถูกล็อกแล้ว หากต้องการแก้ไขกรุณากดปลดล็อก</span>
+                </div>
+              ) : (
+                <div></div>
+              )}
+              
               <button
                 onClick={handleSave}
-                disabled={isPending}
-                className="flex items-center gap-2 px-5 py-3 bg-sky-500 text-white font-bold rounded-xl hover:bg-sky-600 transition shadow-md disabled:opacity-50"
+                disabled={isLocked || isPending}
+                className="flex items-center gap-2 px-5 py-3 bg-sky-500 text-white font-bold rounded-xl hover:bg-sky-600 transition shadow-md disabled:opacity-40 disabled:cursor-not-allowed ml-auto"
               >
                 <FaSave />
                 <span>{isPending ? "กำลังบันทึก..." : "บันทึกการเข้าเรียน"}</span>

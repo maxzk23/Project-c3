@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -13,28 +14,48 @@ import {
   FaSignOutAlt,
   FaUserCheck,
   FaTimes
-} from "react-icons/fa"; // เปลี่ยนกลับมาใช้ fa ปกติ
-import { logout } from "@/app/actions/auth"; // อิมพอร์ตฟังก์ชันสำหรับการออกจากระบบ
+} from "react-icons/fa";
+import { logout } from "@/app/actions/auth";
+import { getStudentSidebarCounts } from "@/app/actions/student";
 
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-// คอมโพเนนต์ Sidebar (แถบเมนูด้านข้าง) สำหรับนักเรียน
 export default function StudentSidebar({ isOpen = false, onClose }: SidebarProps) {
-  // ใช้ usePathname เพื่อดึง URL ปัจจุบันมาเช็คว่าผู้ใช้เปิดหน้าไหนอยู่
   const pathname = usePathname();
+  const [counts, setCounts] = useState({ pendingAssignments: 0, unlockedLessons: 0, unreadNotifications: 0 });
 
-  // สร้างฟังก์ชันเช็ค URL เพื่อเพิ่ม class 'active' ให้กับเมนูที่ถูกเลือก
+  const fetchCounts = async () => {
+    const data = await getStudentSidebarCounts();
+    if (data) setCounts(data);
+  };
+
+  useEffect(() => {
+    fetchCounts();
+    const interval = setInterval(fetchCounts, 3000);
+
+    const bc = new BroadcastChannel("lms-channel");
+    bc.onmessage = () => {
+      fetchCounts();
+    };
+
+    return () => {
+      clearInterval(interval);
+      bc.close();
+    };
+  }, []);
+
+  const isCurrentActive = (path: string) => pathname === path;
+
   const isActive = (path: string) => {
-    return pathname === path 
-      ? "bg-sky-500 text-white shadow-md shadow-sky-200" // สไตล์เมื่อเมนูถูกเลือก (Active)
-      : "text-slate-500 hover:bg-sky-50 hover:text-sky-600"; // สไตล์ปกติ (Inactive)
+    return isCurrentActive(path) 
+      ? "bg-sky-500 text-white shadow-sm shadow-sky-200 font-semibold" 
+      : "text-slate-500 hover:bg-slate-50 hover:text-slate-700 font-medium";
   };
 
   return (
-    // โครงสร้างหลักของ Sidebar (Fix ติดจอซ้าย, กว้าง 260px)
     <aside className={`fixed top-0 left-0 h-screen w-[260px] bg-white border-r border-slate-200 flex flex-col z-50 transition-all duration-300 ${
       isOpen ? "translate-x-0" : "-translate-x-full"
     } lg:translate-x-0`}>
@@ -60,7 +81,8 @@ export default function StudentSidebar({ isOpen = false, onClose }: SidebarProps
         {/* เมนู แดชบอร์ด */}
         <Link 
           href="/student/dashboard" 
-          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 ${isActive("/student/dashboard")}`}
+          onClick={onClose}
+          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${isActive("/student/dashboard")}`}
         >
           <FaHome className="text-xl w-6 text-center" />
           <span>แดชบอร์ด</span>
@@ -69,7 +91,8 @@ export default function StudentSidebar({ isOpen = false, onClose }: SidebarProps
         {/* เมนู ประวัติการเข้าเรียน */}
         <Link 
           href="/student/classrooms" 
-          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 ${isActive("/student/classrooms")}`}
+          onClick={onClose}
+          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${isActive("/student/classrooms")}`}
         >
           <FaUserCheck className="text-xl w-6 text-center" />
           <span>ประวัติการเข้าเรียน</span>
@@ -78,25 +101,50 @@ export default function StudentSidebar({ isOpen = false, onClose }: SidebarProps
         {/* เมนู บทเรียนของฉัน */}
         <Link 
           href="/student/lessons" 
-          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 ${isActive("/student/lessons")}`}
+          onClick={onClose}
+          className={`flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${isActive("/student/lessons")}`}
         >
-          <FaBookOpen className="text-xl w-6 text-center" />
-          <span>บทเรียนของฉัน</span>
+          <div className="flex items-center gap-3">
+            <FaBookOpen className="text-xl w-6 text-center" />
+            <span>บทเรียนของฉัน</span>
+          </div>
+          {counts.unlockedLessons > 0 && (
+            <span className={`px-2 py-0.5 text-[11px] font-bold rounded-full ${
+              isCurrentActive("/student/lessons")
+                ? "bg-white/20 text-white"
+                : "bg-purple-100 text-purple-700"
+            }`}>
+              {counts.unlockedLessons}
+            </span>
+          )}
         </Link>
 
         {/* เมนู ส่งการบ้าน */}
         <Link 
           href="/student/assignments" 
-          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 ${isActive("/student/assignments")}`}
+          onClick={onClose}
+          className={`flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${isActive("/student/assignments")}`}
         >
-          <FaFileUpload className="text-xl w-6 text-center" />
-          <span>ส่งการบ้าน</span>
+          <div className="flex items-center gap-3">
+            <FaFileUpload className="text-xl w-6 text-center" />
+            <span>ส่งการบ้าน</span>
+          </div>
+          {counts.pendingAssignments > 0 && (
+            <span className={`px-2 py-0.5 text-[11px] font-black rounded-full shadow-sm ${
+              isCurrentActive("/student/assignments")
+                ? "bg-white text-rose-600"
+                : "bg-rose-500 text-white shadow-rose-200"
+            }`}>
+              {counts.pendingAssignments}
+            </span>
+          )}
         </Link>
 
         {/* เมนู มินิเกม & ภารกิจ */}
         <Link 
           href="/student/games" 
-          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 ${isActive("/student/games")}`}
+          onClick={onClose}
+          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${isActive("/student/games")}`}
         >
           <FaGamepad className="text-xl w-6 text-center" />
           <span>มินิเกม & ภารกิจ</span>
@@ -105,7 +153,8 @@ export default function StudentSidebar({ isOpen = false, onClose }: SidebarProps
         {/* เมนู ลีดเดอร์บอร์ด */}
         <Link 
           href="/student/leaderboard" 
-          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 ${isActive("/student/leaderboard")}`}
+          onClick={onClose}
+          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${isActive("/student/leaderboard")}`}
         >
           <FaTrophy className="text-xl w-6 text-center" />
           <span>ลีดเดอร์บอร์ด</span>
@@ -114,10 +163,22 @@ export default function StudentSidebar({ isOpen = false, onClose }: SidebarProps
         {/* เมนู การแจ้งเตือน */}
         <Link 
           href="/student/notifications" 
-          className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-semibold transition-all duration-200 ${isActive("/student/notifications")}`}
+          onClick={onClose}
+          className={`flex items-center justify-between gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${isActive("/student/notifications")}`}
         >
-          <FaBell className="text-xl w-6 text-center" />
-          <span>การแจ้งเตือน</span>
+          <div className="flex items-center gap-3">
+            <FaBell className="text-xl w-6 text-center" />
+            <span>การแจ้งเตือน</span>
+          </div>
+          {counts.unreadNotifications > 0 && (
+            <span className={`px-2 py-0.5 text-[11px] font-black rounded-full shadow-sm ${
+              isCurrentActive("/student/notifications")
+                ? "bg-white text-rose-600"
+                : "bg-rose-500 text-white shadow-rose-200"
+            }`}>
+              {counts.unreadNotifications}
+            </span>
+          )}
         </Link>
       </nav>
 

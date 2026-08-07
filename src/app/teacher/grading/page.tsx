@@ -54,10 +54,10 @@ export default function TeacherGradingPage() {
     getTeacherClassrooms().then((classes) => {
       setClassrooms(classes);
       const savedClassId = localStorage.getItem("teacher-grading-classId");
-      if (savedClassId && classes.some(c => c.id === savedClassId)) {
+      if (savedClassId && (savedClassId === "ALL" || classes.some(c => c.id === savedClassId))) {
         setSelectedClassId(savedClassId);
-      } else if (classes.length > 0) {
-        setSelectedClassId(classes[0].id);
+      } else {
+        setSelectedClassId("ALL");
       }
     });
 
@@ -122,13 +122,6 @@ export default function TeacherGradingPage() {
     const data = await getAssignmentsWithSubmissions(selectedClassId);
     const asms = data as Assignment[];
     setAssignments(asms);
-    // ขยาย card แรกอัตโนมัติเฉพาะตอนไม่ใช่การดึงข้อมูลเงียบๆ และยังไม่มีประวัติขยายการ์ด
-    if (!isSilent && asms.length > 0) {
-      const savedExpanded = localStorage.getItem("teacher-grading-expandedIds");
-      if (!savedExpanded) {
-        setExpandedIds(new Set([asms[0].id]));
-      }
-    }
     if (!isSilent) setIsLoading(false);
   };
 
@@ -192,10 +185,32 @@ export default function TeacherGradingPage() {
 
   const isFileUrl = (url: string) => url.startsWith("/uploads/");
 
+  const [globalFilter, setGlobalFilter] = useState<"all" | "pending" | "graded">("all");
+
+  const handleSummaryCardClick = (filter: "all" | "pending" | "graded") => {
+    setGlobalFilter(filter);
+    const nextTabs: Record<string, "pending" | "graded" | "all"> = {};
+    assignments.forEach(asm => {
+      nextTabs[asm.id] = filter;
+    });
+    setActiveTab(nextTabs);
+    localStorage.setItem("teacher-grading-activeTabs", JSON.stringify(nextTabs));
+  };
+
   // สรุป stats รวม
   const totalPending = assignments.reduce((s, a) => s + a.submissions.filter(x => x.status !== "GRADED").length, 0);
   const totalGraded = assignments.reduce((s, a) => s + a.submissions.filter(x => x.status === "GRADED").length, 0);
   const totalSubs = totalPending + totalGraded;
+
+  const filteredAssignments = assignments.filter((asm) => {
+    if (globalFilter === "pending") {
+      return asm.submissions.some(s => s.status !== "GRADED");
+    }
+    if (globalFilter === "graded") {
+      return asm.submissions.some(s => s.status === "GRADED");
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-8">
@@ -221,6 +236,7 @@ export default function TeacherGradingPage() {
           onChange={(e) => handleClassChange(e.target.value)}
           className="w-full md:w-auto px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold outline-none cursor-pointer text-slate-700 shadow-sm self-start md:self-auto"
         >
+          <option value="ALL">ดูทั้งหมด (ทุกห้องเรียน)</option>
           {classrooms.map(cls => (
             <option key={cls.id} value={cls.id}>{cls.name} ({cls.yearLevel}/{cls.room})</option>
           ))}
@@ -243,35 +259,76 @@ export default function TeacherGradingPage() {
       ) : (
         <div className="space-y-5">
 
-          {/* Summary bar */}
-          {totalSubs > 0 && (
-            <div className="grid grid-cols-3 gap-2 sm:gap-3">
-              <div className="bg-white rounded-2xl border border-slate-100 p-3 sm:p-4 text-center shadow-sm">
-                <p className="text-xl sm:text-2xl font-black text-slate-800">{assignments.length}</p>
-                <p className="text-[10px] sm:text-xs text-slate-400 font-semibold mt-0.5">ใบงานทั้งหมด</p>
-              </div>
-              <div className="bg-orange-50 rounded-2xl border border-orange-100 p-3 sm:p-4 text-center shadow-sm">
-                <p className="text-xl sm:text-2xl font-black text-orange-600">{totalPending}</p>
-                <p className="text-[10px] sm:text-xs text-orange-400 font-semibold mt-0.5">รอตรวจ</p>
-              </div>
-              <div className="bg-emerald-50 rounded-2xl border border-emerald-100 p-3 sm:p-4 text-center shadow-sm">
-                <p className="text-xl sm:text-2xl font-black text-emerald-600">{totalGraded}</p>
-                <p className="text-[10px] sm:text-xs text-emerald-400 font-semibold mt-0.5">ตรวจแล้ว</p>
-              </div>
+          {/* Summary bar (คลิกการ์ดเพื่อกรองฟิลเตอร์ได้ทันที) */}
+          <div className="grid grid-cols-3 gap-2.5 sm:gap-4 select-none">
+            {/* การ์ด 1: ใบงานทั้งหมด */}
+            <div 
+              onClick={() => handleSummaryCardClick("all")}
+              className={`p-3 sm:p-4 rounded-2xl border text-center transition-all cursor-pointer shadow-xs ${
+                globalFilter === "all"
+                  ? "bg-sky-50 border-sky-500 ring-2 ring-sky-500/20 scale-[1.02]"
+                  : "bg-white border-slate-200/80 hover:bg-slate-50 hover:border-slate-300"
+              }`}
+            >
+              <p className={`text-xl sm:text-2xl font-black ${globalFilter === "all" ? "text-sky-600" : "text-slate-800"}`}>
+                {assignments.length}
+              </p>
+              <p className={`text-[10px] sm:text-xs font-bold mt-0.5 ${globalFilter === "all" ? "text-sky-600" : "text-slate-500"}`}>
+                ใบงานทั้งหมด
+              </p>
             </div>
-          )}
 
-          {/* Assignment Accordion */}
-          {assignments.map((asm) => {
-            const pending = asm.submissions.filter(s => s.status !== "GRADED");
-            const graded = asm.submissions.filter(s => s.status === "GRADED");
-            const isOpen = expandedIds.has(asm.id);
-            const tab = getTab(asm.id);
+            {/* การ์ด 2: รอตรวจ */}
+            <div 
+              onClick={() => handleSummaryCardClick("pending")}
+              className={`p-3 sm:p-4 rounded-2xl border text-center transition-all cursor-pointer shadow-xs ${
+                globalFilter === "pending"
+                  ? "bg-orange-50 border-orange-500 ring-2 ring-orange-500/20 scale-[1.02]"
+                  : "bg-white border-slate-200/80 hover:bg-orange-50/50 hover:border-orange-200"
+              }`}
+            >
+              <p className="text-xl sm:text-2xl font-black text-orange-600">{totalPending}</p>
+              <p className="text-[10px] sm:text-xs text-orange-600 font-bold mt-0.5 flex items-center justify-center gap-1">
+                <FaHourglassHalf className="text-[9px]" />
+                <span>รอตรวจ</span>
+              </p>
+            </div>
 
-            let visibleSubs = tab === "pending" ? pending : tab === "graded" ? graded : asm.submissions;
+            {/* การ์ด 3: ตรวจแล้ว */}
+            <div 
+              onClick={() => handleSummaryCardClick("graded")}
+              className={`p-3 sm:p-4 rounded-2xl border text-center transition-all cursor-pointer shadow-xs ${
+                globalFilter === "graded"
+                  ? "bg-emerald-50 border-emerald-500 ring-2 ring-emerald-500/20 scale-[1.02]"
+                  : "bg-white border-slate-200/80 hover:bg-emerald-50/50 hover:border-emerald-200"
+              }`}
+            >
+              <p className="text-xl sm:text-2xl font-black text-emerald-600">{totalGraded}</p>
+              <p className="text-[10px] sm:text-xs text-emerald-600 font-bold mt-0.5 flex items-center justify-center gap-1">
+                <FaCheckCircle className="text-[9px]" />
+                <span>ตรวจแล้ว</span>
+              </p>
+            </div>
+          </div>
 
-            return (
-              <div key={asm.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          {/* Assignment Accordion List */}
+          {filteredAssignments.length === 0 ? (
+            <div className="bg-white p-12 rounded-2xl border border-slate-100 shadow-xs text-center text-slate-400 space-y-2">
+              <FaFolderOpen className="text-4xl mx-auto text-slate-300 mb-2" />
+              <p className="text-base font-bold text-slate-700">ไม่มีรายการใบงานในหมวดนี้</p>
+              <p className="text-xs text-slate-400">กดเลือกการ์ดสรุปผลอื่นเพื่อดูใบงานหมวดถัดไป</p>
+            </div>
+          ) : (
+            filteredAssignments.map((asm) => {
+              const pending = asm.submissions.filter(s => s.status !== "GRADED");
+              const graded = asm.submissions.filter(s => s.status === "GRADED");
+              const isOpen = expandedIds.has(asm.id);
+              const tab = getTab(asm.id);
+
+              let visibleSubs = tab === "pending" ? pending : tab === "graded" ? graded : asm.submissions;
+
+              return (
+                <div key={asm.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
 
                 {/* Header row — คลิกเพื่อขยาย/ย่อ */}
                 <button
@@ -397,7 +454,8 @@ export default function TeacherGradingPage() {
                 )}
               </div>
             );
-          })}
+          })
+          )}
         </div>
       )}
 

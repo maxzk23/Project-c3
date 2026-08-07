@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { FaBell, FaCheckDouble, FaFileAlt, FaBars, FaBookOpen, FaTrophy, FaExclamationCircle, FaInfoCircle, FaCheckCircle, FaExclamationTriangle } from "react-icons/fa"; // อิมพอร์ตไอคอนกระดิ่งแจ้งเตือน
 import { getCurrentStudentProfile } from "@/app/actions/student";
 import { getNotifications, markAllNotificationsAsRead, markNotificationAsRead } from "@/app/actions/notification";
+import { renderAvatarHelper } from "@/components/profile/ProfileSettings";
 
 interface TopbarProps {
   onMenuClick?: () => void;
@@ -14,6 +15,8 @@ interface TopbarProps {
 // คอมโพเนนต์ Topbar (แถบด้านบน) สำหรับนักเรียน
 export default function StudentTopbar({ onMenuClick }: TopbarProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const isDashboard = pathname === "/student/dashboard";
   // สร้าง State สำหรับเปิด/ปิด เมนูดรอปดาวน์การแจ้งเตือน
   const [isNotifyOpen, setIsNotifyOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -21,6 +24,7 @@ export default function StudentTopbar({ onMenuClick }: TopbarProps) {
     name: string;
     nickname: string;
     classLabel: string;
+    avatarUrl?: string | null;
     avatarChar: string;
   } | null>(null);
 
@@ -44,6 +48,23 @@ export default function StudentTopbar({ onMenuClick }: TopbarProps) {
     fetchProfile();
     loadNotificationsRef.current();
 
+    // ฟัง Event เมื่อมีการอัปเดตโปรไฟล์เพื่อรีเฟรชข้อมูลใน Topbar ทันที
+    const handleProfileUpdate = () => {
+      fetchProfile();
+    };
+
+    window.addEventListener("profile-updated", handleProfileUpdate);
+
+    let bc: BroadcastChannel | null = null;
+    try {
+      bc = new BroadcastChannel("lms-channel");
+      bc.onmessage = (event) => {
+        if (event.data?.type === "PROFILE_UPDATED") {
+          fetchProfile();
+        }
+      };
+    } catch (e) {}
+
     // ดึงข้อมูลการแจ้งเตือนทุก 8 วินาที
     const interval = setInterval(() => {
       if (loadNotificationsRef.current) {
@@ -51,7 +72,11 @@ export default function StudentTopbar({ onMenuClick }: TopbarProps) {
       }
     }, 8000);
 
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener("profile-updated", handleProfileUpdate);
+      if (bc) bc.close();
+      clearInterval(interval);
+    };
   }, []);
 
   // ฟังก์ชันสลับสถานะเปิด/ปิด การแจ้งเตือน
@@ -123,49 +148,78 @@ export default function StudentTopbar({ onMenuClick }: TopbarProps) {
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
+  const getPageTitle = (path: string) => {
+    switch (path) {
+      case "/student/classrooms": return "ประวัติการเช็คชื่อ";
+      case "/student/assignments": return "การบ้านและภารกิจ";
+      case "/student/lessons": return "สื่อและบทเรียน";
+      case "/student/games": return "มินิเกมสะสมแต้ม";
+      case "/student/leaderboard": return "ตารางอันดับเกียรติยศ";
+      case "/student/notifications": return "ศูนย์แจ้งเตือน";
+      case "/student/profile": return "โปรไฟล์ส่วนตัว";
+      default: return "";
+    }
+  };
+
   return (
     // โครงสร้างหลักของ Topbar: จัดวางให้อยู่ด้านบนซ้ายถึงขวา มีช่องว่างระหว่างกลาง (justify-between)
-    <header className="flex justify-between items-center mb-8 relative z-40 gap-4">
+    <header className="flex justify-between items-center mb-6 pb-4 border-b border-slate-200/60 relative z-40 gap-4">
       
-      {/* ส่วนทักทายนักเรียน (ด้านซ้าย) */}
+      {/* ส่วนทักทาย หรือ Breadcrumb (ด้านซ้าย) */}
       <div className="flex items-center gap-3">
         <button 
           onClick={onMenuClick}
-          className="lg:hidden p-2.5 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 hover:text-sky-500 hover:border-sky-500 transition shrink-0"
+          className="lg:hidden p-2.5 bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 hover:text-sky-500 hover:border-sky-500 transition shrink-0 shadow-xs"
           aria-label="เปิดเมนู"
         >
           <FaBars className="text-base" />
         </button>
-        <div className="flex flex-col text-left">
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-800 leading-tight">
-            สวัสดี, {profile ? (profile.nickname || profile.name.split(" ")[0]) : "นักเรียน"}! 👋
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1">พร้อมที่จะเรียนรู้และทำภารกิจของวันนี้หรือยัง?</p>
-        </div>
+
+        {isDashboard ? (
+          <div className="flex flex-col text-left">
+            <h1 className="text-lg sm:text-2xl font-bold text-slate-800 leading-tight">
+              สวัสดี, {profile ? (profile.nickname || profile.name.split(" ")[0]) : "นักเรียน"}! 👋
+            </h1>
+            <p className="text-[11px] sm:text-sm text-slate-500 mt-0.5 sm:mt-1">พร้อมที่จะเรียนรู้และทำภารกิจของวันนี้หรือยัง?</p>
+          </div>
+        ) : (
+          getPageTitle(pathname) && (
+            <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-semibold select-none min-w-0">
+              <Link href="/student/dashboard" className="text-slate-400 hover:text-sky-600 transition font-bold flex items-center gap-1 shrink-0">
+                <span>แดชบอร์ด</span>
+              </Link>
+              <span className="text-slate-300 font-light shrink-0">/</span>
+              <span className="text-sky-700 bg-sky-50 border border-sky-200/80 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full font-extrabold flex items-center gap-1.5 shadow-2xs truncate max-w-[130px] sm:max-w-none">
+                <span className="w-1.5 h-1.5 rounded-full bg-sky-500 animate-pulse shrink-0"></span>
+                <span className="truncate">{getPageTitle(pathname)}</span>
+              </span>
+            </div>
+          )
+        )}
       </div>
 
       {/* ส่วน Action Buttons (แจ้งเตือน และ โปรไฟล์) (ด้านขวา) */}
-      <div className="flex items-center gap-5">
+      <div className="flex items-center gap-2 sm:gap-5 shrink-0">
         
         {/* กล่องการแจ้งเตือน */}
         <div className="relative">
           {/* ปุ่มรูปกระดิ่ง */}
           <button 
             onClick={toggleNotify}
-            className="relative bg-white border border-slate-200 w-12 h-12 rounded-full flex justify-center items-center text-slate-500 hover:text-sky-500 hover:border-sky-500 transition-all duration-300 shadow-sm"
+            className="relative bg-white border border-slate-200 w-10 h-10 sm:w-12 sm:h-12 rounded-full flex justify-center items-center text-slate-500 hover:text-sky-500 hover:border-sky-500 transition-all duration-300 shadow-xs"
           >
-            <FaBell className="text-xl" />
+            <FaBell className="text-base sm:text-xl" />
             {/* ป้ายตัวเลขแจ้งเตือน (Badge) มุมขวาบน */}
             {unreadCount > 0 && (
-              <div className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] bg-rose-500 rounded-full border-2 border-white text-[9px] font-bold text-white flex items-center justify-center px-1">
+              <div className="absolute top-1 sm:top-1.5 right-1 sm:right-1.5 min-w-[16px] sm:min-w-[18px] h-[16px] sm:h-[18px] bg-rose-500 rounded-full border-2 border-white text-[9px] font-bold text-white flex items-center justify-center px-1">
                 {unreadCount}
               </div>
             )}
           </button>
 
-          {/* ดรอปดาวน์การแจ้งเตือน (แสดงเฉพาะเมื่อ isNotifyOpen เป็น true) */}
+          {/* ดรอปดาวน์การแจ้งเตือน */}
           {isNotifyOpen && (
-            <div className="absolute top-14 right-0 w-[360px] bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-200 text-left z-50">
+            <div className="absolute top-14 right-0 w-[calc(100vw-32px)] sm:w-[360px] max-w-[360px] bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden animate-in fade-in duration-200 text-left z-50">
               
               {/* หัวข้อดรอปดาวน์ */}
               <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
@@ -229,11 +283,9 @@ export default function StudentTopbar({ onMenuClick }: TopbarProps) {
         {/* ส่วนข้อมูลโปรไฟล์ (รูปภาพ และ ชื่อ) */}
         <Link 
           href="/student/profile"
-          className="flex items-center gap-3 bg-white pr-4 pl-2 py-2 rounded-full border border-slate-200 cursor-pointer hover:shadow-sm hover:border-sky-300 transition-all"
+          className="flex items-center gap-3 bg-white pr-4 pl-1.5 py-1 rounded-full border border-slate-200 cursor-pointer hover:shadow-sm hover:border-sky-300 transition-all select-none"
         >
-          <div className="w-10 h-10 rounded-full bg-sky-100 text-sky-700 flex justify-center items-center font-bold">
-            {profile?.avatarChar || "น"}
-          </div>
+          {renderAvatarHelper(profile?.avatarUrl, profile?.name || "นักเรียน", "w-9 h-9 text-base")}
           <div className="hidden md:block">
             <h4 className="text-sm font-bold text-slate-800">{profile?.name || "กำลังโหลด..."}</h4>
             <p className="text-xs text-slate-500">{profile?.classLabel || "นักเรียน"}</p>

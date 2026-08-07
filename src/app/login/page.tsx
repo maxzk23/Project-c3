@@ -123,20 +123,6 @@ export default function LoginPage() {
 
           </form>
 
-          {/* รายละเอียดบัญชีสำหรับทดสอบระบบตัวอย่าง */}
-          <div className="pt-4 border-t border-white/5 text-center space-y-1">
-            <p className="text-xs text-slate-500">บัญชีสำหรับคณะกรรมการ / ครู / แอดมิน ทดสอบรัน:</p>
-            <p className="text-[11px] text-slate-400">
-              แอดมิน: <span className="text-sky-400 font-mono">แอดมินระบบ</span> (รหัส: <span className="text-sky-400 font-mono">admin</span>)
-            </p>
-            <p className="text-[11px] text-slate-400">
-              ครู: <span className="text-sky-400 font-mono">คุณครูสมชาย รักเรียน</span> (รหัส: <span className="text-sky-400 font-mono">teacher</span>)
-            </p>
-            <p className="text-[11px] text-slate-400">
-              นักเรียน: <span className="text-sky-400 font-mono">เด็กชายแดง รักเรียน</span> (รหัส: <span className="text-sky-400 font-mono">student</span>)
-            </p>
-          </div>
-
         </div>
 
       </div>

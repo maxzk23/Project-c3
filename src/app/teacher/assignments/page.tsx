@@ -60,10 +60,10 @@ export default function TeacherAssignmentsPage() {
       const classes = await getTeacherClassrooms();
       setClassrooms(classes);
       const savedClassId = localStorage.getItem("teacher-assignments-classId");
-      if (savedClassId && classes.some(c => c.id === savedClassId)) {
+      if (savedClassId && (savedClassId === "ALL" || classes.some(c => c.id === savedClassId))) {
         setSelectedClassId(savedClassId);
-      } else if (classes.length > 0) {
-        setSelectedClassId(classes[0].id);
+      } else {
+        setSelectedClassId("ALL");
       }
     };
     fetchClasses();
@@ -224,6 +224,7 @@ export default function TeacherAssignmentsPage() {
             onChange={(e) => handleClassChange(e.target.value)}
             className="w-full sm:w-auto px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold outline-none cursor-pointer text-slate-700 shadow-sm"
           >
+            <option value="ALL">ดูทั้งหมด (ทุกห้องเรียน)</option>
             {classrooms.map((cls) => (
               <option key={cls.id} value={cls.id}>
                 {cls.name} ({cls.yearLevel}/{cls.room})

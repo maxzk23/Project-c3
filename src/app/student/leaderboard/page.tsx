@@ -26,11 +26,16 @@ interface LeaderboardEntry {
     name: string;
     avatarUrl: string | null;
   };
+  classroom?: {
+    name: string;
+    yearLevel: string;
+    room: string;
+  };
 }
 
 export default function StudentLeaderboardPage() {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
-  const [selectedClassId, setSelectedClassId] = useState<string>("");
+  const [selectedClassId, setSelectedClassId] = useState<string>("ALL");
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -38,28 +43,21 @@ export default function StudentLeaderboardPage() {
     const initData = async () => {
       const classes = await getStudentClassrooms();
       setClassrooms(classes);
-      
-      const defaultClass = await getStudentDefaultClass();
-      if (defaultClass) {
-        setSelectedClassId(defaultClass.id);
-      } else if (classes.length > 0) {
-        setSelectedClassId(classes[0].id);
-      } else {
-        setIsLoading(false);
-      }
+      loadLeaderboard("ALL");
     };
     initData();
   }, []);
 
   useEffect(() => {
     if (selectedClassId) {
-      loadLeaderboard();
+      loadLeaderboard(selectedClassId);
     }
   }, [selectedClassId]);
 
-  const loadLeaderboard = async () => {
+  const loadLeaderboard = async (classId?: string) => {
     setIsLoading(true);
-    const data = await getClassLeaderboard(selectedClassId);
+    const targetClassId = classId || selectedClassId || "ALL";
+    const data = await getClassLeaderboard(targetClassId);
     setLeaderboard(data as unknown as LeaderboardEntry[]);
     setIsLoading(false);
   };
@@ -106,12 +104,20 @@ export default function StudentLeaderboardPage() {
           <p className="text-sm text-slate-500 mt-1">ตารางจัดอันดับสะสมคะแนนจากการตอบคำถามและการเล่นมินิเกมของห้องเรียน</p>
         </div>
 
-        {classrooms.find(c => c.id === selectedClassId) && (
-          <div className="px-4 py-2.5 bg-sky-50 border border-sky-150 rounded-xl text-xs font-black text-sky-700 select-none shadow-sm flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
-            <span>{classrooms.find(c => c.id === selectedClassId)?.name} ({classrooms.find(c => c.id === selectedClassId)?.yearLevel}/{classrooms.find(c => c.id === selectedClassId)?.room})</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2.5">
+          <select
+            value={selectedClassId}
+            onChange={(e) => setSelectedClassId(e.target.value)}
+            className="px-4 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none cursor-pointer text-slate-700 shadow-xs"
+          >
+            <option value="ALL">ดูทั้งหมด (ทุกห้องเรียน)</option>
+            {classrooms.map((cls) => (
+              <option key={cls.id} value={cls.id}>
+                {cls.name} ({cls.yearLevel}/{cls.room})
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {classrooms.length === 0 ? (
@@ -154,7 +160,14 @@ export default function StudentLeaderboardPage() {
                             <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center font-bold text-xs">
                               {entry.student.name.charAt(0)}
                             </div>
-                            <span>{entry.student.name}</span>
+                            <div>
+                              <span className="block font-bold text-slate-800">{entry.student.name}</span>
+                              {entry.classroom && (
+                                <span className="text-[10px] text-slate-400 font-semibold block">
+                                  {entry.classroom.name} ({entry.classroom.yearLevel}/{entry.classroom.room})
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td className="py-4 text-right pr-2 font-mono text-base font-black text-sky-600">

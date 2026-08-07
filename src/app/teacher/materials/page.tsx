@@ -97,9 +97,7 @@ export default function TeacherMaterialsPage() {
     const fetchClasses = async () => {
       const classes = await getTeacherClassrooms();
       setClassrooms(classes);
-      if (classes.length > 0) {
-        setSelectedClassId(classes[0].yearLevel);
-      }
+      setSelectedClassId("ALL");
     };
     fetchClasses();
   }, []);
@@ -491,6 +489,7 @@ export default function TeacherMaterialsPage() {
             onChange={(e) => setSelectedClassId(e.target.value)}
             className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold outline-none cursor-pointer text-slate-700 shadow-sm"
           >
+            <option value="ALL">ดูทั้งหมด (ทุกระดับชั้นปี)</option>
             {uniqueYears.map((year) => (
               <option key={year} value={year}>
                 {year === "ม.3" ? "มัธยมศึกษาปีที่ 3 (ม.3)" : year === "ม.2" ? "มัธยมศึกษาปีที่ 2 (ม.2)" : "มัธยมศึกษาปีที่ 1 (ม.1)"}
