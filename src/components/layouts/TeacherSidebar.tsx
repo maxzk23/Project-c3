@@ -202,11 +202,11 @@ export default function TeacherSidebar({ isOpen = false, onClose }: SidebarProps
         
       </nav>
 
-      {/* ปุ่มออกจากระบบสีแดงอ่อนโค้งมนแบบภาพเดโม่ */}
+      {/* ปุ่มออกจากระบบสไตล์ Ghost Button สบายตา */}
       <div className="p-3 shrink-0">
         <button 
           onClick={() => logout()}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl font-bold transition text-sm border border-rose-150 shadow-sm"
+          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50/80 rounded-xl font-semibold transition-all duration-200 cursor-pointer"
         >
           <FaSignOutAlt className="text-base" />
           <span>ออกจากระบบ</span>

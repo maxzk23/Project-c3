@@ -47,10 +47,11 @@ export default function AttendanceCheckTab({
   const leaveCount = students.filter((s) => s.status === "LEAVE").length;
   const absentCount = students.filter((s) => s.status === "ABSENT").length;
 
-  const presentPercent = totalStudents > 0 ? (presentCount / totalStudents) * 100 : 100;
-  const latePercent = totalStudents > 0 ? (lateCount / totalStudents) * 100 : 0;
-  const leavePercent = totalStudents > 0 ? (leaveCount / totalStudents) * 100 : 0;
-  const absentPercent = totalStudents > 0 ? (absentCount / totalStudents) * 100 : 0;
+  const hasRecords = students.some(s => s.status !== null);
+  const presentPercent = totalStudents > 0 && hasRecords ? (presentCount / totalStudents) * 100 : 0;
+  const latePercent = totalStudents > 0 && hasRecords ? (lateCount / totalStudents) * 100 : 0;
+  const leavePercent = totalStudents > 0 && hasRecords ? (leaveCount / totalStudents) * 100 : 0;
+  const absentPercent = totalStudents > 0 && hasRecords ? (absentCount / totalStudents) * 100 : 0;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-in fade-in duration-300">
@@ -316,13 +317,24 @@ export default function AttendanceCheckTab({
 
           {/* กราฟแถบสัดส่วน Segmented Bar Chart */}
           <div className="space-y-1.5">
-            <span className="text-xs text-slate-400 font-bold block">สัดส่วนการเข้าชั้นเรียนวันนี้:</span>
-            <div className="w-full h-5 rounded-full overflow-hidden flex bg-slate-100">
-              <div style={{ width: `${presentPercent}%` }} className="h-full bg-emerald-500 transition-all duration-300" title="มาเรียน"></div>
-              <div style={{ width: `${latePercent}%` }} className="h-full bg-amber-500 transition-all duration-300" title="สาย"></div>
-              <div style={{ width: `${leavePercent}%` }} className="h-full bg-purple-500 transition-all duration-300" title="ลา"></div>
-              <div style={{ width: `${absentPercent}%` }} className="h-full bg-rose-500 transition-all duration-300" title="ขาดเรียน"></div>
+            <span className="text-xs text-slate-600 font-semibold block">สัดส่วนการเข้าชั้นเรียนวันนี้:</span>
+            <div className="w-full h-5 rounded-full overflow-hidden flex bg-slate-200 border border-slate-200/80">
+              {!hasRecords || totalStudents === 0 ? (
+                <div className="w-full h-full bg-slate-200 transition-all duration-300"></div>
+              ) : (
+                <>
+                  <div style={{ width: `${presentPercent}%` }} className="h-full bg-emerald-500 transition-all duration-300" title="มาเรียน"></div>
+                  <div style={{ width: `${latePercent}%` }} className="h-full bg-amber-500 transition-all duration-300" title="สาย"></div>
+                  <div style={{ width: `${leavePercent}%` }} className="h-full bg-purple-500 transition-all duration-300" title="ลา"></div>
+                  <div style={{ width: `${absentPercent}%` }} className="h-full bg-rose-500 transition-all duration-300" title="ขาดเรียน"></div>
+                </>
+              )}
             </div>
+            {!hasRecords && totalStudents > 0 && (
+              <p className="text-[11px] text-slate-500 font-medium text-center pt-1">
+                ยังไม่มีการบันทึกข้อมูลเช็คชื่อประจำวันนี้
+              </p>
+            )}
           </div>
 
           {/* การ์ดตัวเลขสรุปแยกตามสถานะ */}

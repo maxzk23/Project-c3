@@ -157,15 +157,16 @@ export default function TeacherDashboard() {
 
   // คำนวณความกว้างสัดส่วนกราฟแบบ Segmented Bar Chart
   const getAttPercent = () => {
-    if (!summaryData) return { present: 100, late: 0, leave: 0, absent: 0 };
+    if (!summaryData) return { present: 0, late: 0, leave: 0, absent: 0, total: 0 };
     const att = summaryData.attendance;
     const total = att.present + att.late + att.leave + att.absent;
-    if (total === 0) return { present: 100, late: 0, leave: 0, absent: 0 }; // Default เป็นมาเรียนทั้งหมดถ้ายังไม่มีใครเช็คชื่อ
+    if (total === 0) return { present: 0, late: 0, leave: 0, absent: 0, total: 0 };
     return {
       present: (att.present / total) * 100,
       late: (att.late / total) * 100,
       leave: (att.leave / total) * 100,
-      absent: (att.absent / total) * 100
+      absent: (att.absent / total) * 100,
+      total
     };
   };
 
@@ -211,55 +212,55 @@ export default function TeacherDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         
         {/* สถิติ 1: จำนวนนักเรียน */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-emerald-500 flex items-center justify-between group hover:shadow-md transition">
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-emerald-500 flex items-center justify-between group hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-default">
           <div className="space-y-1">
             <h3 className="text-[25px] font-black text-slate-800 tracking-tight">
               {summaryData?.stats.totalStudents ?? 0} คน
             </h3>
-            <p className="text-[11px] font-bold text-slate-400">
+            <p className="text-[11px] font-bold text-slate-500">
               {selectedClassId === "ALL" ? "จำนวนนักเรียนในระบบทั้งหมด" : "จำนวนนักเรียนในห้องเรียนนี้"}
             </p>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-lg shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-lg shrink-0 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-200">
             <FaUsers />
           </div>
         </div>
 
         {/* สถิติ 2: การบ้านรอตรวจ */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-sky-500 flex items-center justify-between group hover:shadow-md transition">
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-sky-500 flex items-center justify-between group hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-default">
           <div className="space-y-1">
             <h3 className="text-[25px] font-black text-slate-800 tracking-tight">
               {summaryData?.stats.pendingGrading ?? 0} งาน
             </h3>
-            <p className="text-[11px] font-bold text-slate-400">การบ้านที่รอตรวจ</p>
+            <p className="text-[11px] font-bold text-slate-500">การบ้านที่รอตรวจ</p>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-sky-50 text-sky-500 flex items-center justify-center text-lg shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-sky-50 text-sky-500 flex items-center justify-center text-lg shrink-0 group-hover:bg-sky-500 group-hover:text-white transition-colors duration-200">
             <FaFileSignature />
           </div>
         </div>
 
         {/* สถิติ 3: บทเรียนที่เปิดให้ดู */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-purple-500 flex items-center justify-between group hover:shadow-md transition">
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-purple-500 flex items-center justify-between group hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-default">
           <div className="space-y-1">
             <h3 className="text-[25px] font-black text-slate-800 tracking-tight">
               {summaryData?.stats.unlockedMaterials ?? 0} บท
             </h3>
-            <p className="text-[11px] font-bold text-slate-400">บทเรียนที่เปิดให้นักเรียนดู</p>
+            <p className="text-[11px] font-bold text-slate-500">บทเรียนที่เปิดให้นักเรียนดู</p>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center text-lg shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center text-lg shrink-0 group-hover:bg-purple-500 group-hover:text-white transition-colors duration-200">
             <FaFolderOpen />
           </div>
         </div>
 
         {/* สถิติ 4: จำนวนมินิเกม */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-orange-500 flex items-center justify-between group hover:shadow-md transition">
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-orange-500 flex items-center justify-between group hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-default">
           <div className="space-y-1">
             <h3 className="text-[25px] font-black text-slate-800 tracking-tight">
               {summaryData?.stats.totalGames ?? 1} เกม
             </h3>
-            <p className="text-[11px] font-bold text-slate-400">มินิเกมในระบบทั้งหมด</p>
+            <p className="text-[11px] font-bold text-slate-500">มินิเกมในระบบทั้งหมด</p>
           </div>
-          <div className="w-11 h-11 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-lg shrink-0">
+          <div className="w-11 h-11 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-lg shrink-0 group-hover:bg-orange-500 group-hover:text-white transition-colors duration-200">
             <FaGamepad />
           </div>
         </div>
@@ -329,51 +330,63 @@ export default function TeacherDashboard() {
         <div className="lg:col-span-2 space-y-6">
           
           {/* การ์ด: สรุปการเข้าเรียนประจำวัน (Attendance) */}
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 text-left space-y-4">
+          <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 text-left space-y-4 hover:shadow-md transition-all duration-200">
             <h3 className="text-sm font-extrabold text-slate-800 flex items-center gap-2">
               <FaUserCheck className="text-emerald-500" />
               <span>สรุปการเข้าเรียนประจำวัน (Daily Attendance Summary)</span>
             </h3>
             
-            <p className="text-xs text-slate-400 font-semibold">
+            <p className="text-xs text-slate-600 font-medium">
               สัดส่วนการเข้าเรียนของชั้นเรียนห้องเรียนปัจจุบัน (คำนวณแบบเรียลไทม์)
             </p>
 
             {/* Segmented bar chart */}
-            <div className="w-full h-3 rounded-full overflow-hidden flex bg-slate-50 border border-slate-100">
-              <div style={{ width: `${attPercent.present}%` }} className="h-full bg-emerald-500 transition-all duration-300"></div>
-              <div style={{ width: `${attPercent.late}%` }} className="h-full bg-amber-500 transition-all duration-300"></div>
-              <div style={{ width: `${attPercent.leave}%` }} className="h-full bg-purple-500 transition-all duration-300"></div>
-              <div style={{ width: `${attPercent.absent}%` }} className="h-full bg-rose-500 transition-all duration-300"></div>
+            <div className="w-full h-3 rounded-full overflow-hidden flex bg-slate-200 border border-slate-200/80">
+              {attPercent.total === 0 ? (
+                <div className="w-full h-full bg-slate-200 transition-all duration-300"></div>
+              ) : (
+                <>
+                  <div style={{ width: `${attPercent.present}%` }} className="h-full bg-emerald-500 transition-all duration-300"></div>
+                  <div style={{ width: `${attPercent.late}%` }} className="h-full bg-amber-500 transition-all duration-300"></div>
+                  <div style={{ width: `${attPercent.leave}%` }} className="h-full bg-purple-500 transition-all duration-300"></div>
+                  <div style={{ width: `${attPercent.absent}%` }} className="h-full bg-rose-500 transition-all duration-300"></div>
+                </>
+              )}
             </div>
+
+            {attPercent.total === 0 && (
+              <p className="text-[11px] text-slate-500 font-semibold text-center -mt-1">
+                ยังไม่มีการบันทึกข้อมูลการเข้าเรียนในวันนี้ (0 คน)
+              </p>
+            )}
 
             {/* การ์ดสถิติย่อขอบข้างหลากสี */}
             <div className="grid grid-cols-4 gap-2">
               {/* มาเรียน */}
-              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 border-l-[3px] border-l-emerald-500 text-center">
+              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 border-l-[3px] border-l-emerald-500 text-center hover:bg-slate-100/60 transition">
                 <span className="text-xs font-bold text-emerald-600 block">{summaryData?.attendance.present ?? 0} คน</span>
-                <span className="text-[9px] text-slate-400 font-bold block mt-0.5">มาเรียน</span>
+                <span className="text-[9px] text-slate-500 font-bold block mt-0.5">มาเรียน</span>
               </div>
               {/* สาย */}
-              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 border-l-[3px] border-l-amber-500 text-center">
+              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 border-l-[3px] border-l-amber-500 text-center hover:bg-slate-100/60 transition">
                 <span className="text-xs font-bold text-amber-600 block">{summaryData?.attendance.late ?? 0} คน</span>
-                <span className="text-[9px] text-slate-400 font-bold block mt-0.5">สาย</span>
+                <span className="text-[9px] text-slate-500 font-bold block mt-0.5">สาย</span>
               </div>
               {/* ลา */}
-              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 border-l-[3px] border-l-purple-500 text-center">
+              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 border-l-[3px] border-l-purple-500 text-center hover:bg-slate-100/60 transition">
                 <span className="text-xs font-bold text-purple-600 block">{summaryData?.attendance.leave ?? 0} คน</span>
-                <span className="text-[9px] text-slate-400 font-bold block mt-0.5">ลา</span>
+                <span className="text-[9px] text-slate-500 font-bold block mt-0.5">ลา</span>
               </div>
               {/* ขาดเรียน */}
-              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 border-l-[3px] border-l-rose-500 text-center">
+              <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100 border-l-[3px] border-l-rose-500 text-center hover:bg-slate-100/60 transition">
                 <span className="text-xs font-bold text-rose-600 block">{summaryData?.attendance.absent ?? 0} คน</span>
-                <span className="text-[9px] text-slate-400 font-bold block mt-0.5">ขาดเรียน</span>
+                <span className="text-[9px] text-slate-500 font-bold block mt-0.5">ขาดเรียน</span>
               </div>
             </div>
 
             <Link 
               href="/teacher/attendance"
-              className="w-full flex items-center justify-center gap-1.5 py-3.5 bg-sky-50 text-sky-600 font-bold text-xs rounded-xl hover:bg-sky-100 transition-colors shadow-sm border border-sky-100"
+              className="w-full flex items-center justify-center gap-1.5 py-3.5 bg-sky-50 text-sky-600 font-bold text-xs rounded-xl hover:bg-sky-100 hover:shadow transition-all shadow-xs border border-sky-100 active:scale-[0.99]"
             >
               <FaUserCheck />
               <span>ลงทะเบียน / บันทึกข้อมูลการเข้าเรียนประจำวัน</span>

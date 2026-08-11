@@ -210,12 +210,12 @@ export default function TeacherTopbar({ onMenuClick }: TopbarProps) {
             <h1 className="text-lg sm:text-2xl font-black text-slate-800 tracking-tight">
               สวัสดี, {profile ? (profile.name.startsWith("คุณครู") ? profile.name.replace("คุณครู", "ครู") : profile.name) : "คุณครู"}!
             </h1>
-            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 sm:mt-1 font-semibold">ภาพรวมการเรียนการสอน ห้อง ม.3/1 ประจำวันนี้</p>
+            <p className="text-[11px] sm:text-xs text-slate-600 mt-0.5 sm:mt-1 font-semibold">ภาพรวมการเรียนการสอน ห้อง ม.3/1 ประจำวันนี้</p>
           </div>
         ) : (
           getPageTitle(pathname) && (
             <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-semibold select-none min-w-0">
-              <Link href="/teacher/dashboard" className="text-slate-400 hover:text-sky-600 transition font-bold flex items-center gap-1 shrink-0">
+              <Link href="/teacher/dashboard" className="text-slate-500 hover:text-sky-600 transition font-bold flex items-center gap-1 shrink-0">
                 <span>แดชบอร์ด</span>
               </Link>
               <span className="text-slate-300 font-light shrink-0">/</span>

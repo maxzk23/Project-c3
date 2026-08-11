@@ -186,9 +186,9 @@ export default function StudentSidebar({ isOpen = false, onClose }: SidebarProps
       <div className="p-4 mt-auto">
         <button 
           onClick={() => logout()} // เรียกใช้งาน Action logout เมื่อคลิก
-          className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 rounded-xl font-bold transition-all duration-200"
+          className="w-full flex items-center justify-center gap-2 px-4 py-3 text-slate-500 hover:text-rose-600 hover:bg-rose-50/80 rounded-xl font-semibold transition-all duration-200 cursor-pointer"
         >
-          <FaSignOutAlt className="text-xl" />
+          <FaSignOutAlt className="text-lg" />
           <span>ออกจากระบบ</span>
         </button>
       </div>
