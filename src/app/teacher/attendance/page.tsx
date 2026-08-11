@@ -13,6 +13,7 @@ import { AttendanceStatus } from "@prisma/client";
 import AttendanceCheckTab from "@/components/teacher/attendance/AttendanceCheckTab";
 import AttendanceHistoryTab from "@/components/teacher/attendance/AttendanceHistoryTab";
 import UnlockModal from "@/components/teacher/attendance/UnlockModal";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 interface Classroom {
   id: string;
@@ -65,8 +66,15 @@ export default function TeacherAttendancePage() {
     // โหลดห้องเรียนทั้งหมดของคุณครูเพื่อสร้างดรอปดาวน์เลือกห้อง
     const fetchClasses = async () => {
       const classes = await getTeacherClassrooms();
-      setClassrooms(classes);
-      setSelectedClassId("ALL");
+      const sortedClasses = [...classes].sort((a, b) => {
+        const levelCompare = a.yearLevel.localeCompare(b.yearLevel, undefined, { numeric: true, sensitivity: "base" });
+        if (levelCompare !== 0) return levelCompare;
+        return a.room.localeCompare(b.room, undefined, { numeric: true, sensitivity: "base" });
+      });
+      setClassrooms(sortedClasses);
+      if (sortedClasses.length > 0) {
+        setSelectedClassId(sortedClasses[0].id);
+      }
     };
     fetchClasses();
   }, []);
@@ -224,18 +232,15 @@ export default function TeacherAttendancePage() {
           {activeTab === "check" && classrooms.length > 0 && (
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
               {/* ตัวเลือกห้องเรียน */}
-              <select
+              <CustomSelect
+                options={classrooms.map((cls) => ({
+                  value: cls.id,
+                  label: `${cls.name} (${cls.yearLevel}/${cls.room})`
+                }))}
                 value={selectedClassId}
-                onChange={(e) => setSelectedClassId(e.target.value)}
-                className="w-full sm:w-auto px-3.5 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none cursor-pointer text-slate-700 shadow-xs"
-              >
-                <option value="ALL">ดูทั้งหมด (ทุกห้องเรียน)</option>
-                {classrooms.map((cls) => (
-                  <option key={cls.id} value={cls.id}>
-                    {cls.name} ({cls.yearLevel}/{cls.room})
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setSelectedClassId(val)}
+                accentColor="emerald"
+              />
 
               {/* เลือกวันที่ */}
               <div className="w-full sm:w-auto">

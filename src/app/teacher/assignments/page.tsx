@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition, useRef } from "react";
 import { getTeacherClassrooms } from "@/app/actions/classroom";
 import { getAssignmentsWithSubmissions, createAssignment, updateAssignment, deleteAssignment } from "@/app/actions/teacher";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { 
   FaPlus, 
   FaCheckCircle, 
@@ -219,18 +220,18 @@ export default function TeacherAssignmentsPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
-          <select
+          <CustomSelect
+            options={[
+              { value: "ALL", label: "ดูทั้งหมด (ทุกห้องเรียน)" },
+              ...classrooms.map((cls) => ({
+                value: cls.id,
+                label: `${cls.name} (${cls.yearLevel}/${cls.room})`
+              }))
+            ]}
             value={selectedClassId}
-            onChange={(e) => handleClassChange(e.target.value)}
-            className="w-full sm:w-auto px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold outline-none cursor-pointer text-slate-700 shadow-sm"
-          >
-            <option value="ALL">ดูทั้งหมด (ทุกห้องเรียน)</option>
-            {classrooms.map((cls) => (
-              <option key={cls.id} value={cls.id}>
-                {cls.name} ({cls.yearLevel}/{cls.room})
-              </option>
-            ))}
-          </select>
+            onChange={(val) => handleClassChange(val)}
+            accentColor="blue"
+          />
 
           <button
             onClick={() => { setIsCreateOpen(true); setCreateIsGoogleForm(false); }}

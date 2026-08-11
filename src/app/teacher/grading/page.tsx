@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition, useRef } from "react";
 import { getTeacherClassrooms } from "@/app/actions/classroom";
 import { getAssignmentsWithSubmissions, gradeSubmission } from "@/app/actions/teacher";
+import CustomSelect from "@/components/ui/CustomSelect";
 import {
   FaFileSignature,
   FaCheckCircle,
@@ -231,16 +232,18 @@ export default function TeacherGradingPage() {
           </h1>
           <p className="text-sm text-slate-500 mt-1">ตรวจงาน ดูประวัติย้อนหลังแต่ละใบงาน และเก็บบันทึกเป็นหลักฐาน</p>
         </div>
-        <select
+        <CustomSelect
+          options={[
+            { value: "ALL", label: "ดูทั้งหมด (ทุกห้องเรียน)" },
+            ...classrooms.map((cls) => ({
+              value: cls.id,
+              label: `${cls.name} (${cls.yearLevel}/${cls.room})`
+            }))
+          ]}
           value={selectedClassId}
-          onChange={(e) => handleClassChange(e.target.value)}
-          className="w-full md:w-auto px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold outline-none cursor-pointer text-slate-700 shadow-sm self-start md:self-auto"
-        >
-          <option value="ALL">ดูทั้งหมด (ทุกห้องเรียน)</option>
-          {classrooms.map(cls => (
-            <option key={cls.id} value={cls.id}>{cls.name} ({cls.yearLevel}/{cls.room})</option>
-          ))}
-        </select>
+          onChange={(val) => handleClassChange(val)}
+          accentColor="amber"
+        />
       </div>
 
       {classrooms.length === 0 ? (

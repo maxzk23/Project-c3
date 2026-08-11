@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getClassLeaderboard } from "@/app/actions/student";
 import { getTeacherClassrooms } from "@/app/actions/classroom";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { 
   FaTrophy, 
   FaExclamationCircle, 
@@ -125,18 +126,18 @@ export default function TeacherLeaderboardPage() {
 
         {classrooms.length > 0 && selectedClassId && (
           <div className="flex items-center gap-2">
-            <select
+            <CustomSelect
+              options={[
+                { value: "ALL", label: "ดูทั้งหมด (ทุกห้องเรียน)" },
+                ...classrooms.map((c) => ({
+                  value: c.id,
+                  label: `ห้อง ${c.name} (${c.yearLevel}/${c.room})`
+                }))
+              ]}
               value={selectedClassId}
-              onChange={(e) => setSelectedClassId(e.target.value)}
-              className="px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:border-sky-500 focus:ring-4 focus:ring-sky-500/10 transition shadow-xs cursor-pointer"
-            >
-              <option value="ALL">ดูทั้งหมด (ทุกห้องเรียน)</option>
-              {classrooms.map((c) => (
-                <option key={c.id} value={c.id}>
-                  ห้อง {c.name} ({c.yearLevel}/{c.room})
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setSelectedClassId(val)}
+              accentColor="amber"
+            />
           </div>
         )}
       </div>

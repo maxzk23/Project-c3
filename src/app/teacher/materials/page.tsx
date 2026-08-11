@@ -21,6 +21,7 @@ import {
   FaEdit
 } from "react-icons/fa";
 import { MaterialType } from "@prisma/client";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 interface Classroom {
   id: string;
@@ -484,18 +485,18 @@ export default function TeacherMaterialsPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <select
+          <CustomSelect
+            options={[
+              { value: "ALL", label: "ดูทั้งหมด (ทุกระดับชั้นปี)" },
+              ...uniqueYears.map((year) => ({
+                value: year,
+                label: year === "ม.3" ? "มัธยมศึกษาปีที่ 3 (ม.3)" : year === "ม.2" ? "มัธยมศึกษาปีที่ 2 (ม.2)" : "มัธยมศึกษาปีที่ 1 (ม.1)"
+              }))
+            ]}
             value={selectedClassId}
-            onChange={(e) => setSelectedClassId(e.target.value)}
-            className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold outline-none cursor-pointer text-slate-700 shadow-sm"
-          >
-            <option value="ALL">ดูทั้งหมด (ทุกระดับชั้นปี)</option>
-            {uniqueYears.map((year) => (
-              <option key={year} value={year}>
-                {year === "ม.3" ? "มัธยมศึกษาปีที่ 3 (ม.3)" : year === "ม.2" ? "มัธยมศึกษาปีที่ 2 (ม.2)" : "มัธยมศึกษาปีที่ 1 (ม.1)"}
-              </option>
-            ))}
-          </select>
+            onChange={(val) => setSelectedClassId(val)}
+            accentColor="purple"
+          />
 
           <button
             onClick={() => setIsModalOpen(true)}

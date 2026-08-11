@@ -1,0 +1,112 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import { FaChevronDown, FaCheck } from "react-icons/fa";
+
+export interface Option {
+  value: string;
+  label: string;
+}
+
+interface CustomSelectProps {
+  options: Option[];
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  className?: string;
+  accentColor?: "purple" | "emerald" | "blue" | "amber";
+}
+
+export default function CustomSelect({
+  options,
+  value,
+  onChange,
+  placeholder = "เลือกรายการ...",
+  className = "",
+  accentColor = "purple"
+}: CustomSelectProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const selectedOption = options.find((opt) => opt.value === value);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const colorStyles = {
+    purple: {
+      activeBg: "bg-purple-50 text-purple-700 font-bold",
+      activeIcon: "text-purple-600",
+      ring: "focus:ring-purple-500/20 focus:border-purple-500",
+      chevronActive: "text-purple-600"
+    },
+    emerald: {
+      activeBg: "bg-emerald-50 text-emerald-700 font-bold",
+      activeIcon: "text-emerald-600",
+      ring: "focus:ring-emerald-500/20 focus:border-emerald-500",
+      chevronActive: "text-emerald-600"
+    },
+    blue: {
+      activeBg: "bg-blue-50 text-blue-700 font-bold",
+      activeIcon: "text-blue-600",
+      ring: "focus:ring-blue-500/20 focus:border-blue-500",
+      chevronActive: "text-blue-600"
+    },
+    amber: {
+      activeBg: "bg-amber-50 text-amber-700 font-bold",
+      activeIcon: "text-amber-600",
+      ring: "focus:ring-amber-500/20 focus:border-amber-500",
+      chevronActive: "text-amber-600"
+    }
+  };
+
+  const style = colorStyles[accentColor] || colorStyles.purple;
+
+  return (
+    <div ref={containerRef} className={`relative inline-block ${className}`}>
+      {/* Trigger Button */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 shadow-sm hover:shadow transition-all duration-150 outline-none ${style.ring} cursor-pointer`}
+      >
+        <span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
+        <FaChevronDown className={`text-xs text-slate-400 transition-transform duration-200 shrink-0 ${isOpen ? `rotate-180 ${style.chevronActive}` : ""}`} />
+      </button>
+
+      {/* Floating Dropdown Menu */}
+      {isOpen && (
+        <div className="absolute left-0 right-0 sm:left-auto sm:right-0 mt-2 min-w-[200px] max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-2xl shadow-xl z-50 p-1.5 space-y-0.5 animate-in fade-in-50 zoom-in-95 duration-150">
+          {options.map((opt) => {
+            const isSelected = opt.value === value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-semibold rounded-xl transition-colors duration-150 text-left cursor-pointer ${
+                  isSelected
+                    ? style.activeBg
+                    : "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+                }`}
+              >
+                <span className="truncate">{opt.label}</span>
+                {isSelected && <FaCheck className={`${style.activeIcon} text-xs shrink-0 ml-2`} />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
