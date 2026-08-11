@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { getStudentDefaultClass, getStudentAttendanceHistory } from "@/app/actions/student";
 import { getStudentClassrooms } from "@/app/actions/classroom";
+import CustomSelect from "@/components/ui/CustomSelect";
 import {
   FaUserCheck,
   FaCalendarAlt,
@@ -226,18 +227,18 @@ export default function StudentAttendanceHistoryPage() {
           {filterType === "monthly" && (
             <div className="space-y-1.5 text-left animate-in slide-in-from-top-2 duration-200">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">เลือกเดือน</label>
-              <select
+              <CustomSelect
+                options={[
+                  { value: "", label: "-- เลือกเดือน --" },
+                  ...availableMonths.map((m) => ({
+                    value: m,
+                    label: formatThaiMonth(m)
+                  }))
+                ]}
                 value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-sky-500 focus:bg-white transition"
-              >
-                <option value="">-- เลือกเดือน --</option>
-                {availableMonths.map((m) => (
-                  <option key={m} value={m}>
-                    {formatThaiMonth(m)}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setSelectedMonth(val)}
+                accentColor="blue"
+              />
             </div>
           )}
 
@@ -247,17 +248,18 @@ export default function StudentAttendanceHistoryPage() {
           {/* ตัวกรองสถานะ */}
           <div className="space-y-1.5 text-left">
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">กรองสถานะ</label>
-            <select
+            <CustomSelect
+              options={[
+                { value: "ALL", label: "ทั้งหมดทุกสถานะ" },
+                { value: "PRESENT", label: "มาเรียน" },
+                { value: "LATE", label: "สาย" },
+                { value: "LEAVE", label: "ลา" },
+                { value: "ABSENT", label: "ขาดเรียน" }
+              ]}
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 outline-none focus:border-sky-500 focus:bg-white transition"
-            >
-              <option value="ALL">ทั้งหมดทุกสถานะ</option>
-              <option value="PRESENT">มาเรียน</option>
-              <option value="LATE">สาย</option>
-              <option value="LEAVE">ลา</option>
-              <option value="ABSENT">ขาดเรียน</option>
-            </select>
+              onChange={(val) => setSelectedStatus(val)}
+              accentColor="blue"
+            />
           </div>
 
           {/* ปุ่มล้างตัวกรอง */}

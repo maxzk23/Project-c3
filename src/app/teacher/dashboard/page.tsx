@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { getTeacherClassrooms } from "@/app/actions/classroom";
 import { getDashboardSummaryData, toggleMaterialLock } from "@/app/actions/teacher";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { 
   FaUsers, 
   FaFileSignature, 
@@ -276,32 +277,32 @@ export default function TeacherDashboard() {
             </h2>
             
             {/* ดรอปดาวน์เลือกวิชาเรียนและห้องย่อย */}
-            <div className="flex items-center gap-1.5 w-full sm:w-auto">
-              <select
+            <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 w-full sm:w-auto">
+              <CustomSelect
+                options={[
+                  { value: "ALL", label: "ทุกระดับชั้นปี" },
+                  ...uniqueYearLevels.map((year) => ({
+                    value: year,
+                    label: year === "ม.3" ? "มัธยมศึกษาปีที่ 3" : year === "ม.2" ? "มัธยมศึกษาปีที่ 2" : "มัธยมศึกษาปีที่ 1"
+                  }))
+                ]}
                 value={selectedYearLevel}
-                onChange={(e) => handleYearLevelChange(e.target.value)}
-                className="flex-1 sm:flex-initial px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold outline-none cursor-pointer text-slate-700 hover:bg-slate-100 transition"
-              >
-                <option value="ALL">ทุกระดับชั้นปี</option>
-                {uniqueYearLevels.map((year) => (
-                  <option key={year} value={year}>
-                    {year === "ม.3" ? "มัธยมศึกษาปีที่ 3" : year === "ม.2" ? "มัธยมศึกษาปีที่ 2" : "มัธยมศึกษาปีที่ 1"}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => handleYearLevelChange(val)}
+                accentColor="emerald"
+              />
 
-              <select
+              <CustomSelect
+                options={[
+                  { value: "ALL", label: "ดูทั้งหมด (ทุกห้องเรียน)" },
+                  ...availableRooms.map((cls) => ({
+                    value: cls.id,
+                    label: `ห้อง ${cls.yearLevel}/${cls.room}`
+                  }))
+                ]}
                 value={selectedClassId}
-                onChange={(e) => setSelectedClassId(e.target.value)}
-                className="flex-1 sm:flex-initial px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold outline-none cursor-pointer text-slate-700 hover:bg-slate-100 transition"
-              >
-                <option value="ALL">ดูทั้งหมด (ทุกห้องเรียน)</option>
-                {availableRooms.map((cls) => (
-                  <option key={cls.id} value={cls.id}>
-                    ห้อง {cls.yearLevel}/{cls.room}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setSelectedClassId(val)}
+                accentColor="emerald"
+              />
             </div>
 
           </div>

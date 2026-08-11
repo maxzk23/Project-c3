@@ -10,6 +10,7 @@ import {
 } from "@/app/actions/classroom";
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { 
   FaPlus, 
   FaFileExcel, 
@@ -464,28 +465,30 @@ export default function StudentRegistryPage() {
 
 
           {/* ระดับชั้น */}
-          <select 
+          <CustomSelect
+            options={[
+              { value: "all", label: "ทุกระดับชั้น" },
+              { value: "ม.1", label: "ม.1" },
+              { value: "ม.2", label: "ม.2" },
+              { value: "ม.3", label: "ม.3" }
+            ]}
             value={selectedLevel}
-            onChange={(e) => setSelectedLevel(e.target.value)}
-            className="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 cursor-pointer focus:outline-none focus:border-sky-500 transition"
-          >
-            <option value="all">ทุกระดับชั้น</option>
-            <option value="ม.1">ม.1</option>
-            <option value="ม.2">ม.2</option>
-            <option value="ม.3">ม.3</option>
-          </select>
+            onChange={(val) => setSelectedLevel(val)}
+            accentColor="blue"
+          />
 
           {/* ทุกห้อง */}
-          <select 
+          <CustomSelect
+            options={[
+              { value: "all", label: "ทุกห้อง" },
+              { value: "1", label: "ห้อง 1" },
+              { value: "2", label: "ห้อง 2" },
+              { value: "3", label: "ห้อง 3" }
+            ]}
             value={selectedRoom}
-            onChange={(e) => setSelectedRoom(e.target.value)}
-            className="px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 cursor-pointer focus:outline-none focus:border-sky-500 transition"
-          >
-            <option value="all">ทุกห้อง</option>
-            <option value="1">ห้อง 1</option>
-            <option value="2">ห้อง 2</option>
-            <option value="3">ห้อง 3</option>
-          </select>
+            onChange={(val) => setSelectedRoom(val)}
+            accentColor="blue"
+          />
 
           {/* ช่องค้นหา */}
           <div className="relative min-w-[200px]">

@@ -11,6 +11,7 @@ import {
   FaSearch, 
   FaHistory 
 } from "react-icons/fa";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 interface AttendanceHistoryTabProps {
   historyLogs: any[];
@@ -188,25 +189,26 @@ export default function AttendanceHistoryTab({
               <label className="text-xs font-bold text-slate-500 flex items-center gap-1">
                 <FaCalendarAlt className="text-[10px]" /> เลือกดูตามเดือน
               </label>
-              <select
+              <CustomSelect
+                options={[
+                  { value: "all", label: "ทุกเดือน (ทั้งหมด)" },
+                  { value: "ม.ค.", label: "มกราคม" },
+                  { value: "ก.พ.", label: "กุมภาพันธ์" },
+                  { value: "มี.ค.", label: "มีนาคม" },
+                  { value: "เม.ย.", label: "เมษายน" },
+                  { value: "พ.ค.", label: "พฤษภาคม" },
+                  { value: "มิ.ย.", label: "มิถุนายน" },
+                  { value: "ก.ค.", label: "กรกฎาคม" },
+                  { value: "ส.ค.", label: "สิงหาคม" },
+                  { value: "ก.ย.", label: "กันยายน" },
+                  { value: "ต.ค.", label: "ตุลาคม" },
+                  { value: "พ.ย.", label: "พฤศจิกายน" },
+                  { value: "ธ.ค.", label: "ธันวาคม" }
+                ]}
                 value={historyMonthFilter}
-                onChange={(e) => setHistoryMonthFilter(e.target.value)}
-                className="px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none cursor-pointer text-slate-700"
-              >
-                <option value="all">ทุกเดือน (ทั้งหมด)</option>
-                <option value="ม.ค.">มกราคม</option>
-                <option value="ก.พ.">กุมภาพันธ์</option>
-                <option value="มี.ค.">มีนาคม</option>
-                <option value="เม.ย.">เมษายน</option>
-                <option value="พ.ค.">พฤษภาคม</option>
-                <option value="มิ.ย.">มิถุนายน</option>
-                <option value="ก.ค.">กรกฎาคม</option>
-                <option value="ส.ค.">สิงหาคม</option>
-                <option value="ก.ย.">กันยายน</option>
-                <option value="ต.ค.">ตุลาคม</option>
-                <option value="พ.ย.">พฤศจิกายน</option>
-                <option value="ธ.ค.">ธันวาคม</option>
-              </select>
+                onChange={(val) => setHistoryMonthFilter(val)}
+                accentColor="emerald"
+              />
             </div>
           )}
 
@@ -215,16 +217,17 @@ export default function AttendanceHistoryTab({
             <label className="text-xs font-bold text-slate-500 flex items-center gap-1">
               <FaUserCheck className="text-[10px]" /> กรองระดับชั้นปี
             </label>
-            <select
+            <CustomSelect
+              options={[
+                { value: "all", label: "ทุกระดับชั้น (ทั้งหมด)" },
+                { value: "ม.1", label: "มัธยมศึกษาปีที่ 1 (ม.1)" },
+                { value: "ม.2", label: "มัธยมศึกษาปีที่ 2 (ม.2)" },
+                { value: "ม.3", label: "มัธยมศึกษาปีที่ 3 (ม.3)" }
+              ]}
               value={historyClassFilter}
-              onChange={(e) => setHistoryClassFilter(e.target.value)}
-              className="px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none cursor-pointer text-slate-700"
-            >
-              <option value="all">ทุกระดับชั้น (ทั้งหมด)</option>
-              <option value="ม.1">มัธยมศึกษาปีที่ 1 (ม.1)</option>
-              <option value="ม.2">มัธยมศึกษาปีที่ 2 (ม.2)</option>
-              <option value="ม.3">มัธยมศึกษาปีที่ 3 (ม.3)</option>
-            </select>
+              onChange={(val) => setHistoryClassFilter(val)}
+              accentColor="emerald"
+            />
           </div>
 
           {/* กรองห้อง */}
@@ -232,16 +235,17 @@ export default function AttendanceHistoryTab({
             <label className="text-xs font-bold text-slate-500 flex items-center gap-1">
               <FaArrowRight className="text-[10px] transform rotate-90" /> กรองห้องเรียนย่อย
             </label>
-            <select
+            <CustomSelect
+              options={[
+                { value: "all", label: "ทุกห้องเรียน (ทั้งหมด)" },
+                { value: "1", label: "ห้อง 1" },
+                { value: "2", label: "ห้อง 2" },
+                { value: "3", label: "ห้อง 3" }
+              ]}
               value={historyRoomFilter}
-              onChange={(e) => setHistoryRoomFilter(e.target.value)}
-              className="px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold outline-none cursor-pointer text-slate-700"
-            >
-              <option value="all">ทุกห้องเรียน (ทั้งหมด)</option>
-              <option value="1">ห้อง 1</option>
-              <option value="2">ห้อง 2</option>
-              <option value="3">ห้อง 3</option>
-            </select>
+              onChange={(val) => setHistoryRoomFilter(val)}
+              accentColor="emerald"
+            />
           </div>
         </div>
 
