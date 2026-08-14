@@ -100,6 +100,7 @@ model User {
   notifications    Notification[]    @relation("UserNotifications") // เชื่อมโยงรายการแจ้งเตือนที่ผู้ใช้ได้รับ
   executedLogs     AcademicYearLog[] @relation("ExecutedBy") // เชื่อมโยงประวัติการกดจัดการปีการศึกษาของคุณครู
 
+  @@index([role]) // ดัชนีเร่งกรองผู้ใช้ตามบทบาท (STUDENT, TEACHER, ADMIN)
   @@map("users") // แมปชื่อโมเดลเป็นชื่อตาราง "users" ในฐานข้อมูล PostgreSQL
 }
 
@@ -136,6 +137,7 @@ model StudentClass {
   classroom Classroom @relation(fields: [classId], references: [id], onDelete: Cascade) // โยงข้อมูลห้องเรียน (ถ้าลบห้องเรียน ข้อมูลการลงเรียนจะถูกลบตาม)
 
   @@unique([studentId, classId]) // ป้องกันนักเรียนสมัครเรียนซ้ำในห้องเรียนเดิมซ้ำซ้อน
+  @@index([classId]) // ดัชนีเร่งนับจำนวนนักเรียนต่อห้อง
   @@map("student_classes") // แมปชื่อโมเดลเป็นชื่อตาราง "student_classes" ใน PostgreSQL
 }
 
@@ -175,6 +177,7 @@ model Submission {
   assignment Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade) // โยงหางาน (ลบงานที่สั่ง ข้อมูลส่งงานจะลบตาม)
 
   @@unique([studentId, assignmentId]) // จำกัดสิทธิ์นักเรียนหนึ่งคนส่งงานชิ้นเดียวกันได้เพียงครั้งเดียวเท่านั้น
+  @@index([assignmentId]) // ดัชนีเร่งค้นหารายการส่งงานตามการบ้าน
   @@map("submissions") // แมปชื่อโมเดลเป็นชื่อตาราง "submissions" ใน PostgreSQL
 }
 
@@ -192,6 +195,7 @@ model Attendance {
   classroom Classroom @relation(fields: [classId], references: [id], onDelete: Cascade) // โยงหาตัวห้องเรียน (ลบห้องเรียน ประวัติเช็คชื่อลบตาม)
 
   @@unique([studentId, classId, date]) // ป้องกันไม่ให้มีการเช็คชื่อซ้ำของนักเรียนคนเดิมในห้องเดิมในวันเดียวกัน
+  @@index([classId, date]) // ดัชนีเร่งค้นหาเช็คชื่อตามห้องเรียนและวันที่
   @@map("attendance") // แมปชื่อโมเดลเป็นชื่อตาราง "attendance" ใน PostgreSQL
 }
 
@@ -209,6 +213,7 @@ model CourseMaterial {
   // ความสัมพันธ์ภายนอก (Relationships)
   classroom Classroom @relation(fields: [classId], references: [id], onDelete: Cascade) // โยงหาห้องเรียน (ลบห้องเรียน สื่อการสอนในห้องถูกลบตาม)
 
+  @@index([classId, isLocked]) // ดัชนีเร่งกรองสื่อที่เปิด/ล็อกตามห้องเรียน
   @@map("course_materials") // แมปชื่อโมเดลเป็นชื่อตาราง "course_materials" ใน PostgreSQL
 }
 
@@ -225,6 +230,7 @@ model GameScore {
   // ความสัมพันธ์ภายนอก (Relationships)
   student User @relation(fields: [studentId], references: [id], onDelete: Cascade) // โยงหานักเรียนผู้เล่น (ลบนักเรียน ประวัติคะแนนเกมลบตาม)
 
+  @@index([studentId, earnedAt(sort: Desc)]) // ดัชนีเร่งดึงประวัติคะแนนเกมล่าสุดของนักเรียน
   @@map("game_scores") // แมปชื่อโมเดลเป็นชื่อตาราง "game_scores" ใน PostgreSQL
 }
 
@@ -261,6 +267,7 @@ model Notification {
   // ความสัมพันธ์ภายนอก (Relationships)
   recipient User @relation("UserNotifications", fields: [recipientId], references: [id], onDelete: Cascade) // โยงหาผู้รับการแจ้งเตือน (ลบผู้ใช้ การแจ้งเตือนจะลบตาม)
 
+  @@index([recipientId, isRead, createdAt(sort: Desc)]) // ดัชนีเพิ่มความเร็วในการดึงแจ้งเตือนของผู้ใช้ (Topbar polling ทุก 8 วินาที)
   @@map("notifications") // แมปชื่อโมเดลเป็นชื่อตาราง "notifications" ใน PostgreSQL
 }
 

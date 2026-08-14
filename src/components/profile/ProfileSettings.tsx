@@ -73,8 +73,8 @@ export default function ProfileSettings({ initialUser }: ProfileSettingsProps) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
-  // เช็คว่าผู้ใช้เป็นครูหรือแอดมิน (มีสิทธิ์แก้ชื่อ/อวาตาร์) หรือไม่
-  const canEditInfo = initialUser.role === "TEACHER" || initialUser.role === "ADMIN";
+  // เช็คว่าผู้ใช้เป็นครูหรือแอดมิน (มีสิทธิ์แก้ชื่อจริง) หรือไม่
+  const canEditName = initialUser.role === "TEACHER" || initialUser.role === "ADMIN";
 
   const handleFormSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -83,10 +83,8 @@ export default function ProfileSettings({ initialUser }: ProfileSettingsProps) {
 
     const formData = new FormData(event.currentTarget);
     
-    // ตั้งค่ารูปอวาตาร์ที่เลือกส่งไปหลังบ้าน (เฉพาะ Preset ในระบบ)
-    if (canEditInfo) {
-      formData.set("avatarUrl", selectedAvatar);
-    }
+    // ตั้งค่ารูปอวาตาร์ที่เลือกส่งไปหลังบ้านสำหรับผู้ใช้ทุกคน
+    formData.set("avatarUrl", selectedAvatar);
 
     startTransition(async () => {
       const res = await updateProfile(null, formData);
@@ -151,7 +149,7 @@ export default function ProfileSettings({ initialUser }: ProfileSettingsProps) {
         {/* คอลัมน์ซ้าย: บัตรข้อมูลส่วนตัวย่อ */}
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col items-center text-center space-y-4 self-start">
           {renderAvatarHelper(
-            canEditInfo ? selectedAvatar : initialUser.avatarUrl,
+            selectedAvatar,
             initialUser.name,
             "w-24 h-24 text-4xl"
           )}
@@ -163,7 +161,7 @@ export default function ProfileSettings({ initialUser }: ProfileSettingsProps) {
                 ? "bg-sky-100 text-sky-700 border border-sky-200" 
                 : "bg-purple-100 text-purple-700 border border-purple-200"
             }`}>
-              {initialUser.role === "TEACHER" ? "คุณครูผู้สอน" : "นักเรียน ม.3/1"}
+              {initialUser.role === "TEACHER" ? "คุณครูผู้สอน" : "นักเรียน"}
             </span>
           </div>
 
@@ -192,48 +190,41 @@ export default function ProfileSettings({ initialUser }: ProfileSettingsProps) {
                     type="text"
                     name="name"
                     defaultValue={initialUser.name}
-                    disabled={!canEditInfo || isPending}
+                    disabled={!canEditName || isPending}
                     className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-sky-500 focus:bg-white transition disabled:opacity-75 disabled:bg-slate-100 disabled:cursor-not-allowed"
                     placeholder="ป้อนชื่อจริงนามสกุล"
                   />
                 </div>
-                {!canEditInfo && (
+                {!canEditName && (
                   <p className="text-xs text-amber-600 font-medium">⚠️ บัญชีนักเรียนไม่สามารถแก้ไขชื่อได้ด้วยตัวเอง กรุณาติดต่อครูประจำชั้นเพื่อขอเปลี่ยนชื่อ</p>
                 )}
               </div>
 
-              {/* ฟิลด์เลือกอวาตาร์ (เฉพาะครูแก้ไขได้) */}
-              {canEditInfo ? (
-                <div className="space-y-3">
-                  <label className="text-sm font-bold text-slate-700">เลือกรูปภาพประจำตัว (Avatar)</label>
-                  
-                  {/* การ์ดสไตล์สำหรับการเลือก Preset */}
-                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 pt-2">
-                    {AVATAR_PRESETS.map((avatar) => (
-                      <button
-                        key={avatar.id}
-                        type="button"
-                        onClick={() => setSelectedAvatar(avatar.id)}
-                        className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition hover:scale-105 active:scale-95 ${
-                          selectedAvatar === avatar.id 
-                            ? "border-sky-500 bg-sky-50 ring-2 ring-sky-500/20" 
-                            : "border-slate-200 bg-white hover:border-slate-300"
-                        }`}
-                      >
-                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${avatar.gradient} text-white flex items-center justify-center text-lg`}>
-                          {avatar.emoji}
-                        </div>
-                        <span className="text-[10px] font-bold text-slate-500 truncate w-full text-center">{avatar.label}</span>
-                      </button>
-                    ))}
-                  </div>
+              {/* ฟิลด์เลือกอวาตาร์ (ทุกคนแก้ไขได้) */}
+              <div className="space-y-3">
+                <label className="text-sm font-bold text-slate-700">เลือกรูปภาพประจำตัว (Avatar)</label>
+                
+                {/* การ์ดสไตล์สำหรับการเลือก Preset */}
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 pt-2">
+                  {AVATAR_PRESETS.map((avatar) => (
+                    <button
+                      key={avatar.id}
+                      type="button"
+                      onClick={() => setSelectedAvatar(avatar.id)}
+                      className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition hover:scale-105 active:scale-95 ${
+                        selectedAvatar === avatar.id 
+                          ? "border-sky-500 bg-sky-50 ring-2 ring-sky-500/20" 
+                          : "border-slate-200 bg-white hover:border-slate-300"
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${avatar.gradient} text-white flex items-center justify-center text-lg`}>
+                        {avatar.emoji}
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-500 truncate w-full text-center">{avatar.label}</span>
+                    </button>
+                  ))}
                 </div>
-              ) : (
-                <div className="space-y-1.5">
-                  <label className="text-sm font-bold text-slate-700">รูปภาพประจำตัว</label>
-                  <p className="text-xs text-slate-400">ภาพอวาตาร์ปัจจุบันถูกกำหนดโดยระบบ</p>
-                </div>
-              )}
+              </div>
             </div>
 
             {/* หมวดหมู่: ความปลอดภัยและรหัสผ่าน */}

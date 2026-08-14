@@ -211,9 +211,12 @@ export default function TeacherDashboard() {
       */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         
-        {/* สถิติ 1: จำนวนนักเรียน */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-emerald-500 flex items-center justify-between group hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-default">
-          <div className="space-y-1">
+        {/* สถิติ 1: จำนวนนักเรียน -> ไปที่ /teacher/classrooms */}
+        <Link 
+          href="/teacher/classrooms"
+          className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-emerald-500 flex items-center justify-between group hover:shadow-md hover:-translate-y-1 active:scale-[0.98] transition-all duration-200 cursor-pointer"
+        >
+          <div className="space-y-1 text-left">
             <h3 className="text-[25px] font-black text-slate-800 tracking-tight">
               {summaryData?.stats.totalStudents ?? 0} คน
             </h3>
@@ -224,11 +227,14 @@ export default function TeacherDashboard() {
           <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center text-lg shrink-0 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-200">
             <FaUsers />
           </div>
-        </div>
+        </Link>
 
-        {/* สถิติ 2: การบ้านรอตรวจ */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-sky-500 flex items-center justify-between group hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-default">
-          <div className="space-y-1">
+        {/* สถิติ 2: การบ้านรอตรวจ -> ไปที่ /teacher/grading */}
+        <Link 
+          href="/teacher/grading"
+          className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-sky-500 flex items-center justify-between group hover:shadow-md hover:-translate-y-1 active:scale-[0.98] transition-all duration-200 cursor-pointer"
+        >
+          <div className="space-y-1 text-left">
             <h3 className="text-[25px] font-black text-slate-800 tracking-tight">
               {summaryData?.stats.pendingGrading ?? 0} งาน
             </h3>
@@ -237,11 +243,14 @@ export default function TeacherDashboard() {
           <div className="w-11 h-11 rounded-2xl bg-sky-50 text-sky-500 flex items-center justify-center text-lg shrink-0 group-hover:bg-sky-500 group-hover:text-white transition-colors duration-200">
             <FaFileSignature />
           </div>
-        </div>
+        </Link>
 
-        {/* สถิติ 3: บทเรียนที่เปิดให้ดู */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-purple-500 flex items-center justify-between group hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-default">
-          <div className="space-y-1">
+        {/* สถิติ 3: บทเรียนที่เปิดให้ดู -> ไปที่ /teacher/materials */}
+        <Link 
+          href="/teacher/materials"
+          className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-purple-500 flex items-center justify-between group hover:shadow-md hover:-translate-y-1 active:scale-[0.98] transition-all duration-200 cursor-pointer"
+        >
+          <div className="space-y-1 text-left">
             <h3 className="text-[25px] font-black text-slate-800 tracking-tight">
               {summaryData?.stats.unlockedMaterials ?? 0} บท
             </h3>
@@ -250,11 +259,14 @@ export default function TeacherDashboard() {
           <div className="w-11 h-11 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center text-lg shrink-0 group-hover:bg-purple-500 group-hover:text-white transition-colors duration-200">
             <FaFolderOpen />
           </div>
-        </div>
+        </Link>
 
-        {/* สถิติ 4: จำนวนมินิเกม */}
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-orange-500 flex items-center justify-between group hover:shadow-md hover:-translate-y-1 transition-all duration-200 cursor-default">
-          <div className="space-y-1">
+        {/* สถิติ 4: จำนวนมินิเกม -> ไปที่ /teacher/leaderboard */}
+        <Link 
+          href="/teacher/leaderboard"
+          className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 border-l-[5px] border-l-orange-500 flex items-center justify-between group hover:shadow-md hover:-translate-y-1 active:scale-[0.98] transition-all duration-200 cursor-pointer"
+        >
+          <div className="space-y-1 text-left">
             <h3 className="text-[25px] font-black text-slate-800 tracking-tight">
               {summaryData?.stats.totalGames ?? 1} เกม
             </h3>
@@ -263,7 +275,7 @@ export default function TeacherDashboard() {
           <div className="w-11 h-11 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-lg shrink-0 group-hover:bg-orange-500 group-hover:text-white transition-colors duration-200">
             <FaGamepad />
           </div>
-        </div>
+        </Link>
 
       </div>
 
@@ -517,8 +529,8 @@ export default function TeacherDashboard() {
             )}
 
             <Link 
-              href="/teacher/grading"
-              className="w-full flex items-center justify-center gap-1.5 py-3.5 bg-sky-50 text-sky-600 font-bold text-xs rounded-xl hover:bg-sky-100 transition-colors shadow-sm border border-sky-100"
+              href="/teacher/leaderboard"
+              className="w-full flex items-center justify-center gap-1.5 py-3.5 bg-sky-50 text-sky-600 font-bold text-xs rounded-xl hover:bg-sky-100 hover:shadow transition-all shadow-xs border border-sky-100 active:scale-[0.99]"
             >
               <FaTrophy />
               <span>ไปที่แผงสถิติมินิเกมและคะแนนชั้นเรียน</span>

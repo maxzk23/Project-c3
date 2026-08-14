@@ -116,11 +116,7 @@ export default function TeacherSidebar({ isOpen = false, onClose }: SidebarProps
             <span>ตรวจการบ้าน</span>
           </div>
           {counts.pendingGrading > 0 && (
-            <span className={`px-2 py-0.5 text-[11px] font-black rounded-full shadow-sm ${
-              isItemActive("/teacher/grading") 
-                ? "bg-white text-rose-600" 
-                : "bg-rose-500 text-white shadow-rose-200"
-            }`}>
+            <span className="px-2 py-0.5 text-[11px] font-black rounded-full bg-rose-500 text-white shadow-sm shadow-rose-200">
               {counts.pendingGrading}
             </span>
           )}
@@ -180,11 +176,7 @@ export default function TeacherSidebar({ isOpen = false, onClose }: SidebarProps
             <span>การแจ้งเตือน</span>
           </div>
           {counts.unreadNotifications > 0 && (
-            <span className={`px-2 py-0.5 text-[11px] font-black rounded-full shadow-sm ${
-              isItemActive("/teacher/notifications") 
-                ? "bg-white text-rose-600" 
-                : "bg-rose-500 text-white shadow-rose-200"
-            }`}>
+            <span className="px-2 py-0.5 text-[11px] font-black rounded-full bg-rose-500 text-white shadow-sm shadow-rose-200">
               {counts.unreadNotifications}
             </span>
           )}

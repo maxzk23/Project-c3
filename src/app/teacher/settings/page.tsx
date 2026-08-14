@@ -10,6 +10,7 @@ import {
   restoreSystemFromBackup
 } from "@/app/actions/teacher";
 import { getTeacherClassrooms } from "@/app/actions/classroom";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { 
   FaCog, 
   FaSync, 
@@ -168,19 +169,41 @@ export default function TeacherSettingsPage() {
     }
   };
 
+  // สเตตสำหรับ ConfirmModal
+  const [confirmModalConfig, setConfirmModalConfig] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    confirmText?: string;
+    variant?: "danger" | "warning" | "info";
+    onConfirm: () => void;
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    onConfirm: () => {},
+  });
+
   // รีเซ็ตฐานข้อมูลเริ่มต้นของโรงเรียนสำหรับทดสอบเดโม่ใหม่
   const handleResetDatabaseSeed = async () => {
-    if (window.confirm("⚠️ คุณครูแน่ใจใช่ไหมว่าต้องการล้างข้อมูลเพื่อเริ่มปี 2568 ใหม่?\n(การดำเนินการนี้จะรีเซ็ตห้องเรียนและนักเรียนต้นแบบทั้งหมดเข้าสู่สภาวะเริ่มต้นเดโม่)")) {
-      startTransition(async () => {
-        const res = await resetDatabaseSeed();
-        if (res.success) {
-          showToast("success", res.message || "รีเซ็ตฐานข้อมูลสำเร็จ");
-          setTimeout(() => window.location.reload(), 1500);
-        } else {
-          showToast("error", res.error || "เกิดข้อผิดพลาด");
-        }
-      });
-    }
+    setConfirmModalConfig({
+      isOpen: true,
+      title: "ยืนยันการรีเซ็ตฐานข้อมูลเริ่มต้น",
+      description: "คุณครูแน่ใจใช่ไหมว่าต้องการล้างข้อมูลเพื่อเริ่มปี 2568 ใหม่? การดำเนินการนี้จะรีเซ็ตห้องเรียนและนักเรียนต้นแบบทั้งหมดเข้าสู่สภาวะเริ่มต้นเดโม่",
+      confirmText: "ยืนยันรีเซ็ตระบบ",
+      variant: "danger",
+      onConfirm: () => {
+        startTransition(async () => {
+          const res = await resetDatabaseSeed();
+          if (res.success) {
+            showToast("success", res.message || "รีเซ็ตฐานข้อมูลสำเร็จ");
+            setTimeout(() => window.location.reload(), 1500);
+          } else {
+            showToast("error", res.error || "เกิดข้อผิดพลาด");
+          }
+        });
+      }
+    });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -192,41 +215,44 @@ export default function TeacherSettingsPage() {
   const handleRestoreBackup = async () => {
     if (!restoreFile) return;
 
-    const confirmRestore = window.confirm("⚠️ คำเตือน: การกู้คืนข้อมูลจะทำการลบข้อมูลทั้งหมดในระบบปัจจุบันและแทนที่ด้วยข้อมูลจากไฟล์สำรอง คุณต้องการดำเนินการต่อหรือไม่?");
-    if (!confirmRestore) return;
-
-    setIsRestoring(true);
-    try {
-      const fileReader = new FileReader();
-      fileReader.onload = async (event) => {
+    setConfirmModalConfig({
+      isOpen: true,
+      title: "ยืนยันการกู้คืนข้อมูลสำรอง",
+      description: "คำเตือน: การกู้คืนข้อมูลจะทำการลบข้อมูลทั้งหมดในระบบปัจจุบันและแทนที่ด้วยข้อมูลจากไฟล์สำรอง (.json) คุณต้องการดำเนินการต่อหรือไม่?",
+      confirmText: "กู้คืนข้อมูลทันที",
+      variant: "warning",
+      onConfirm: () => {
+        setIsRestoring(true);
         try {
-          const jsonText = event.target?.result as string;
-          const parsed = JSON.parse(jsonText);
-          const backupData = parsed.data || parsed;
+          const fileReader = new FileReader();
+          fileReader.onload = async (event) => {
+            try {
+              const jsonText = event.target?.result as string;
+              const parsed = JSON.parse(jsonText);
+              const backupData = parsed.data || parsed;
 
-          startTransition(async () => {
-            const res = await restoreSystemFromBackup(backupData);
-            setIsRestoring(false);
-            if (res.success) {
-              setRestoreFile(null);
-              const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-              if (fileInput) fileInput.value = "";
-              showToast("success", res.message || "กู้คืนระบบสำเร็จ");
-              setTimeout(() => window.location.reload(), 1500);
-            } else {
-              showToast("error", res.error || "เกิดข้อผิดพลาดในการกู้คืนข้อมูล");
+              startTransition(async () => {
+                const res = await restoreSystemFromBackup(backupData);
+                setIsRestoring(false);
+                if (res.success) {
+                  showToast("success", res.message || "กู้คืนข้อมูลสำเร็จ");
+                  setTimeout(() => window.location.reload(), 1500);
+                } else {
+                  showToast("error", res.error || "เกิดข้อผิดพลาดในการกู้คืน");
+                }
+              });
+            } catch (err) {
+              setIsRestoring(false);
+              showToast("error", "ไฟล์สำรองข้อมูล JSON ไม่ถูกต้อง");
             }
-          });
-        } catch (parseErr) {
+          };
+          fileReader.readAsText(restoreFile);
+        } catch (e) {
           setIsRestoring(false);
-          showToast("error", "ไฟล์ข้อมูลไม่ถูกต้องตามรูปแบบ JSON");
+          showToast("error", "เกิดข้อผิดพลาดในการอ่านไฟล์");
         }
-      };
-      fileReader.readAsText(restoreFile);
-    } catch (err) {
-      setIsRestoring(false);
-      showToast("error", "ไม่สามารถอ่านไฟล์สำรองได้");
-    }
+      }
+    });
   };
 
   // ติ๊กเลือก/ไม่เลือก นักเรียนซ้ำชั้น
@@ -846,6 +872,19 @@ export default function TeacherSettingsPage() {
         </div>
 
       </div>
+
+      {/* Confirm Modal สำหรับการยืนยันทำรายการต่างๆ ในหน้าการตั้งค่า */}
+      <ConfirmModal
+        isOpen={confirmModalConfig.isOpen}
+        onClose={() => setConfirmModalConfig(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModalConfig.onConfirm}
+        title={confirmModalConfig.title}
+        description={confirmModalConfig.description}
+        confirmText={confirmModalConfig.confirmText}
+        cancelText="ยกเลิก"
+        variant={confirmModalConfig.variant || "danger"}
+        isLoading={isPending || isRestoring}
+      />
 
     </div>
   );

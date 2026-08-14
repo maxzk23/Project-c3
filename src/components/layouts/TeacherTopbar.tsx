@@ -7,6 +7,8 @@ import { FaBell, FaExclamationCircle, FaBars, FaFileAlt, FaBookOpen, FaCheckCirc
 import { getCurrentTeacherProfile } from "@/app/actions/classroom";
 import { getNotifications, markAllNotificationsAsRead, markNotificationAsRead, clearAllNotifications, getAssignmentClassId } from "@/app/actions/notification";
 import { renderAvatarHelper } from "@/components/profile/ProfileSettings";
+import { dispatchNotificationUpdate } from "@/lib/events";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 interface TopbarProps {
   onMenuClick?: () => void;
@@ -47,12 +49,19 @@ export default function TeacherTopbar({ onMenuClick }: TopbarProps) {
     fetchProfile();
     loadNotificationsRef.current();
 
-    // ฟัง Event เมื่อมีการอัปเดตโปรไฟล์เพื่อรีเฟรชข้อมูลใน Topbar ทันที
+    // ฟัง Event เมื่อมีการอัปเดตโปรไฟล์หรือการแจ้งเตือนเพื่อรีเฟรชข้อมูลใน Topbar ทันที
     const handleProfileUpdate = () => {
       fetchProfile();
     };
 
+    const handleNotifyUpdate = () => {
+      if (loadNotificationsRef.current) {
+        loadNotificationsRef.current();
+      }
+    };
+
     window.addEventListener("profile-updated", handleProfileUpdate);
+    window.addEventListener("notifications-updated", handleNotifyUpdate);
 
     let bc: BroadcastChannel | null = null;
     try {
@@ -60,6 +69,10 @@ export default function TeacherTopbar({ onMenuClick }: TopbarProps) {
       bc.onmessage = (event) => {
         if (event.data?.type === "PROFILE_UPDATED") {
           fetchProfile();
+        } else if (event.data?.type === "NOTIFICATIONS_UPDATED") {
+          if (loadNotificationsRef.current) {
+            loadNotificationsRef.current();
+          }
         }
       };
     } catch (e) {}
@@ -73,6 +86,7 @@ export default function TeacherTopbar({ onMenuClick }: TopbarProps) {
 
     return () => {
       window.removeEventListener("profile-updated", handleProfileUpdate);
+      window.removeEventListener("notifications-updated", handleNotifyUpdate);
       if (bc) bc.close();
       clearInterval(interval);
     };
@@ -87,6 +101,7 @@ export default function TeacherTopbar({ onMenuClick }: TopbarProps) {
     const res = await markAllNotificationsAsRead();
     if (res.success) {
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      dispatchNotificationUpdate();
     }
   };
 
@@ -129,12 +144,14 @@ export default function TeacherTopbar({ onMenuClick }: TopbarProps) {
     }
   };
 
-  const handleClearAll = async () => {
-    if (!window.confirm("คุณต้องการล้างการแจ้งเตือนทั้งหมดหรือไม่?")) return;
+  const [isClearModalOpen, setIsClearModalOpen] = useState(false);
+
+  const handleConfirmClearAll = async () => {
     const res = await clearAllNotifications();
     if (res.success) {
       setNotifications([]);
       setIsNotifyOpen(false);
+      dispatchNotificationUpdate();
     }
   };
 
@@ -287,7 +304,7 @@ export default function TeacherTopbar({ onMenuClick }: TopbarProps) {
                         <span className="text-[9px] text-slate-400 font-semibold block">{formatTime(item.createdAt)}</span>
                       </div>
                       {!item.isRead && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-sky-500 absolute right-4 mt-2"></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-rose-500 absolute right-4 mt-2"></div>
                       )}
                     </div>
                   ))
@@ -305,15 +322,15 @@ export default function TeacherTopbar({ onMenuClick }: TopbarProps) {
                 <div className="flex justify-around items-center pt-1">
                   {notifications.length > 0 && (
                     <button 
-                      onClick={handleClearAll}
-                      className="text-[10px] font-bold text-rose-600 hover:text-rose-700"
+                      onClick={() => setIsClearModalOpen(true)}
+                      className="text-[10px] font-bold text-rose-600 hover:text-rose-700 cursor-pointer"
                     >
                       ล้างการแจ้งเตือนทั้งหมด
                     </button>
                   )}
                   <button 
                     onClick={() => setIsNotifyOpen(false)}
-                    className="text-[10px] font-bold text-slate-500 hover:text-slate-700"
+                    className="text-[10px] font-bold text-slate-500 hover:text-slate-700 cursor-pointer"
                   >
                     ปิดหน้าต่าง
                   </button>
@@ -338,6 +355,19 @@ export default function TeacherTopbar({ onMenuClick }: TopbarProps) {
         </Link>
 
       </div>
+
+      {/* Confirm Modal สำหรับล้างการแจ้งเตือนทั้งหมด */}
+      <ConfirmModal
+        isOpen={isClearModalOpen}
+        onClose={() => setIsClearModalOpen(false)}
+        onConfirm={handleConfirmClearAll}
+        title="ยืนยันการล้างประวัติการแจ้งเตือน"
+        description="คุณต้องการลบประวัติรายการแจ้งเตือนทั้งหมดใช่หรือไม่? ข้อมูลประวัติการแจ้งเตือนที่ลบไปแล้วจะไม่สามารถกู้คืนกลับมาได้"
+        confirmText="ลบทั้งหมด"
+        cancelText="ยกเลิก"
+        variant="danger"
+      />
+
     </header>
   );
 }

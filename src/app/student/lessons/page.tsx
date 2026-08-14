@@ -53,38 +53,41 @@ export default function StudentLessonsPage() {
     initData();
   }, []);
 
+  const loadMaterials = async (isSilent = false) => {
+    if (!isSilent) setIsLoading(true);
+    try {
+      const data = await getStudentMaterials(selectedClassId);
+      setMaterials(data as Material[]);
+    } finally {
+      if (!isSilent) setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (selectedClassId) {
-      loadMaterials();
+      loadMaterials(false);
 
-      // ดึงข้อมูลอัตโนมัติทุกๆ 3 วินาที (Polling) เพื่ออัปเดตเรียลไทม์ข้ามเบราว์เซอร์
+      // ดึงข้อมูลใหม่แบบเงียบๆ (Silent Refresh) โดยไม่ทำให้เกิดรอยต่อหรือการกระพริบของ UI
       const interval = setInterval(() => {
-        loadMaterials();
-      }, 3000);
+        loadMaterials(true);
+      }, 4000);
 
       return () => clearInterval(interval);
     }
   }, [selectedClassId]);
 
-  // รับการอัปเดตแบบเรียลไทม์เมื่อคุณครูสลับตัวล็อกสื่อการเรียนการสอน
+  // รับการอัปเดตแบบเรียลไทม์เมื่อคุณครูสลับตัวล็อกสื่อการเรียนการสอน (Silent Sync)
   useEffect(() => {
     const bc = new BroadcastChannel("lms-channel");
     bc.onmessage = (event) => {
       if (event.data?.type === "MATERIAL_TOGGLED") {
-        loadMaterials();
+        loadMaterials(true);
       }
     };
     return () => {
       bc.close();
     };
   }, [selectedClassId]);
-
-  const loadMaterials = async () => {
-    setIsLoading(true);
-    const data = await getStudentMaterials(selectedClassId);
-    setMaterials(data as Material[]);
-    setIsLoading(false);
-  };
 
   const getMaterialIcon = (type: MaterialType) => {
     switch (type) {
@@ -144,7 +147,21 @@ export default function StudentLessonsPage() {
       ) : (
         <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
           {isLoading ? (
-            <div className="py-12 text-center text-slate-400 font-medium">กำลังโหลดข้อมูลบทเรียน...</div>
+            /* Skeleton Loading สวยงามนุ่มนวลในการโหลดครั้งแรก */
+            <div className="space-y-4">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-slate-50 rounded-xl border border-slate-100 animate-pulse gap-4">
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className="w-10 h-10 bg-slate-200 rounded-lg shrink-0"></div>
+                    <div className="space-y-2 flex-1">
+                      <div className="w-2/5 h-4 bg-slate-200 rounded"></div>
+                      <div className="w-1/4 h-3 bg-slate-200 rounded"></div>
+                    </div>
+                  </div>
+                  <div className="w-24 h-9 bg-slate-200 rounded-full shrink-0"></div>
+                </div>
+              ))}
+            </div>
           ) : materials.length === 0 ? (
             <div className="py-12 text-center text-slate-400 space-y-2">
               <FaBookOpen className="text-5xl mx-auto text-slate-200" />

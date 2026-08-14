@@ -15,7 +15,9 @@ import {
   FaTimes,
   FaHourglassHalf,
   FaCommentAlt,
-  FaExternalLinkAlt
+  FaExternalLinkAlt,
+  FaChevronDown,
+  FaChevronUp
 } from "react-icons/fa";
 
 interface Classroom { id: string; name: string; yearLevel: string; room: string; }
@@ -43,6 +45,11 @@ export default function StudentAssignmentsPage() {
   const [linkValues, setLinkValues] = useState<Record<string, string>>({});
   const [fileValues, setFileValues] = useState<Record<string, File | null>>({});
   const [dragOver, setDragOver] = useState<Record<string, boolean>>({});
+  const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
+
+  const toggleExpand = (id: string) => {
+    setExpandedIds(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const [isPending, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -269,21 +276,46 @@ export default function StudentAssignmentsPage() {
             </div>
           </div>
 
-          {/* Filter Tabs */}
-          <div className="flex rounded-xl border border-slate-200 bg-slate-50 p-0.5 gap-0.5 overflow-x-auto max-w-full no-scrollbar shrink-0">
-            {[
-              { key: "all", label: `ทั้งหมด (${assignments.length})` },
-              { key: "pending", label: `ยังไม่ส่ง (${notSubmitted})` },
-              { key: "submitted", label: `ส่งแล้ว (${submitted})` }
-            ].map(({ key, label }) => (
-              <button
-                key={key}
-                onClick={() => setFilterTab(key as any)}
-                className={`px-4 py-2 text-xs font-bold rounded-lg transition-all whitespace-nowrap ${filterTab === key ? "bg-white text-slate-700 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
-              >
-                {label}
-              </button>
-            ))}
+          {/* Filter Tabs & Expand All Controls */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex rounded-xl border border-slate-200 bg-slate-50 p-0.5 gap-0.5 overflow-x-auto max-w-full no-scrollbar shrink-0">
+              {[
+                { key: "all", label: `ทั้งหมด (${assignments.length})` },
+                { key: "pending", label: `ยังไม่ส่ง (${notSubmitted})` },
+                { key: "submitted", label: `ส่งแล้ว (${submitted})` }
+              ].map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setFilterTab(key as any)}
+                  className={`px-4 py-2 text-xs font-bold rounded-lg transition-all whitespace-nowrap ${filterTab === key ? "bg-white text-slate-700 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                const allExpanded = filtered.length > 0 && filtered.every(a => expandedIds[a.id]);
+                const newState: Record<string, boolean> = {};
+                filtered.forEach(a => { newState[a.id] = !allExpanded; });
+                setExpandedIds(prev => ({ ...prev, ...newState }));
+              }}
+              className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 self-end sm:self-auto active:scale-95"
+            >
+              {filtered.length > 0 && filtered.every(a => expandedIds[a.id]) ? (
+                <>
+                  <FaChevronUp className="text-[10px] text-sky-600" />
+                  <span>หุบการ์ดทั้งหมด</span>
+                </>
+              ) : (
+                <>
+                  <FaChevronDown className="text-[10px] text-slate-500" />
+                  <span>ขยายการ์ดทั้งหมด</span>
+                </>
+              )}
+            </button>
           </div>
 
           {/* Assignment Cards */}
@@ -294,180 +326,202 @@ export default function StudentAssignmentsPage() {
               const mode = getMode(asm.id);
               const alreadySubmitted = !!asm.submission;
               const isGraded = asm.submission?.status === "GRADED";
+              const isExpanded = !!expandedIds[asm.id];
 
               return (
-                <div key={asm.id} className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all ${isGraded ? "border-emerald-200" : alreadySubmitted ? "border-sky-200" : "border-slate-100"}`}>
+                <div key={asm.id} className={`bg-white rounded-2xl border shadow-sm overflow-hidden transition-all ${isGraded ? "border-emerald-200" : alreadySubmitted ? "border-sky-200" : "border-slate-200"}`}>
 
                   {/* Status stripe */}
                   <div className={`h-1 w-full ${isGraded ? "bg-emerald-400" : alreadySubmitted ? "bg-sky-400" : "bg-amber-300"}`} />
 
-                  {/* Title */}
-                  <div className="px-6 pt-4 pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <h3 className="font-bold text-slate-800 leading-tight">{asm.title}</h3>
-                      {asm.description && <p className="text-sm text-slate-500 mt-1 leading-relaxed">{asm.description}</p>}
+                  {/* Collapsible Header */}
+                  <div 
+                    onClick={() => toggleExpand(asm.id)}
+                    className="px-6 py-4 border-b border-slate-100 flex items-center justify-between gap-3 cursor-pointer hover:bg-slate-50/80 transition-colors select-none group"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-slate-800 leading-tight text-sm sm:text-base group-hover:text-sky-600 transition-colors">
+                          {asm.title}
+                        </h3>
+                      </div>
+                      {asm.description && (
+                        <p className={`text-xs text-slate-500 mt-1 leading-relaxed ${!isExpanded ? "line-clamp-1 opacity-85" : ""}`}>
+                          {asm.description}
+                        </p>
+                      )}
                     </div>
-                    <div className="shrink-0 self-start sm:self-auto">
-                      {isGraded
-                        ? <span className="flex items-center gap-1 px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-full"><FaCheckCircle className="text-[8px]" /> ตรวจแล้ว</span>
-                        : alreadySubmitted
-                        ? <span className="flex items-center gap-1 px-2.5 py-1 bg-sky-100 text-sky-700 text-[10px] font-black rounded-full"><FaHourglassHalf className="text-[8px]" /> รอตรวจ</span>
-                        : <span className="flex items-center gap-1 px-2.5 py-1 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full"><FaExclamationCircle className="text-[8px]" /> ยังไม่ส่ง</span>
-                      }
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <div>
+                        {isGraded
+                          ? <span className="flex items-center gap-1 px-2.5 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-black rounded-full"><FaCheckCircle className="text-[8px]" /> ตรวจแล้ว</span>
+                          : alreadySubmitted
+                          ? <span className="flex items-center gap-1 px-2.5 py-1 bg-sky-100 text-sky-700 text-[10px] font-black rounded-full"><FaHourglassHalf className="text-[8px]" /> รอตรวจ</span>
+                          : <span className="flex items-center gap-1 px-2.5 py-1 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full"><FaExclamationCircle className="text-[8px]" /> ยังไม่ส่ง</span>
+                        }
+                      </div>
+
+                      <div className="w-8 h-8 rounded-full bg-slate-100 group-hover:bg-sky-100 group-hover:text-sky-600 text-slate-500 flex items-center justify-center transition-all shrink-0">
+                        {isExpanded ? <FaChevronUp className="text-xs text-sky-600" /> : <FaChevronDown className="text-xs text-slate-400 group-hover:text-sky-600" />}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+                  {/* Expanded Body Content */}
+                  {isExpanded && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-100 animate-in fade-in duration-200">
 
-                    {/* LEFT: ส่งงาน */}
-                    <div className="p-5 space-y-4">
-                      {asm.isGoogleForm ? (
-                        <div className="space-y-4">
-                          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">แบบฝึกหัดออนไลน์</h4>
-                          <div className="p-4 bg-purple-50 border border-purple-100 rounded-2xl space-y-3">
-                            <p className="text-xs text-purple-800 font-semibold leading-relaxed">
-                              แบบทดสอบนี้ใช้ Google Forms กรุณากดปุ่มเปิดแบบทดสอบเพื่อทำข้อสอบให้เสร็จเรียบร้อย เมื่อส่งคำตอบบนหน้า Google Forms แล้ว ให้กลับมากดปุ่มยืนยันส่งด้านล่างนี้
-                            </p>
-                            <a href={asm.googleFormUrl || "#"} target="_blank" rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-sm transition w-full sm:w-auto">
-                              <span>เปิดทำแบบฝึกหัด</span>
-                              <FaArrowRight className="text-[9px]" />
-                            </a>
-                          </div>
-                          
-                          {alreadySubmitted ? (
-                            <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-xs font-bold text-emerald-700 text-center">
-                              ยืนยันการทำข้อสอบเสร็จสิ้นแล้ว
-                            </div>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleGoogleFormSubmit(asm.id, asm.googleFormUrl || "")}
-                              disabled={pendingId === asm.id}
-                              className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition disabled:opacity-50"
-                            >
-                              {pendingId === asm.id ? "กำลังส่งข้อมูล..." : "ยืนยันว่าทำแบบฝึกหัดเสร็จแล้ว ✔"}
-                            </button>
-                          )}
-                        </div>
-                      ) : (
-                        <form onSubmit={(e) => handleSubmit(asm.id, e)} className="space-y-3">
-                          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">ส่งผลงาน</h4>
-
-                          {/* แสดงไฟล์ที่ส่งไปแล้ว */}
-                          {alreadySubmitted && asm.submission?.fileUrl ? (
-                            <div className="space-y-2">
-                              <p className="text-xs text-slate-500 font-semibold">ผลงานที่ส่ง:</p>
-                              <a href={asm.submission.fileUrl} target="_blank" rel="noopener noreferrer"
-                                className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-sky-600 hover:bg-sky-50 hover:border-sky-200 transition group">
-                                {isFileUrl(asm.submission.fileUrl) ? <FaFile className="shrink-0 text-sky-500" /> : <FaLink className="shrink-0 text-sky-500" />}
-                                <span className="truncate flex-1">{isFileUrl(asm.submission.fileUrl) ? asm.submission.fileUrl.split("/").pop() : asm.submission.fileUrl}</span>
-                                <FaExternalLinkAlt className="text-[9px] shrink-0 opacity-50 group-hover:opacity-100" />
+                      {/* LEFT: ส่งงาน */}
+                      <div className="p-5 space-y-4">
+                        {asm.isGoogleForm ? (
+                          <div className="space-y-4">
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">แบบฝึกหัดออนไลน์</h4>
+                            <div className="p-4 bg-purple-50 border border-purple-100 rounded-2xl space-y-3">
+                              <p className="text-xs text-purple-800 font-semibold leading-relaxed">
+                                แบบทดสอบนี้ใช้ Google Forms กรุณากดปุ่มเปิดแบบทดสอบเพื่อทำข้อสอบให้เสร็จเรียบร้อย เมื่อส่งคำตอบบนหน้า Google Forms แล้ว ให้กลับมากดปุ่มยืนยันส่งด้านล่างนี้
+                              </p>
+                              <a href={asm.googleFormUrl || "#"} target="_blank" rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-sm transition w-full sm:w-auto">
+                                <span>เปิดทำแบบฝึกหัด</span>
+                                <FaArrowRight className="text-[9px]" />
                               </a>
                             </div>
-                          ) : !alreadySubmitted ? (
-                            <>
-                              {/* Mode Tabs */}
-                              <div className="flex rounded-xl border border-slate-200 overflow-hidden bg-slate-50 p-0.5 gap-0.5">
-                                <button type="button" onClick={() => setMode(asm.id, "link")}
-                                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg transition-all ${mode === "link" ? "bg-white text-sky-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}>
-                                  <FaLink className="text-[10px]" /> ส่งลิงก์
-                                </button>
-                                <button type="button" onClick={() => setMode(asm.id, "file")}
-                                  className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg transition-all ${mode === "file" ? "bg-white text-sky-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}>
-                                  <FaCloudUploadAlt className="text-[11px]" /> อัปโหลดไฟล์
-                                </button>
+                            
+                            {alreadySubmitted ? (
+                              <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-xs font-bold text-emerald-700 text-center">
+                                ยืนยันการทำข้อสอบเสร็จสิ้นแล้ว
                               </div>
-
-                              {mode === "link" ? (
-                                <div className="flex flex-col sm:flex-row gap-2">
-                                  <input type="url" required disabled={isSubmitting(asm.id)}
-                                    value={linkValues[asm.id] || ""}
-                                    onChange={(e) => setLinkValues(prev => ({ ...prev, [asm.id]: e.target.value }))}
-                                    placeholder="https://drive.google.com/file/d/..."
-                                    className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-sky-400 focus:bg-white transition w-full"
-                                  />
-                                  <button type="submit" disabled={isSubmitting(asm.id)}
-                                    className="px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 transition whitespace-nowrap w-full sm:w-auto">
-                                    <FaPaperPlane className="text-[10px]" /> ส่งงาน
-                                  </button>
-                                </div>
-                              ) : (
-                                <div className="space-y-2">
-                                  <div
-                                    onDragOver={(e) => { e.preventDefault(); setDragOver(prev => ({ ...prev, [asm.id]: true })); }}
-                                    onDragLeave={() => setDragOver(prev => ({ ...prev, [asm.id]: false }))}
-                                    onDrop={(e) => handleDrop(asm.id, e)}
-                                    className={`relative border-2 border-dashed rounded-xl p-5 text-center transition-all cursor-pointer ${dragOver[asm.id] ? "border-sky-400 bg-sky-50" : fileValues[asm.id] ? "border-emerald-400 bg-emerald-50" : "border-slate-200 bg-slate-50 hover:border-sky-300 hover:bg-sky-50/50"}`}
-                                    onClick={() => document.getElementById(`file-${asm.id}`)?.click()}
-                                  >
-                                    <input id={`file-${asm.id}`} type="file" className="hidden"
-                                      onChange={(e) => setFileValues(prev => ({ ...prev, [asm.id]: e.target.files?.[0] ?? null }))} />
-                                    {fileValues[asm.id] ? (
-                                      <div className="space-y-1">
-                                        <FaFile className="text-2xl text-emerald-500 mx-auto" />
-                                        <p className="text-xs font-bold text-emerald-700 truncate">{fileValues[asm.id]!.name}</p>
-                                        <p className="text-[10px] text-slate-400">{(fileValues[asm.id]!.size / 1024 / 1024).toFixed(2)} MB</p>
-                                      </div>
-                                    ) : (
-                                      <div className="space-y-1">
-                                        <FaCloudUploadAlt className="text-2xl text-slate-300 mx-auto" />
-                                        <p className="text-xs text-slate-500 font-semibold">ลากวางไฟล์หรือคลิกเพื่อเลือก</p>
-                                        <p className="text-[10px] text-slate-400">PDF, Word, รูปภาพ ฯลฯ (สูงสุด 50 MB)</p>
-                                      </div>
-                                    )}  
-                                  </div>
-                                  <button type="submit" disabled={isSubmitting(asm.id) || !fileValues[asm.id]}
-                                    className="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm disabled:opacity-40 transition">
-                                    {isSubmitting(asm.id) ? <span className="animate-pulse">กำลังอัปโหลด...</span> : <><FaCloudUploadAlt /> อัปโหลดและส่งงาน</>}
-                                  </button>
-                                </div>
-                              )}
-                            </>
-                          ) : null}
-                        </form>
-                      )}
-                    </div>
-
-                    {/* RIGHT: สถานะ */}
-                    <div className="p-5 bg-slate-50/50 space-y-3">
-                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">สถานะ</h4>
-
-                      {!asm.submission ? (
-                        <div className="flex items-center gap-2 text-amber-600 text-sm font-bold">
-                          <FaExclamationCircle /> <span>ยังไม่ได้ส่งงาน</span>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2 text-sky-600 text-sm font-bold">
-                            <FaCheckCircle /> <span>ส่งผลงานแล้ว</span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleGoogleFormSubmit(asm.id, asm.googleFormUrl || "")}
+                                disabled={pendingId === asm.id}
+                                className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm transition disabled:opacity-50"
+                              >
+                                {pendingId === asm.id ? "กำลังส่งข้อมูล..." : "ยืนยันว่าทำแบบฝึกหัดเสร็จแล้ว ✔"}
+                              </button>
+                            )}
                           </div>
-                          <p className="text-xs text-slate-500">
-                            ส่งเมื่อ: <span className="font-semibold text-slate-700">{new Date(asm.submission.submittedAt).toLocaleString("th-TH")}</span>
-                          </p>
+                        ) : (
+                          <form onSubmit={(e) => handleSubmit(asm.id, e)} className="space-y-3">
+                            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">ส่งผลงาน</h4>
 
-                          {isGraded ? (
-                            <div className="border-t border-slate-200 pt-3 space-y-2">
-                              <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm">
-                                <FaCheckCircle /> <span>ครูตรวจแล้ว ✅</span>
+                            {/* แสดงไฟล์ที่ส่งไปแล้ว */}
+                            {alreadySubmitted && asm.submission?.fileUrl ? (
+                              <div className="space-y-2">
+                                <p className="text-xs text-slate-500 font-semibold">ผลงานที่ส่ง:</p>
+                                <a href={asm.submission.fileUrl} target="_blank" rel="noopener noreferrer"
+                                  className="flex items-center gap-2 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-sky-600 hover:bg-sky-50 hover:border-sky-200 transition group">
+                                  {isFileUrl(asm.submission.fileUrl) ? <FaFile className="shrink-0 text-sky-500" /> : <FaLink className="shrink-0 text-sky-500" />}
+                                  <span className="truncate flex-1">{isFileUrl(asm.submission.fileUrl) ? asm.submission.fileUrl.split("/").pop() : asm.submission.fileUrl}</span>
+                                  <FaExternalLinkAlt className="text-[9px] shrink-0 opacity-50 group-hover:opacity-100" />
+                                </a>
                               </div>
-                              {asm.submission.feedback && (
-                                <div className="p-3 bg-white border border-emerald-100 rounded-xl text-xs leading-relaxed text-slate-600 flex gap-2">
-                                  <FaCommentAlt className="text-emerald-400 mt-0.5 shrink-0" />
-                                  <span>{asm.submission.feedback}</span>
+                            ) : !alreadySubmitted ? (
+                              <>
+                                {/* Mode Tabs */}
+                                <div className="flex rounded-xl border border-slate-200 overflow-hidden bg-slate-50 p-0.5 gap-0.5">
+                                  <button type="button" onClick={() => setMode(asm.id, "link")}
+                                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg transition-all ${mode === "link" ? "bg-white text-sky-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}>
+                                    <FaLink className="text-[10px]" /> ส่งลิงก์
+                                  </button>
+                                  <button type="button" onClick={() => setMode(asm.id, "file")}
+                                    className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-bold rounded-lg transition-all ${mode === "file" ? "bg-white text-sky-600 shadow-sm" : "text-slate-400 hover:text-slate-600"}`}>
+                                    <FaCloudUploadAlt className="text-[11px]" /> อัปโหลดไฟล์
+                                  </button>
                                 </div>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] px-2.5 py-1 bg-sky-100 text-sky-700 border border-sky-200 rounded-full font-bold">
-                              <FaHourglassHalf className="text-[8px]" /> รอคุณครูตรวจ
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
 
-                  </div>
+                                {mode === "link" ? (
+                                  <div className="flex flex-col sm:flex-row gap-2">
+                                    <input type="url" required disabled={isSubmitting(asm.id)}
+                                      value={linkValues[asm.id] || ""}
+                                      onChange={(e) => setLinkValues(prev => ({ ...prev, [asm.id]: e.target.value }))}
+                                      placeholder="https://drive.google.com/file/d/..."
+                                      className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-sky-400 focus:bg-white transition w-full"
+                                    />
+                                    <button type="submit" disabled={isSubmitting(asm.id)}
+                                      className="px-4 py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 transition whitespace-nowrap w-full sm:w-auto">
+                                      <FaPaperPlane className="text-[10px]" /> ส่งงาน
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2">
+                                    <div
+                                      onDragOver={(e) => { e.preventDefault(); setDragOver(prev => ({ ...prev, [asm.id]: true })); }}
+                                      onDragLeave={() => setDragOver(prev => ({ ...prev, [asm.id]: false }))}
+                                      onDrop={(e) => handleDrop(asm.id, e)}
+                                      className={`relative border-2 border-dashed rounded-xl p-5 text-center transition-all cursor-pointer ${dragOver[asm.id] ? "border-sky-400 bg-sky-50" : fileValues[asm.id] ? "border-emerald-400 bg-emerald-50" : "border-slate-200 bg-slate-50 hover:border-sky-300 hover:bg-sky-50/50"}`}
+                                      onClick={() => document.getElementById(`file-${asm.id}`)?.click()}
+                                    >
+                                      <input id={`file-${asm.id}`} type="file" className="hidden"
+                                        onChange={(e) => setFileValues(prev => ({ ...prev, [asm.id]: e.target.files?.[0] ?? null }))} />
+                                      {fileValues[asm.id] ? (
+                                        <div className="space-y-1">
+                                          <FaFile className="text-2xl text-emerald-500 mx-auto" />
+                                          <p className="text-xs font-bold text-emerald-700 truncate">{fileValues[asm.id]!.name}</p>
+                                          <p className="text-[10px] text-slate-400">{(fileValues[asm.id]!.size / 1024 / 1024).toFixed(2)} MB</p>
+                                        </div>
+                                      ) : (
+                                        <div className="space-y-1">
+                                          <FaCloudUploadAlt className="text-2xl text-slate-300 mx-auto" />
+                                          <p className="text-xs text-slate-500 font-semibold">ลากวางไฟล์หรือคลิกเพื่อเลือก</p>
+                                          <p className="text-[10px] text-slate-400">PDF, Word, รูปภาพ ฯลฯ (สูงสุด 50 MB)</p>
+                                        </div>
+                                      )}  
+                                    </div>
+                                    <button type="submit" disabled={isSubmitting(asm.id) || !fileValues[asm.id]}
+                                      className="w-full py-2.5 bg-sky-500 hover:bg-sky-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-sm disabled:opacity-40 transition">
+                                      {isSubmitting(asm.id) ? <span className="animate-pulse">กำลังอัปโหลด...</span> : <><FaCloudUploadAlt /> อัปโหลดและส่งงาน</>}
+                                    </button>
+                                  </div>
+                                )}
+                              </>
+                            ) : null}
+                          </form>
+                        )}
+                      </div>
+
+                      {/* RIGHT: สถานะ */}
+                      <div className="p-5 bg-slate-50/50 space-y-3">
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">สถานะ</h4>
+
+                        {!asm.submission ? (
+                          <div className="flex items-center gap-2 text-amber-600 text-sm font-bold">
+                            <FaExclamationCircle /> <span>ยังไม่ได้ส่งงาน</span>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-2 text-sky-600 text-sm font-bold">
+                              <FaCheckCircle /> <span>ส่งผลงานแล้ว</span>
+                            </div>
+                            <p className="text-xs text-slate-500">
+                              ส่งเมื่อ: <span className="font-semibold text-slate-700">{new Date(asm.submission.submittedAt).toLocaleString("th-TH")}</span>
+                            </p>
+
+                            {isGraded ? (
+                              <div className="border-t border-slate-200 pt-3 space-y-2">
+                                <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm">
+                                  <FaCheckCircle /> <span>ครูตรวจแล้ว ✅</span>
+                                </div>
+                                {asm.submission.feedback && (
+                                  <div className="p-3 bg-white border border-emerald-100 rounded-xl text-xs leading-relaxed text-slate-600 flex gap-2">
+                                    <FaCommentAlt className="text-emerald-400 mt-0.5 shrink-0" />
+                                    <span>{asm.submission.feedback}</span>
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-[10px] px-2.5 py-1 bg-sky-100 text-sky-700 border border-sky-200 rounded-full font-bold">
+                                <FaHourglassHalf className="text-[8px]" /> รอคุณครูตรวจ
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                    </div>
+                  )}
                 </div>
               );
             })}

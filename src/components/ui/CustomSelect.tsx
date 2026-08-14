@@ -15,6 +15,7 @@ interface CustomSelectProps {
   placeholder?: string;
   className?: string;
   accentColor?: "purple" | "emerald" | "blue" | "amber";
+  align?: "left" | "right" | "auto";
 }
 
 export default function CustomSelect({
@@ -23,13 +24,16 @@ export default function CustomSelect({
   onChange,
   placeholder = "เลือกรายการ...",
   className = "",
-  accentColor = "purple"
+  accentColor = "purple",
+  align = "auto",
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [resolvedAlign, setResolvedAlign] = useState<"left" | "right">("left");
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectedOption = options.find((opt) => opt.value === value);
 
+  // ปิดดร็อปดาวน์เมื่อคลิกข้างนอก
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -39,6 +43,18 @@ export default function CustomSelect({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // คำนวณตำแหน่งอัตโนมัติเมื่อเปิด dropdown
+  useEffect(() => {
+    if (isOpen && align === "auto" && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      // ถ้าปุ่มอยู่ครึ่งขวาของหน้าจอ → ชิดขวา, ไม่งั้น → ชิดซ้าย
+      setResolvedAlign(rect.left + rect.width / 2 > viewportWidth / 2 ? "right" : "left");
+    } else if (align !== "auto") {
+      setResolvedAlign(align);
+    }
+  }, [isOpen, align]);
 
   const colorStyles = {
     purple: {
@@ -83,7 +99,12 @@ export default function CustomSelect({
 
       {/* Floating Dropdown Menu */}
       {isOpen && (
-        <div className="absolute left-0 right-0 sm:left-auto sm:right-0 mt-2 min-w-[200px] max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-2xl shadow-xl z-50 p-1.5 space-y-0.5 animate-in fade-in-50 zoom-in-95 duration-150">
+        <div
+          className={`absolute top-full mt-1.5 min-w-full max-h-60 overflow-y-auto bg-white border border-slate-100 rounded-2xl shadow-xl z-50 p-1.5 space-y-0.5 animate-in fade-in-50 zoom-in-95 duration-150 ${
+            resolvedAlign === "right" ? "right-0" : "left-0"
+          }`}
+          style={{ minWidth: "160px", maxWidth: "min(340px, calc(100vw - 32px))" }}
+        >
           {options.map((opt) => {
             const isSelected = opt.value === value;
             return (

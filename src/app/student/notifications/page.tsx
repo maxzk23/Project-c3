@@ -9,6 +9,8 @@ import {
   deleteNotification,
   clearAllNotifications 
 } from "@/app/actions/notification";
+import { dispatchNotificationUpdate } from "@/lib/events";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { 
   FaBell, 
   FaBookOpen, 
@@ -40,24 +42,44 @@ export default function StudentNotificationsPage() {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
+  const [isClearModalOpen, setIsClearModalOpen] = useState(false);
 
-  const loadNotifications = async () => {
-    setIsLoading(true);
+  const loadNotifications = async (isSilent = false) => {
+    if (!isSilent) setIsLoading(true);
     const data = await getNotifications();
     setNotifications(data as any[]);
-    setIsLoading(false);
+    if (!isSilent) setIsLoading(false);
   };
 
   useEffect(() => {
-    loadNotifications();
+    loadNotifications(false);
 
-    // ดึงข้อมูลการแจ้งเตือนใหม่ๆ ทุกๆ 8 วินาที
+    const handleNotifyUpdate = () => {
+      loadNotifications(true);
+    };
+
+    window.addEventListener("notifications-updated", handleNotifyUpdate);
+
+    let bc: BroadcastChannel | null = null;
+    try {
+      bc = new BroadcastChannel("lms-channel");
+      bc.onmessage = (event) => {
+        if (event.data?.type === "NOTIFICATIONS_UPDATED") {
+          loadNotifications(true);
+        }
+      };
+    } catch (e) {}
+
+    // ดึงข้อมูลการแจ้งเตือนใหม่ๆ ทุกๆ 8 วินาทีแบบเงียบๆ
     const interval = setInterval(async () => {
-      const data = await getNotifications();
-      setNotifications(data as any[]);
+      loadNotifications(true);
     }, 8000);
 
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener("notifications-updated", handleNotifyUpdate);
+      if (bc) bc.close();
+      clearInterval(interval);
+    };
   }, []);
 
   const handleMarkAllRead = () => {
@@ -65,6 +87,7 @@ export default function StudentNotificationsPage() {
       const res = await markAllNotificationsAsRead();
       if (res.success) {
         setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        dispatchNotificationUpdate();
       }
     });
   };
@@ -74,6 +97,7 @@ export default function StudentNotificationsPage() {
       const res = await markNotificationAsRead(id);
       if (res.success) {
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+        dispatchNotificationUpdate();
       }
     });
   };
@@ -82,6 +106,7 @@ export default function StudentNotificationsPage() {
     if (!item.isRead) {
       await markNotificationAsRead(item.id);
       setNotifications(prev => prev.map(n => n.id === item.id ? { ...n, isRead: true } : n));
+      dispatchNotificationUpdate();
     }
     
     if (item.relatedType === "ASSIGNMENT") {
@@ -91,22 +116,26 @@ export default function StudentNotificationsPage() {
     }
   };
 
-  const handleDelete = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // ป้องกันการกดทับเพื่อเปิดอ่าน
+  const [deleteSingleId, setDeleteSingleId] = useState<string | null>(null);
+
+  const handleConfirmDeleteSingle = () => {
+    if (!deleteSingleId) return;
     startTransition(async () => {
-      const res = await deleteNotification(id);
+      const res = await deleteNotification(deleteSingleId);
       if (res.success) {
-        setNotifications(prev => prev.filter(n => n.id !== id));
+        setNotifications(prev => prev.filter(n => n.id !== deleteSingleId));
+        dispatchNotificationUpdate();
       }
+      setDeleteSingleId(null);
     });
   };
 
-  const handleClearAll = () => {
-    if (!window.confirm("คุณต้องการลบประวัติการแจ้งเตือนทั้งหมดหรือไม่?")) return;
+  const handleConfirmClearAll = () => {
     startTransition(async () => {
       const res = await clearAllNotifications();
       if (res.success) {
         setNotifications([]);
+        dispatchNotificationUpdate();
       }
     });
   };
@@ -179,9 +208,9 @@ export default function StudentNotificationsPage() {
                 ทำเครื่องหมายอ่านแล้วทั้งหมด
               </button>
               <button
-                onClick={handleClearAll}
+                onClick={() => setIsClearModalOpen(true)}
                 disabled={isPending}
-                className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition shadow-sm border border-rose-100"
+                className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-xl transition shadow-sm border border-rose-100 cursor-pointer"
               >
                 ล้างแจ้งเตือนทั้งหมด
               </button>
@@ -238,9 +267,12 @@ export default function StudentNotificationsPage() {
 
                 {/* Delete button (displays on hover) */}
                 <button
-                  onClick={(e) => handleDelete(item.id, e)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteSingleId(item.id);
+                  }}
                   disabled={isPending}
-                  className="opacity-0 group-hover:opacity-100 absolute right-4 bottom-5 p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition"
+                  className="opacity-0 group-hover:opacity-100 absolute right-4 bottom-5 p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
                   title="ลบแจ้งเตือนนี้"
                 >
                   <FaTrash className="text-xs" />
@@ -250,6 +282,32 @@ export default function StudentNotificationsPage() {
           </div>
         )}
       </div>
+
+      {/* Confirm Modal สำหรับลบการแจ้งเตือนรายการเดียว */}
+      <ConfirmModal
+        isOpen={!!deleteSingleId}
+        onClose={() => setDeleteSingleId(null)}
+        onConfirm={handleConfirmDeleteSingle}
+        title="ยืนยันการลบการแจ้งเตือน?"
+        description="การลบรายการนี้จะเป็นการลบข้อความแจ้งเตือนออกจากระบบอย่างถาวร และจะไม่สามารถเรียกคืนข้อมูลได้อีกต่อไป"
+        confirmText="ลบอย่างถาวร"
+        cancelText="ยกเลิก"
+        variant="danger"
+        isLoading={isPending}
+      />
+
+      {/* Confirm Modal สำหรับล้างแจ้งเตือนทั้งหมด */}
+      <ConfirmModal
+        isOpen={isClearModalOpen}
+        onClose={() => setIsClearModalOpen(false)}
+        onConfirm={handleConfirmClearAll}
+        title="ยืนยันการล้างประวัติการแจ้งเตือน?"
+        description="คุณต้องการลบประวัติรายการแจ้งเตือนทั้งหมดใช่หรือไม่? ข้อมูลประวัติการแจ้งเตือนที่ลบไปแล้วจะไม่สามารถกู้คืนกลับมาได้"
+        confirmText="ลบอย่างถาวร"
+        cancelText="ยกเลิก"
+        variant="danger"
+        isLoading={isPending}
+      />
 
     </div>
   );

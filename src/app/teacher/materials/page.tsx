@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { getTeacherClassrooms } from "@/app/actions/classroom";
 import { getCourseMaterials, toggleMaterialLock, createCourseMaterial, updateCourseMaterial, deleteCourseMaterial } from "@/app/actions/teacher";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { 
   FaBookOpen, 
   FaPlus, 
@@ -1055,41 +1056,17 @@ export default function TeacherMaterialsPage() {
       )}
 
       {/* Modal ป๊อปอัปยืนยันการลบ */}
-      {deleteTargetId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl border border-slate-100 p-6 relative overflow-hidden animate-in zoom-in-95 duration-200">
-            
-            <div className="text-center space-y-3">
-              <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center mx-auto mb-2">
-                <FaTrash className="text-xl" />
-              </div>
-              <h3 className="text-base font-bold text-slate-800">ยืนยันการลบสื่อการสอน?</h3>
-              <p className="text-xs text-slate-400 font-semibold leading-relaxed">
-                การลบรายการนี้จะเป็นการลบไฟล์และบทเรียนออกจากระบบอย่างถาวร นักเรียนทุกคนจะไม่สามารถคลิกเปิดเรียนรู้สื่อชุดนี้ได้อีกต่อไป
-              </p>
-            </div>
-
-            <div className="pt-5 flex justify-center gap-3 text-sm">
-              <button
-                type="button"
-                onClick={() => setDeleteTargetId(null)}
-                className="px-4 py-2 border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 transition text-xs font-bold flex-1"
-              >
-                ยกเลิก
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteConfirm}
-                disabled={isPending}
-                className="px-4 py-2 bg-rose-500 text-white font-bold rounded-xl hover:bg-rose-600 transition shadow-md disabled:opacity-50 text-xs flex-1"
-              >
-                {isPending ? "กำลังลบ..." : "ลบอย่างถาวร"}
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={!!deleteTargetId}
+        onClose={() => setDeleteTargetId(null)}
+        onConfirm={handleDeleteConfirm}
+        title="ยืนยันการลบสื่อการสอน?"
+        description="การลบรายการนี้จะเป็นการลบไฟล์และบทเรียนออกจากระบบอย่างถาวร นักเรียนทุกคนจะไม่สามารถคลิกเปิดเรียนรู้สื่อชุดนี้ได้อีกต่อไป"
+        confirmText="ลบอย่างถาวร"
+        cancelText="ยกเลิก"
+        variant="danger"
+        isLoading={isPending}
+      />
 
     </div>
   );

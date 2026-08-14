@@ -19,7 +19,10 @@ async function getSessionTeacher() {
   if (!session || !session.userId || (session.role !== "TEACHER" && session.role !== "ADMIN")) return null;
 
   // ตรวจสอบความถูกต้องว่าบัญชีผู้ใช้ยังมีอยู่ในระบบจริง (กันเคส Database Reset / Seed)
-  const teacherExists = await db.user.findUnique({ where: { id: session.userId as string } });
+  const teacherExists = await db.user.findUnique({
+    where: { id: session.userId as string },
+    select: { id: true }
+  });
   if (!teacherExists) return null;
 
   return session.userId as string;

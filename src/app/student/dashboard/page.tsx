@@ -203,8 +203,8 @@ export default function StudentDashboard() {
           {/* ส่วนที่ 1: แถบสถิติหลัก (Stats Grid) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
-            {/* สถิติ 1: คะแนนสะสม */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition">
+            {/* สถิติ 1: คะแนนสะสม (โชว์เฉยๆ ตามคำขอ) */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition cursor-default">
               <div className="w-14 h-14 rounded-2xl bg-sky-100 text-sky-600 flex items-center justify-center text-2xl shrink-0">
                 <FaStar />
               </div>
@@ -212,35 +212,41 @@ export default function StudentDashboard() {
                 <h3 className="text-2xl font-black text-slate-800 tracking-tight">
                   {(summary?.stats.totalPoints ?? 0).toLocaleString()}
                 </h3>
-                <p className="text-xs text-slate-400 font-bold mt-0.5">คะแนนสะสมทั้งหมด</p>
+                <p className="text-xs text-slate-500 font-bold mt-0.5">คะแนนสะสมทั้งหมด</p>
               </div>
             </div>
 
-            {/* สถิติ 2: อันดับในห้องเรียน */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition">
+            {/* สถิติ 2: อันดับในห้องเรียน -> ไปที่ /student/leaderboard */}
+            <Link 
+              href="/student/leaderboard"
+              className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md hover:-translate-y-1 active:scale-[0.98] transition cursor-pointer"
+            >
               <div className="w-14 h-14 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center text-2xl shrink-0">
                 <FaMedal />
               </div>
-              <div>
+              <div className="text-left">
                 <h3 className="text-2xl font-black text-slate-800 tracking-tight">
                   อันดับ {summary?.stats.rank ?? "-"}
                 </h3>
-                <p className="text-xs text-slate-400 font-bold mt-0.5">Leaderboard ของห้อง</p>
+                <p className="text-xs text-slate-500 font-bold mt-0.5">Leaderboard ของห้อง</p>
               </div>
-            </div>
+            </Link>
 
-            {/* สถิติ 3: การบ้านค้างส่ง */}
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md transition">
+            {/* สถิติ 3: การบ้านค้างส่ง -> ไปที่ /student/assignments */}
+            <Link 
+              href="/student/assignments"
+              className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-5 hover:shadow-md hover:-translate-y-1 active:scale-[0.98] transition cursor-pointer"
+            >
               <div className="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl shrink-0">
                 <FaCheckCircle />
               </div>
-              <div>
+              <div className="text-left">
                 <h3 className="text-2xl font-black text-slate-800 tracking-tight">
                   {summary?.stats.pendingAssignmentsCount ?? 0} งาน
                 </h3>
-                <p className="text-xs text-slate-400 font-bold mt-0.5">การบ้านที่ต้องส่งสัปดาห์นี้</p>
+                <p className="text-xs text-slate-500 font-bold mt-0.5">การบ้านที่ต้องส่งสัปดาห์นี้</p>
               </div>
-            </div>
+            </Link>
           </div>
 
           {/* ส่วนที่ 2: โครงสร้างแบบ 2 คอลัมน์ (ซ้ายกว้าง ขวาแคบ) */}
@@ -255,15 +261,15 @@ export default function StudentDashboard() {
                   <FaUserCheck className="text-sky-500" /> สถานะการเข้าเรียน
                 </h3>
                 
-                <p className="text-xs text-slate-400 font-semibold leading-relaxed">
+                <p className="text-xs text-slate-500 font-semibold leading-relaxed">
                   วิชา: {activeClassroom?.name || "วิทยาการคำนวณ"} {activeClassroom?.yearLevel || "ม.3"}/{activeClassroom?.room || "1"} | เวลาปัจจุบัน: {currentTime || "23:31"} น.
                 </p>
 
                 {getAttendanceWidget()}
 
                 <Link
-                  href="/student/profile#attendance"
-                  className="w-full mt-4 bg-white border border-slate-200 text-slate-500 py-3.5 rounded-xl font-bold hover:bg-slate-50 transition flex items-center justify-center gap-2 text-xs shadow-sm"
+                  href="/student/classrooms"
+                  className="w-full mt-4 bg-white border border-slate-200 text-slate-600 py-3.5 rounded-xl font-bold hover:bg-slate-50 hover:shadow transition flex items-center justify-center gap-2 text-xs shadow-xs active:scale-[0.99]"
                 >
                   <FaChartBar className="text-sky-500" />
                   <span>ดูรายงานเช็คชื่อย้อนหลัง</span>
@@ -294,15 +300,19 @@ export default function StudentDashboard() {
                 ) : (
                   <div className="space-y-3">
                     {summary?.pendingAssignments.map((asm) => (
-                      <div key={asm.id} className="p-4 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center hover:border-sky-300 transition">
+                      <Link 
+                        key={asm.id}
+                        href="/student/assignments"
+                        className="p-4 bg-slate-50 hover:bg-sky-50/50 rounded-xl border border-slate-100 hover:border-sky-300 flex justify-between items-center transition cursor-pointer group active:scale-[0.99]"
+                      >
                         <div>
-                          <h4 className="font-bold text-slate-700 text-xs">{asm.title}</h4>
-                          <p className="text-[10px] text-slate-400 font-semibold mt-1">
+                          <h4 className="font-bold text-slate-700 text-xs group-hover:text-sky-600 transition-colors">{asm.title}</h4>
+                          <p className="text-[10px] text-slate-500 font-semibold mt-1">
                             กำหนดส่ง: {asm.dueDate ? new Date(asm.dueDate).toLocaleString("th-TH") : "ไม่มีกำหนดส่ง"}
                           </p>
                         </div>
-                        <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-[10px] font-extrabold border border-amber-200">ยังไม่ส่ง</span>
-                      </div>
+                        <span className="px-3 py-1 bg-amber-100 text-amber-700 rounded-lg text-[10px] font-extrabold border border-amber-200 shrink-0 ml-2">ยังไม่ส่ง</span>
+                      </Link>
                     ))}
                   </div>
                 )}
@@ -331,20 +341,23 @@ export default function StudentDashboard() {
                     {summary?.materials.map((m) => (
                       <div 
                         key={m.id} 
-                        className="flex justify-between items-center p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-sky-300 hover:bg-sky-50 transition group cursor-pointer"
+                        className="flex justify-between items-center p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-sky-300 hover:bg-sky-50 transition group"
                       >
-                        <div className="flex items-center gap-4">
+                        <Link 
+                          href="/student/lessons"
+                          className="flex items-center gap-4 min-w-0 flex-1 cursor-pointer"
+                        >
                           {getMaterialIcon(m.type)}
-                          <div>
-                            <h5 className="font-bold text-slate-700 text-xs">{m.title}</h5>
-                            <p className="text-[10px] text-slate-400 mt-1">บทเรียนสื่อประกอบการเรียนรู้ในระดับชั้น</p>
+                          <div className="min-w-0 flex-1">
+                            <h5 className="font-bold text-slate-700 text-xs group-hover:text-sky-600 transition-colors truncate">{m.title}</h5>
+                            <p className="text-[10px] text-slate-500 mt-1">บทเรียนสื่อประกอบการเรียนรู้ในระดับชั้น</p>
                           </div>
-                        </div>
+                        </Link>
                         <a 
                           href={m.fileUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-4 py-2 bg-sky-500 text-white rounded-full text-[10px] font-bold flex items-center gap-1.5 shadow-sm hover:bg-sky-600"
+                          className="px-4 py-2 bg-sky-500 text-white rounded-full text-[10px] font-bold flex items-center gap-1.5 shadow-sm hover:bg-sky-600 transition shrink-0 ml-3 active:scale-95"
                         >
                           {m.type === "VIDEO" ? <FaPlay /> : <FaEye />}
                           <span>{m.type === "VIDEO" ? "เล่นคลิป" : "เปิดดู"}</span>
@@ -412,20 +425,21 @@ export default function StudentDashboard() {
                       else if (isRank3) badgeBg = "bg-orange-100 text-orange-600 border border-orange-200";
 
                       return (
-                        <div 
+                        <Link 
                           key={entry.studentId} 
-                          className={`flex items-center gap-3.5 p-3 rounded-xl border transition relative ${
+                          href="/student/leaderboard"
+                          className={`flex items-center gap-3.5 p-3 rounded-xl border transition relative cursor-pointer hover:border-sky-300 active:scale-[0.99] group ${
                             isMe 
                               ? "bg-sky-50/50 border-sky-400 shadow-sm" 
-                              : "bg-slate-50/50 border-slate-100"
+                              : "bg-slate-50/50 border-slate-100 hover:bg-slate-100/60"
                           }`}
                         >
                           <div className={`w-7 h-7 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0 border ${badgeBg}`}>
                             {entry.rank}
                           </div>
                           
-                          <div className="flex-1 min-w-0">
-                            <h5 className="font-bold text-slate-700 text-xs truncate flex items-center gap-1.5">
+                          <div className="flex-1 min-w-0 text-left">
+                            <h5 className="font-bold text-slate-700 text-xs truncate flex items-center gap-1.5 group-hover:text-sky-600 transition-colors">
                               <span>{entry.studentName}</span>
                               {isMe && (
                                 <span className="bg-sky-100 text-sky-700 text-[8px] font-bold px-1.5 py-0.5 rounded-full select-none">คุณ</span>
@@ -439,7 +453,7 @@ export default function StudentDashboard() {
                           <div className="font-mono text-xs font-black text-sky-600 shrink-0">
                             {entry.totalPoints.toLocaleString()} <span className="text-[8px] text-slate-400 font-semibold font-sans">pts</span>
                           </div>
-                        </div>
+                        </Link>
                       );
                     })}
                   </div>

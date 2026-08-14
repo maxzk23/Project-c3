@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition, useRef } from "react";
 import { getTeacherClassrooms } from "@/app/actions/classroom";
 import { getAssignmentsWithSubmissions, createAssignment, updateAssignment, deleteAssignment } from "@/app/actions/teacher";
 import CustomSelect from "@/components/ui/CustomSelect";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 import { 
   FaPlus, 
   FaCheckCircle, 
@@ -470,35 +471,17 @@ export default function TeacherAssignmentsPage() {
       )}
 
       {/* ── MODAL: DELETE ─────────────────────────────── */}
-      {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl w-full max-w-sm shadow-2xl border border-slate-100 p-6 animate-in zoom-in-95 duration-200">
-            <div className="text-center space-y-3">
-              <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center mx-auto">
-                <FaTrash className="text-2xl" />
-              </div>
-              <h3 className="font-bold text-slate-800 text-base">ยืนยันการลบการบ้าน?</h3>
-              <div className="px-4 py-2.5 bg-slate-50 rounded-xl border border-slate-100">
-                <p className="text-sm font-semibold text-slate-700 truncate">"{deleteTarget.title}"</p>
-              </div>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                การลบจะเป็นการถาวร นักเรียนจะไม่สามารถมองเห็นหรือส่งงานนี้ได้อีก
-              </p>
-            </div>
-
-            <div className="mt-5 flex gap-3">
-              <button onClick={() => setDeleteTarget(null)}
-                className="flex-1 px-4 py-2.5 border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-50 text-xs font-bold transition">
-                ยกเลิก
-              </button>
-              <button onClick={handleDelete} disabled={isPending}
-                className="flex-1 px-4 py-2.5 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl text-xs shadow-md disabled:opacity-50 transition">
-                {isPending ? "กำลังลบ..." : "ลบอย่างถาวร"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDelete}
+        title="ยืนยันการลบการบ้าน?"
+        description={deleteTarget ? `การลบการบ้าน "${deleteTarget.title}" จะเป็นการลบถาวร นักเรียนจะไม่สามารถมองเห็นหรือส่งงานนี้ได้อีกต่อไป` : "การลบจะเป็นการถาวร"}
+        confirmText="ลบอย่างถาวร"
+        cancelText="ยกเลิก"
+        variant="danger"
+        isLoading={isPending}
+      />
 
     </div>
   );

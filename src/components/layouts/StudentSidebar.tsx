@@ -26,11 +26,19 @@ interface SidebarProps {
 export default function StudentSidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const [counts, setCounts] = useState({ pendingAssignments: 0, unlockedLessons: 0, unreadNotifications: 0 });
+  const [seenLessonsCount, setSeenLessonsCount] = useState<number>(0);
 
   const fetchCounts = async () => {
     const data = await getStudentSidebarCounts();
     if (data) setCounts(data);
   };
+
+  useEffect(() => {
+    const saved = localStorage.getItem("lms_seen_lessons_count");
+    if (saved !== null) {
+      setSeenLessonsCount(Number(saved));
+    }
+  }, []);
 
   useEffect(() => {
     fetchCounts();
@@ -46,6 +54,13 @@ export default function StudentSidebar({ isOpen = false, onClose }: SidebarProps
       bc.close();
     };
   }, []);
+
+  useEffect(() => {
+    if (pathname === "/student/lessons" && counts.unlockedLessons > 0) {
+      localStorage.setItem("lms_seen_lessons_count", String(counts.unlockedLessons));
+      setSeenLessonsCount(counts.unlockedLessons);
+    }
+  }, [pathname, counts.unlockedLessons]);
 
   const isCurrentActive = (path: string) => pathname === path;
 
@@ -108,13 +123,9 @@ export default function StudentSidebar({ isOpen = false, onClose }: SidebarProps
             <FaBookOpen className="text-xl w-6 text-center" />
             <span>บทเรียนของฉัน</span>
           </div>
-          {counts.unlockedLessons > 0 && (
-            <span className={`px-2 py-0.5 text-[11px] font-bold rounded-full ${
-              isCurrentActive("/student/lessons")
-                ? "bg-white/20 text-white"
-                : "bg-purple-100 text-purple-700"
-            }`}>
-              {counts.unlockedLessons}
+          {Math.max(0, counts.unlockedLessons - seenLessonsCount) > 0 && (
+            <span className="px-2 py-0.5 text-[11px] font-black rounded-full bg-rose-500 text-white shadow-sm shadow-rose-200">
+              {Math.max(0, counts.unlockedLessons - seenLessonsCount)}
             </span>
           )}
         </Link>
@@ -130,11 +141,7 @@ export default function StudentSidebar({ isOpen = false, onClose }: SidebarProps
             <span>ส่งการบ้าน</span>
           </div>
           {counts.pendingAssignments > 0 && (
-            <span className={`px-2 py-0.5 text-[11px] font-black rounded-full shadow-sm ${
-              isCurrentActive("/student/assignments")
-                ? "bg-white text-rose-600"
-                : "bg-rose-500 text-white shadow-rose-200"
-            }`}>
+            <span className="px-2 py-0.5 text-[11px] font-black rounded-full bg-rose-500 text-white shadow-sm shadow-rose-200">
               {counts.pendingAssignments}
             </span>
           )}
@@ -171,11 +178,7 @@ export default function StudentSidebar({ isOpen = false, onClose }: SidebarProps
             <span>การแจ้งเตือน</span>
           </div>
           {counts.unreadNotifications > 0 && (
-            <span className={`px-2 py-0.5 text-[11px] font-black rounded-full shadow-sm ${
-              isCurrentActive("/student/notifications")
-                ? "bg-white text-rose-600"
-                : "bg-rose-500 text-white shadow-rose-200"
-            }`}>
+            <span className="px-2 py-0.5 text-[11px] font-black rounded-full bg-rose-500 text-white shadow-sm shadow-rose-200">
               {counts.unreadNotifications}
             </span>
           )}

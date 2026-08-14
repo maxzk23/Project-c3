@@ -76,21 +76,17 @@ export async function updateProfile(
 
     const updateData: any = {};
 
-    // 2. ตรวจสอบเงื่อนไขการแก้ไขชื่อผู้ใช้และอวาตาร์ (ล็อกเฉพาะครูหรือแอดมินเท่านั้น)
-    if (userRole === "TEACHER" || userRole === "ADMIN") {
-      if (newName && newName.trim() !== currentUser.name) {
+    // 2. ตรวจสอบการแก้ไขอวาตาร์ (อนุญาตให้ทุกคนรวมทั้งนักเรียนเปลี่ยนอวาตาร์ได้)
+    if (newAvatarUrl && newAvatarUrl !== currentUser.avatarUrl) {
+      updateData.avatarUrl = newAvatarUrl;
+    }
+
+    // การแก้ไขชื่อผู้ใช้ (name) ล็อกเฉพาะครูหรือแอดมินเท่านั้น
+    if (newName && newName.trim() !== currentUser.name) {
+      if (userRole === "TEACHER" || userRole === "ADMIN") {
         updateData.name = newName.trim();
-      }
-      if (newAvatarUrl && newAvatarUrl !== currentUser.avatarUrl) {
-        updateData.avatarUrl = newAvatarUrl;
-      }
-    } else {
-      // ถ้านักเรียนแอบส่งค่ามาแก้ไข ให้ป้องกันไว้
-      if (
-        (newName && newName.trim() !== currentUser.name) ||
-        (newAvatarUrl && newAvatarUrl !== currentUser.avatarUrl)
-      ) {
-        return { success: false, error: "สิทธิ์นักเรียนไม่สามารถแก้ไขชื่อหรืออวาตาร์เองได้" };
+      } else {
+        return { success: false, error: "สิทธิ์นักเรียนไม่สามารถแก้ไขชื่อจริงได้ด้วยตัวเอง กรุณาติดต่อคุณครู" };
       }
     }
 

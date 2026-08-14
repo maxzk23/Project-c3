@@ -13,6 +13,9 @@ const pool =
   globalForPrisma.pgPool ??
   new Pool({
     connectionString: process.env.DATABASE_URL,
+    max: 10,                        // จำกัดจำนวน connection สูงสุดเพื่อป้องกัน connection leak
+    idleTimeoutMillis: 30000,       // ตัดเชื่อมต่อที่ไม่ใช้งานหลัง 30 วินาที
+    connectionTimeoutMillis: 5000,  // timeout หากรอ connection นานกว่า 5 วินาที
   });
 
 // 2. สร้าง Driver Adapter เชื่อมต่อ PostgreSQL เข้ากับ Prisma 7 Engine

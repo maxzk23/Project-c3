@@ -7,6 +7,7 @@ import { FaBell, FaCheckDouble, FaFileAlt, FaBars, FaBookOpen, FaTrophy, FaExcla
 import { getCurrentStudentProfile } from "@/app/actions/student";
 import { getNotifications, markAllNotificationsAsRead, markNotificationAsRead } from "@/app/actions/notification";
 import { renderAvatarHelper } from "@/components/profile/ProfileSettings";
+import { dispatchNotificationUpdate } from "@/lib/events";
 
 interface TopbarProps {
   onMenuClick?: () => void;
@@ -48,12 +49,19 @@ export default function StudentTopbar({ onMenuClick }: TopbarProps) {
     fetchProfile();
     loadNotificationsRef.current();
 
-    // ฟัง Event เมื่อมีการอัปเดตโปรไฟล์เพื่อรีเฟรชข้อมูลใน Topbar ทันที
+    // ฟัง Event เมื่อมีการอัปเดตโปรไฟล์หรือการแจ้งเตือนเพื่อรีเฟรชข้อมูลทันที
     const handleProfileUpdate = () => {
       fetchProfile();
     };
 
+    const handleNotifyUpdate = () => {
+      if (loadNotificationsRef.current) {
+        loadNotificationsRef.current();
+      }
+    };
+
     window.addEventListener("profile-updated", handleProfileUpdate);
+    window.addEventListener("notifications-updated", handleNotifyUpdate);
 
     let bc: BroadcastChannel | null = null;
     try {
@@ -61,6 +69,10 @@ export default function StudentTopbar({ onMenuClick }: TopbarProps) {
       bc.onmessage = (event) => {
         if (event.data?.type === "PROFILE_UPDATED") {
           fetchProfile();
+        } else if (event.data?.type === "NOTIFICATIONS_UPDATED") {
+          if (loadNotificationsRef.current) {
+            loadNotificationsRef.current();
+          }
         }
       };
     } catch (e) {}
@@ -74,6 +86,7 @@ export default function StudentTopbar({ onMenuClick }: TopbarProps) {
 
     return () => {
       window.removeEventListener("profile-updated", handleProfileUpdate);
+      window.removeEventListener("notifications-updated", handleNotifyUpdate);
       if (bc) bc.close();
       clearInterval(interval);
     };
@@ -88,6 +101,7 @@ export default function StudentTopbar({ onMenuClick }: TopbarProps) {
     const res = await markAllNotificationsAsRead();
     if (res.success) {
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      dispatchNotificationUpdate();
     }
   };
 
@@ -95,6 +109,7 @@ export default function StudentTopbar({ onMenuClick }: TopbarProps) {
     const res = await markNotificationAsRead(id);
     if (res.success) {
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+      dispatchNotificationUpdate();
     }
   };
 
@@ -259,7 +274,7 @@ export default function StudentTopbar({ onMenuClick }: TopbarProps) {
                         <span className="text-[10px] text-slate-400 font-semibold block">{formatTime(item.createdAt)}</span>
                       </div>
                       {!item.isRead && (
-                        <div className="w-1.5 h-1.5 rounded-full bg-sky-500 absolute right-4 mt-2"></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-rose-500 absolute right-4 mt-2"></div>
                       )}
                     </div>
                   ))
