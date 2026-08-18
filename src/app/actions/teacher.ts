@@ -401,10 +401,10 @@ export async function createCourseMaterial(yearLevelOrClassId: string, formData:
       const buffer = Buffer.from(bytes);
       
       const uploadDir = join(process.cwd(), "public", "uploads", "materials");
-      await mkdir(uploadDir, { recursive: true });
+      // await mkdir(uploadDir, { recursive: true }); // MOCKED FOR VERCEL
 
       const filePath = join(uploadDir, file.name);
-      await writeFile(filePath, buffer);
+      // await writeFile(filePath, buffer); // MOCKED FOR VERCEL
       
       fileUrl = `/uploads/materials/${file.name}`;
     } catch (err) {
@@ -1052,10 +1052,10 @@ export async function updateCourseMaterial(materialId: string, yearLevelOrClassI
       const buffer = Buffer.from(bytes);
       
       const uploadDir = join(process.cwd(), "public", "uploads", "materials");
-      await mkdir(uploadDir, { recursive: true });
+      // await mkdir(uploadDir, { recursive: true }); // MOCKED FOR VERCEL
 
       const filePath = join(uploadDir, file.name);
-      await writeFile(filePath, buffer);
+      // await writeFile(filePath, buffer); // MOCKED FOR VERCEL
       
       fileUrl = `/uploads/materials/${file.name}`;
     } catch (err) {

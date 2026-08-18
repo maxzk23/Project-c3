@@ -125,13 +125,13 @@ export async function submitStudentAssignment(assignmentId: string, formData: Fo
       const buffer = Buffer.from(bytes);
 
       const uploadDir = join(process.cwd(), "public", "uploads", "submissions");
-      await mkdir(uploadDir, { recursive: true });
+      // await mkdir(uploadDir, { recursive: true }); // MOCKED FOR VERCEL
 
       // ตั้งชื่อไฟล์ให้ unique ด้วย studentId + timestamp
       const ext = uploadedFile.name.split(".").pop() || "bin";
       const fileName = `${studentId}_${assignmentId}_${Date.now()}.${ext}`;
       const filePath = join(uploadDir, fileName);
-      await writeFile(filePath, buffer);
+      // await writeFile(filePath, buffer); // MOCKED FOR VERCEL
 
       fileUrl = `/uploads/submissions/${fileName}`;
     } catch (err) {
