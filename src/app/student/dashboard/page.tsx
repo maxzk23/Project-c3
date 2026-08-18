@@ -81,25 +81,18 @@ export default function StudentDashboard() {
   // ดึงห้องเรียนในการรันหน้าครั้งแรก
   useEffect(() => {
     const initData = async () => {
-      try {
-        const [classes, defaultClass] = await Promise.all([
-          getStudentClassrooms(),
-          getStudentDefaultClass(),
-        ]);
-        setClassrooms(classes || []);
-        
-        if (defaultClass) {
-          setSelectedClassId(defaultClass.id);
-        } else if (classes && classes.length > 0) {
-          setSelectedClassId(classes[0].id);
-        } else {
-          // Vercel Fallback
-          setSelectedClassId("mock-class");
-        }
-      } catch (e) {
-        // Vercel Fallback
-        setClassrooms([{ id: "mock-class", name: "วิชาจำลอง", yearLevel: "ม.3", room: "1" }]);
-        setSelectedClassId("mock-class");
+      const [classes, defaultClass] = await Promise.all([
+        getStudentClassrooms(),
+        getStudentDefaultClass(),
+      ]);
+      setClassrooms(classes);
+      
+      if (defaultClass) {
+        setSelectedClassId(defaultClass.id);
+      } else if (classes.length > 0) {
+        setSelectedClassId(classes[0].id);
+      } else {
+        setIsLoading(false);
       }
     };
     initData();
@@ -133,30 +126,9 @@ export default function StudentDashboard() {
 
   const loadDashboard = async (isSilent = false) => {
     if (!isSilent) setIsLoading(true);
-    try {
-      const res = await getStudentDashboardSummary(selectedClassId);
-      if (res) {
-        setSummary(res as DashboardData);
-      } else {
-        // Fallback Mock Data
-        setSummary({
-          totalPoints: 1250,
-          pendingAssignments: 2,
-          attendanceStatus: "PRESENT",
-          materialsCount: 5,
-          recentAssignments: [],
-          recentMaterials: []
-        });
-      }
-    } catch (e) {
-      setSummary({
-        totalPoints: 1250,
-        pendingAssignments: 2,
-        attendanceStatus: "PRESENT",
-        materialsCount: 5,
-        recentAssignments: [],
-        recentMaterials: []
-      });
+    const res = await getStudentDashboardSummary(selectedClassId);
+    if (res) {
+      setSummary(res as DashboardData);
     }
     if (!isSilent) setIsLoading(false);
   };

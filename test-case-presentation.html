@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>การทดสอบระดับหน่วย และการจัดทำ Test Case (Unit Test & Test Case Report)</title>
+  
+  <!-- Google Fonts - Sarabun & Plus Jakarta Sans & Prompt -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Reveal.js styles -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/black.min.css">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            tealdeep: '#062d2f',
+            tealcard: '#0a3d40',
+            tealaccent: '#0d9488',
+            teallight: '#14b8a6',
+            tealcyan: '#06b6d4',
+            emeraldaccent: '#10b981',
+          },
+          fontFamily: {
+            sans: ['Prompt', 'Sarabun', 'sans-serif'],
+            heading: ['Plus Jakarta Sans', 'Prompt', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --r-font-family: 'Prompt', 'Sarabun', sans-serif;
+      --r-heading-font: 'Plus Jakarta Sans', 'Prompt', sans-serif;
+      --r-background-color: #041f22;
+      --r-main-color: #f1f5f9;
+      --r-heading-color: #ffffff;
+      --r-link-color: #14b8a6;
+    }
+
+    .reveal {
+      font-family: var(--r-font-family);
+      background: radial-gradient(circle at 85% 15%, #084c50 0%, #041f22 65%, #021214 100%);
+      color: #e2e8f0;
+    }
+
+    .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+      font-family: var(--r-heading-font);
+      font-weight: 700;
+      text-transform: none;
+      letter-spacing: -0.01em;
+    }
+
+    .reveal h2 {
+      text-align: left;
+      font-size: 1.75rem;
+      margin-bottom: 0.8rem !important;
+      color: #ffffff;
+    }
+
+    /* Custom UI cards */
+    .glass-card {
+      background: rgba(10, 61, 64, 0.65);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(20, 184, 166, 0.25);
+      border-radius: 12px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .glass-card-dark {
+      background: rgba(4, 31, 34, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* Table styles */
+    .test-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.72rem;
+      text-align: left;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .test-table th {
+      background-color: #0d9488;
+      color: #ffffff;
+      padding: 8px 10px;
+      font-weight: 600;
+      border: 1px solid #115e59;
+    }
+
+    .test-table td {
+      padding: 7px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+      background: rgba(10, 61, 64, 0.4);
+    }
+
+    .test-table td:first-child {
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .test-table tr:hover td {
+      background: rgba(20, 184, 166, 0.2);
+    }
+
+    .status-pass {
+      background-color: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      display: inline-block;
+    }
+
+    /* Fixed top navigation */
+    .top-bar {
+      position: fixed;
+      top: 15px;
+      left: 25px;
+      right: 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      pointer-events: auto;
+    }
+
+    .nav-btn {
+      background: rgba(10, 61, 64, 0.85);
+      border: 1px solid rgba(20, 184, 166, 0.35);
+      color: #99f6e4;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .nav-btn:hover {
+      background: #0d9488;
+      color: #ffffff;
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Bar Navigation -->
+  <div class="top-bar">
+    <div class="flex items-center gap-3">
+      <a href="index.html" class="nav-btn"><i class="fa-solid fa-house"></i> หน้าหลัก Portal</a>
+      <a href="test-case-report.html" class="nav-btn"><i class="fa-solid fa-table-list"></i> รายงานฉบับสมบูรณ์ (Printable)</a>
+    </div>
+    <div class="text-xs text-teal-300 font-mono flex items-center gap-2">
+      <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      มาตรฐานสมรรถนะ: 10302.01 & 10302.02
+    </div>
+  </div>
+
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- SLIDE 1: Cover Page -->
+      <section>
+        <div class="h-full flex flex-col justify-center text-left max-w-5xl mx-auto px-6">
+          <div class="inline-flex items-center gap-2 text-teal-300 text-sm font-semibold tracking-wider uppercase mb-3">
+            <i class="fa-solid fa-vial-circle-check text-lg text-teal-400"></i> Software Quality Assurance & Testing
+          </div>
+          <h1 class="text-4xl md:text-5xl font-extrabold text-white leading-tight mb-4">
+            การทดสอบระดับหน่วย<br/>และการจัดทำ <span class="text-teal-400">Test Case</span>
+          </h1>
+          <p class="text-lg text-teal-100/80 mb-8 font-light">
+            Unit Test &bull; Test Case &bull; Test Plan &bull; Go-live Decision
+          </p>
+
+          <div class="p-5 glass-card max-w-xl border-l-4 border-l-teal-400">
+            <h4 class="text-xs text-teal-300 uppercase tracking-wider font-semibold mb-2">หน่วยสมรรถนะที่ครอบคลุม</h4>
+            <div class="space-y-1 text-sm text-slate-100">
+              <div class="flex items-center gap-2">
+                <span class="text-teal-400 font-bold">10302.01</span> ดำเนินการ Finish detail design process
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-teal-400 font-bold">10302.02</span> จัดทำรายงาน Unit Test
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 2: วัตถุประสงค์การเรียนรู้ -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+            <span class="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center text-sm font-bold">1</span>
+            วัตถุประสงค์การเรียนรู้
+          </h2>
+          
+          <div class="grid grid-cols-1 gap-3.5 mt-4">
+            <div class="glass-card p-3.5 flex items-start gap-4 hover:border-teal-400 transition-all">
+              <div class="w-8 h-8 rounded-full bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center shrink-0 text-sm">1</div>
+              <div>
+                <h4 class="text-sm font-bold text-white mb-0.5">อธิบายความหมายและความสำคัญของ Test Case</h4>
+                <p class="text-xs text-slate-300">บอกได้ว่า Test Case คืออะไร ต่างจาก Test Scenario อย่างไร และทำไมจึงจำเป็นต่อคุณภาพซอฟต์แวร์</p>
+              </div>
+            </div>
+
+            <div class="glass-card p-3.5 flex items-start gap-4 hover:border-teal-400 transition-all">
+              <div class="w-8 h-8 rounded-full bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center shrink-0 text-sm">2</div>
+              <div>
+                <h4 class="text-sm font-bold text-white mb-0.5">วิเคราะห์จำนวน Functionality ที่ต้องทดสอบ</h4>
+                <p class="text-xs text-slate-300">แตกระบบออกเป็นฟังก์ชันย่อย และประเมินขอบเขตงานทดสอบได้อย่างแม่นยำ</p>
+              </div>
+            </div>
+
+            <div class="glass-card p-3.5 flex items-start gap-4 hover:border-teal-400 transition-all">
+              <div class="w-8 h-8 rounded-full bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center shrink-0 text-sm">3</div>
+              <div>
+                <h4 class="text-sm font-bold text-white mb-0.5">ตรวจสอบและออกแบบเงื่อนไขการทดสอบ</h4>
+                <p class="text-xs text-slate-300">ใช้เทคนิค Equivalence Partitioning, Boundary Value Analysis และ Decision Table ออกแบบเงื่อนไข</p>
+              </div>
+            </div>
+
+            <div class="glass-card p-3.5 flex items-start gap-4 hover:border-teal-400 transition-all">
+              <div class="w-8 h-8 rounded-full bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center shrink-0 text-sm">4</div>
+              <div>
+                <h4 class="text-sm font-bold text-white mb-0.5">เขียน Test Plan ระบุ Timeline คน และ Resource</h4>
+                <p class="text-xs text-slate-300">วางแผนการทดสอบให้เสร็จตามกำหนดด้วยทรัพยากรที่มี และเผื่อเวลาทดสอบซ้ำ 30–40%</p>
+              </div>
+            </div>
+
+            <div class="glass-card p-3.5 flex items-start gap-4 hover:border-teal-400 transition-all">
+              <div class="w-8 h-8 rounded-full bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center shrink-0 text-sm">5</div>
+              <div>
+                <h4 class="text-sm font-bold text-white mb-0.5">วิเคราะห์ผลทดสอบเพื่อตัดสิน Go live / No go live</h4>
+                <p class="text-xs text-slate-300">อ่านตัวชี้วัดผลทดสอบ (Pass Rate, Coverage, Severity) และให้ข้อเสนอแนะเชิงประจักษ์ต่อผู้บริหาร</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 3: ภาพรวมหน่วยสมรรถนะ -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-2">ภาพรวมหน่วยสมรรถนะ</h2>
+          <p class="text-xs text-teal-200/80 mb-6">สองหน่วยที่ต่อเนื่องกัน: ออกแบบการทดสอบ แล้วจึงรายงานผล</p>
+
+          <div class="grid grid-cols-2 gap-6 items-center">
+            <!-- Unit 1 -->
+            <div class="glass-card p-6 border-t-4 border-t-teal-400 relative">
+              <div class="text-2xl font-black text-white mb-1">10302.01</div>
+              <div class="text-sm font-semibold text-teal-300 mb-4">ดำเนินการ Finish detail design process</div>
+              
+              <div class="space-y-4 text-xs text-slate-200">
+                <div class="bg-black/25 p-3 rounded-lg">
+                  <span class="font-bold text-teal-300 block mb-1">1.1 วิเคราะห์จำนวน Functionality</span>
+                  แตกกระบวนการเป็นฟังก์ชันย่อย นับจำนวน และกำหนดขอบเขตการทดสอบ
+                </div>
+                <div class="bg-black/25 p-3 rounded-lg">
+                  <span class="font-bold text-teal-300 block mb-1">1.2 ตรวจสอบเงื่อนไขการทดสอบ</span>
+                  กำหนด Pre-condition, Test Data และผลลัพธ์ที่คาดหวังของแต่ละกรณี
+                </div>
+              </div>
+            </div>
+
+            <!-- Unit 2 -->
+            <div class="glass-card p-6 border-t-4 border-t-emerald-400 relative">
+              <div class="text-2xl font-black text-white mb-1">10302.02</div>
+              <div class="text-sm font-semibold text-emerald-300 mb-4">จัดทำรายงาน Unit Test</div>
+              
+              <div class="space-y-4 text-xs text-slate-200">
+                <div class="bg-black/25 p-3 rounded-lg">
+                  <span class="font-bold text-emerald-300 block mb-1">2.1 เขียน Test Plan</span>
+                  ระบุ Timeline, ผู้รับผิดชอบ และ Resource ที่ใช้ในการทดสอบ
+                </div>
+                <div class="bg-black/25 p-3 rounded-lg">
+                  <span class="font-bold text-emerald-300 block mb-1">2.2 วิเคราะห์ผลทดสอบ</span>
+                  สรุปผลเป็นตัวชี้วัด และเสนอการตัดสินใจ Go live หรือ No go live
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 4: Test Case คืออะไร -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">Test Case คืออะไร</h2>
+          <p class="text-xs text-teal-200/80 mb-5">นิยามและองค์ประกอบพื้นฐาน</p>
+
+          <div class="grid grid-cols-12 gap-5">
+            <!-- Left Info -->
+            <div class="col-span-7 space-y-4">
+              <div class="glass-card p-4 border-l-4 border-l-teal-400">
+                <p class="text-xs text-slate-200 leading-relaxed">
+                  <strong class="text-teal-300">Test Case คือ</strong> เอกสารที่ระบุ <strong>เงื่อนไข และ การกระทำ</strong> ที่ต้องทำกับซอฟต์แวร์ เพื่อยืนยันว่าซอฟต์แวร์ยังทำงานได้ตามที่ออกแบบไว้ โดยระบุขั้นตอนการทดสอบ ข้อมูลทดสอบ (Test Data) และผลลัพธ์ที่คาดหวัง (Expected Result) ไว้อย่างชัดเจน
+                </p>
+              </div>
+
+              <div class="glass-card-dark p-4 border border-rose-500/30">
+                <h4 class="text-xs font-bold text-rose-300 mb-2 flex items-center gap-2">
+                  <i class="fa-solid fa-triangle-exclamation"></i> จุดสำคัญที่มักเข้าใจผิด
+                </h4>
+                <ul class="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
+                  <li>Test Case ไม่ได้เขียนเพื่อพิสูจน์แค่ว่า <em class="text-rose-200">"ฟังก์ชันใช้งานได้"</em></li>
+                  <li>แต่เขียนเพื่อยืนยันว่าระบบทำงาน <strong>"ตรงตาม Requirement และ Condition"</strong></li>
+                  <li>ระบบที่ใช้งานได้ดีแต่ผิด Requirement ถือว่า <strong>ไม่บรรลุวัตถุประสงค์</strong></li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Right: 8 Components -->
+            <div class="col-span-5 glass-card p-4">
+              <h4 class="text-xs font-bold text-teal-300 mb-3 uppercase tracking-wider">องค์ประกอบของ Test Case 1 รายการ</h4>
+              <div class="space-y-1.5 text-xs">
+                <div class="flex justify-between py-1 border-b border-white/5"><span class="text-slate-400">Test Case ID:</span> <span class="font-mono text-teal-200">TC01</span></div>
+                <div class="flex justify-between py-1 border-b border-white/5"><span class="text-slate-400">Feature / Module:</span> <span class="text-slate-200">Login Page</span></div>
+                <div class="flex justify-between py-1 border-b border-white/5"><span class="text-slate-400">Test Objective:</span> <span class="text-slate-200">ตรวจสอบโหลดหน้า</span></div>
+                <div class="flex justify-between py-1 border-b border-white/5"><span class="text-slate-400">Pre-condition:</span> <span class="text-slate-200">เปิดเว็บสถานะปกติ</span></div>
+                <div class="flex justify-between py-1 border-b border-white/5"><span class="text-slate-400">Test Steps:</span> <span class="text-slate-200">1, 2, 3 ลำดับชัดเจน</span></div>
+                <div class="flex justify-between py-1 border-b border-white/5"><span class="text-slate-400">Test Data:</span> <span class="font-mono text-amber-300">031192 / 031192</span></div>
+                <div class="flex justify-between py-1 border-b border-white/5"><span class="text-slate-400">Expected Result:</span> <span class="text-slate-200">แสดงหน้าเปลี่ยนรหัส</span></div>
+                <div class="flex justify-between py-1"><span class="text-slate-400">Status:</span> <span class="status-pass">ผ่าน</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 5: ทำไมต้องเขียน Test Case -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">ทำไมต้องเขียน Test Case</h2>
+          <p class="text-xs text-teal-200/80 mb-5">เหตุผลเชิงคุณค่าที่ต้องอธิบายให้ทีมและผู้บริหารเข้าใจ</p>
+
+          <div class="grid grid-cols-3 gap-3.5">
+            <div class="glass-card p-4 hover:border-teal-400 transition-all">
+              <div class="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center text-xs mb-2">1</div>
+              <h4 class="text-xs font-bold text-white mb-1">ยืนยันว่าตรง Requirement</h4>
+              <p class="text-[11px] text-slate-300">ระบบที่ใช้งานได้ดีแต่ไม่ตรงกับความต้องการตั้งต้น ถือว่าไม่บรรลุวัตถุประสงค์ของการพัฒนา</p>
+            </div>
+
+            <div class="glass-card p-4 hover:border-teal-400 transition-all">
+              <div class="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center text-xs mb-2">2</div>
+              <h4 class="text-xs font-bold text-white mb-1">เป็นแผนที่นำทางให้ Tester</h4>
+              <p class="text-[11px] text-slate-300">ผู้ทดสอบทุกคนทดสอบด้วยขั้นตอนและข้อมูลชุดเดียวกัน ผลลัพธ์จึงเทียบกันได้อย่างมีมาตรฐาน</p>
+            </div>
+
+            <div class="glass-card p-4 hover:border-teal-400 transition-all">
+              <div class="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center text-xs mb-2">3</div>
+              <h4 class="text-xs font-bold text-white mb-1">ใช้ซ้ำได้ทุกรอบ Regression</h4>
+              <p class="text-[11px] text-slate-300">เมื่อแก้ไขโค้ดหรือปล่อยเวอร์ชันใหม่ นำ Test Case เดิมมารันซ้ำเพื่อยืนยันว่าไม่พังของเดิม</p>
+            </div>
+
+            <div class="glass-card p-4 hover:border-teal-400 transition-all">
+              <div class="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center text-xs mb-2">4</div>
+              <h4 class="text-xs font-bold text-white mb-1">เป็นหลักฐานประกอบส่งมอบ</h4>
+              <p class="text-[11px] text-slate-300">ใช้อ้างอิงกับลูกค้าและผู้ตรวจสอบว่าระบบผ่านการทดสอบครบตามขอบเขตที่ตกลงไว้</p>
+            </div>
+
+            <div class="glass-card p-4 hover:border-teal-400 transition-all">
+              <div class="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center text-xs mb-2">5</div>
+              <h4 class="text-xs font-bold text-white mb-1">ประเมินขอบเขตงานและเวลา</h4>
+              <p class="text-[11px] text-slate-300">จำนวน Test Case สะท้อนปริมาณงานทดสอบ ใช้คำนวณและวางแผนคนและเวลาได้อย่างเป็นรูปธรรม</p>
+            </div>
+
+            <div class="glass-card p-4 hover:border-teal-400 transition-all">
+              <div class="w-7 h-7 rounded-lg bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center text-xs mb-2">6</div>
+              <h4 class="text-xs font-bold text-white mb-1">ลดการพึ่งพาตัวบุคคล</h4>
+              <p class="text-[11px] text-slate-300">คนใหม่เข้าทีมสามารถทดสอบต่อได้ทันทีโดยไม่ต้องรอการถ่ายทอดด้วยวาจา</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 6: Unit Test อยู่ตรงไหนของการทดสอบ -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">Unit Test อยู่ตรงไหนของการทดสอบ</h2>
+          <p class="text-xs text-teal-200/80 mb-5">Test Level ทั้ง 4 ระดับ และตำแหน่งของ Unit Test</p>
+
+          <div class="grid grid-cols-4 gap-3 mb-6">
+            <div class="glass-card p-4 border-b-4 border-b-teal-400">
+              <div class="text-xs font-bold text-teal-300 mb-1">ระดับ 1</div>
+              <h4 class="text-sm font-bold text-white mb-1">Unit Test</h4>
+              <p class="text-[11px] text-slate-300 mb-2">ทดสอบฟังก์ชัน/หน่วยย่อยที่สุด</p>
+              <div class="text-[10px] text-teal-200 font-semibold">ผู้รับผิดชอบ: ผู้พัฒนา + ผู้ทดสอบ</div>
+            </div>
+
+            <div class="glass-card p-4 border-b-4 border-b-teal-500">
+              <div class="text-xs font-bold text-teal-300 mb-1">ระดับ 2</div>
+              <h4 class="text-sm font-bold text-white mb-1">Integration Test</h4>
+              <p class="text-[11px] text-slate-300 mb-2">ทดสอบการเชื่อมต่อระหว่างหน่วย</p>
+              <div class="text-[10px] text-teal-200 font-semibold">ผู้รับผิดชอบ: ผู้ทดสอบ</div>
+            </div>
+
+            <div class="glass-card p-4 border-b-4 border-b-teal-600">
+              <div class="text-xs font-bold text-teal-300 mb-1">ระดับ 3</div>
+              <h4 class="text-sm font-bold text-white mb-1">System Test</h4>
+              <p class="text-[11px] text-slate-300 mb-2">ทดสอบทั้งระบบตาม Requirement</p>
+              <div class="text-[10px] text-teal-200 font-semibold">ผู้รับผิดชอบ: ทีมทดสอบ</div>
+            </div>
+
+            <div class="glass-card p-4 border-b-4 border-b-emerald-400">
+              <div class="text-xs font-bold text-emerald-300 mb-1">ระดับ 4</div>
+              <h4 class="text-sm font-bold text-white mb-1">Acceptance Test</h4>
+              <p class="text-[11px] text-slate-300 mb-2">ผู้ใช้ยืนยันก่อนขึ้นระบบจริง</p>
+              <div class="text-[10px] text-emerald-200 font-semibold">ผู้รับผิดชอบ: ผู้ใช้งาน / ลูกค้า</div>
+            </div>
+          </div>
+
+          <div class="glass-card p-4 bg-teal-950/60 border border-teal-500/30">
+            <h4 class="text-xs font-bold text-teal-300 mb-1.5 flex items-center gap-2">
+              <i class="fa-solid fa-lightbulb"></i> สิ่งที่ต้องจำ
+            </h4>
+            <ul class="text-xs text-slate-200 space-y-1 list-disc list-inside">
+              <li><strong>ยิ่งเจอข้อผิดพลาดในระดับที่ต่ำ (Unit) ยิ่งแก้ไขได้ถูกและเร็ว</strong> — ต้นทุนการแก้บั๊กเพิ่มขึ้นหลายเท่าเมื่อหลุดไปถึง Acceptance หรือ Production</li>
+              <li>Test Case ที่เขียนไว้ในระดับ Unit จะถูกนำกลับมาใช้เป็นฐานของ <strong>Regression Test</strong> ในทุกระดับถัดไป</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 7: หลักการในการเขียน Test Case -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">หลักการในการเขียน Test Case</h2>
+          <p class="text-xs text-teal-200/80 mb-5">ยึดหลัก Verification บนฐานของ Requirement และ Condition</p>
+
+          <div class="grid grid-cols-2 gap-5">
+            <div class="glass-card p-4 space-y-3">
+              <h4 class="text-xs font-bold text-teal-300 uppercase tracking-wider mb-2">4 เสาหลักการเขียน</h4>
+              
+              <div class="bg-black/30 p-2.5 rounded-lg border-l-2 border-teal-400">
+                <div class="text-xs font-bold text-white">อ้างอิง Requirement เป็นตัวตั้ง</div>
+                <div class="text-[11px] text-slate-300">ทุกข้อความต้องการต้องมี Test Case อย่างน้อย 1 ข้อรองรับ ไม่มีข้อใดถูกข้าม</div>
+              </div>
+
+              <div class="bg-black/30 p-2.5 rounded-lg border-l-2 border-teal-400">
+                <div class="text-xs font-bold text-white">ครอบคลุมทุกเงื่อนไข (Condition)</div>
+                <div class="text-[11px] text-slate-300">ทั้งกรณีปกติ กรณีผิดพลาด และกรณีขอบเขต ต้องถูกเขียนให้ครบถ้วน</div>
+              </div>
+
+              <div class="bg-black/30 p-2.5 rounded-lg border-l-2 border-teal-400">
+                <div class="text-xs font-bold text-white">หนึ่ง Test Case ตรวจหนึ่งประเด็น</div>
+                <div class="text-[11px] text-slate-300">ถ้าไม่ผ่าน ต้องรู้ทันทีว่าพังที่จุดใด ไม่ควรรวมหลายเรื่องไว้ในข้อเดียว</div>
+              </div>
+
+              <div class="bg-black/30 p-2.5 rounded-lg border-l-2 border-teal-400">
+                <div class="text-xs font-bold text-white">เขียนให้คนอื่นทำตามได้</div>
+                <div class="text-[11px] text-slate-300">ขั้นตอนชัดเจน ข้อมูลทดสอบระบุค่าจริง ผลคาดหวังวัดผลได้ ไม่กำกวม</div>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div class="glass-card p-4">
+                <h4 class="text-xs font-bold text-teal-300 uppercase tracking-wider mb-2">ระดมความคิดเห็นจากทีม</h4>
+                <p class="text-xs text-slate-200 leading-relaxed">
+                  ควรดึงผู้เกี่ยวข้องหลายบทบาทมาร่วมออกแบบ Test Case เพราะยิ่งมีหลายมุมมอง ยิ่งครอบคลุมทุกกรณีมากขึ้น เช่น SA, Developer, Tester และตัวแทนผู้ใช้งาน
+                </p>
+              </div>
+
+              <div class="glass-card p-4 border border-teal-500/30">
+                <h4 class="text-xs font-bold text-teal-300 uppercase tracking-wider mb-2">เกณฑ์ตรวจคุณภาพ Test Case</h4>
+                <ul class="text-xs text-slate-200 space-y-1.5">
+                  <li>&bull; <strong class="text-teal-300">ทำซ้ำได้ (Repeatable):</strong> คนละคนรันได้ผลเดียวกัน</li>
+                  <li>&bull; <strong class="text-teal-300">ตรวจสอบได้ (Verifiable):</strong> ผลคาดหวังชัด ไม่ต้องตีความ</li>
+                  <li>&bull; <strong class="text-teal-300">ตามรอยได้ (Traceable):</strong> โยงกลับไปยัง Requirement ได้</li>
+                  <li>&bull; <strong class="text-teal-300">เป็นอิสระ (Independent):</strong> ไม่ผูกกับผลของข้ออื่น รันแยกได้</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 8: แหล่งที่มาของ Test Case -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">เริ่มเขียน Test Case ได้จากที่ใดบ้าง</h2>
+          <p class="text-xs text-teal-200/80 mb-5">4 แหล่งข้อมูลตั้งต้น เรียงจากที่น่าเชื่อถือที่สุดไปหาน้อยที่สุด</p>
+
+          <div class="grid grid-cols-2 gap-3.5">
+            <div class="glass-card p-4 border-l-4 border-l-emerald-400">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-bold text-white">1. Requirement</span>
+                <span class="badge-pill bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">น่าเชื่อถือสูงสุด</span>
+              </div>
+              <p class="text-xs text-slate-300">เอกสารความต้องการที่ผ่านการวิเคราะห์จาก SA แล้ว หรือรับมาจากลูกค้าโดยตรง</p>
+            </div>
+
+            <div class="glass-card p-4 border-l-4 border-l-teal-400">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-bold text-white">2. Flow / Process</span>
+                <span class="badge-pill bg-teal-500/20 text-teal-300 border border-teal-500/30">เห็นเส้นทางครบ</span>
+              </div>
+              <p class="text-xs text-slate-300">ผังการทำงานที่ SA วิเคราะห์ไว้ ใช้ไล่เส้นทางการทำงานให้ครบทุกสาขาของเงื่อนไข</p>
+            </div>
+
+            <div class="glass-card p-4 border-l-4 border-l-cyan-400">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-bold text-white">3. Planning ของทีม</span>
+                <span class="badge-pill bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">ได้บริบทเพิ่ม</span>
+              </div>
+              <p class="text-xs text-slate-300">ผลจากการประชุมวางแผนร่วมกัน ช่วยเก็บรายละเอียดที่ไม่ได้เขียนในเอกสาร</p>
+            </div>
+
+            <div class="glass-card p-4 border-l-4 border-l-amber-400">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-bold text-white">4. หน้าจอ UI</span>
+                <span class="badge-pill bg-amber-500/20 text-amber-300 border border-amber-500/30">ทางเลือกสุดท้าย</span>
+              </div>
+              <p class="text-xs text-slate-300">ใช้เมื่อไม่มี Spec หรือเอกสารให้ดู เพราะงาน SA และผู้ทดสอบทำคาบเกี่ยวกัน</p>
+            </div>
+          </div>
+
+          <div class="mt-4 p-3 glass-card-dark border border-amber-500/30 text-xs text-amber-200 flex items-center gap-2">
+            <i class="fa-solid fa-circle-exclamation text-amber-400 text-sm"></i>
+            <span><strong>ข้อควรระวัง:</strong> การเขียนจากหน้าจอ UI อย่างเดียวมีความเสี่ยง หาก Spec เปลี่ยนจะต้องกลับมาแก้ Test Case ทั้งชุด เสียเวลาซ้ำซ้อน</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 9: Divider สมรรถนะ 1 -->
+      <section>
+        <div class="h-full flex flex-col justify-center text-left max-w-4xl mx-auto px-6">
+          <span class="text-xs font-bold text-teal-400 tracking-widest uppercase mb-2">หน่วยสมรรถนะที่ 1</span>
+          <h1 class="text-5xl font-black text-white mb-3">10302.01</h1>
+          <h3 class="text-2xl font-bold text-teal-300 mb-6">ดำเนินการ Finish detail design process</h3>
+          <div class="flex gap-6 text-sm text-slate-300 font-medium">
+            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-teal-400"></i> 1.1 วิเคราะห์จำนวน Functionality</div>
+            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-teal-400"></i> 1.2 ตรวจสอบเงื่อนไขการทดสอบ</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 10: 1.1 วิเคราะห์จำนวน Functionality -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">1.1 วิเคราะห์จำนวน Functionality</h2>
+          <p class="text-xs text-teal-200/80 mb-4">แตกระบบเป็นฟังก์ชันย่อย เพื่อรู้ขอบเขตงานทดสอบที่แท้จริง</p>
+
+          <div class="space-y-2.5 text-xs mb-4">
+            <div class="glass-card p-2.5 flex items-center gap-3">
+              <span class="w-6 h-6 rounded-full bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center shrink-0">1</span>
+              <div><strong class="text-white">รวบรวมขอบเขตระบบ:</strong> ระบุโมดูล/หน้าจอทั้งหมดจาก Requirement เช่น Login, Change Password, Dashboard, Info, Form</div>
+            </div>
+            <div class="glass-card p-2.5 flex items-center gap-3">
+              <span class="w-6 h-6 rounded-full bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center shrink-0">2</span>
+              <div><strong class="text-white">แตกเป็นฟังก์ชันย่อย:</strong> แต่ละหน้าจอมีการกระทำอะไรบ้าง เช่น เปิดหน้า, กรอกข้อมูล, กดยืนยัน, แสดงแจ้งเตือน</div>
+            </div>
+            <div class="glass-card p-2.5 flex items-center gap-3">
+              <span class="w-6 h-6 rounded-full bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center shrink-0">3</span>
+              <div><strong class="text-white">นับจำนวนและจัดกลุ่ม:</strong> รวมจำนวนฟังก์ชันทั้งหมด แล้วจัดกลุ่มตามโมดูลเพื่อกระจายงาน</div>
+            </div>
+            <div class="glass-card p-2.5 flex items-center gap-3">
+              <span class="w-6 h-6 rounded-full bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center shrink-0">4</span>
+              <div><strong class="text-white">จัดลำดับความสำคัญ:</strong> ฟังก์ชันที่กระทบผู้ใช้มากหรือมีความเสี่ยงสูง ต้องทดสอบก่อนและละเอียดกว่า</div>
+            </div>
+            <div class="glass-card p-2.5 flex items-center gap-3">
+              <span class="w-6 h-6 rounded-full bg-teal-500/20 text-teal-300 font-bold flex items-center justify-center shrink-0">5</span>
+              <div><strong class="text-white">ประเมินจำนวน Test Case:</strong> แต่ละฟังก์ชันต้องมีอย่างน้อย 1 กรณีปกติ และ 1 กรณีผิดพลาด</div>
+            </div>
+          </div>
+
+          <div class="glass-card p-3 bg-teal-950/80 border border-teal-400 text-xs text-center text-teal-200">
+            <strong class="text-white">สูตรประเมินเบื้องต้น:</strong> จำนวน Test Case โดยประมาณ = จำนวน Functionality &times; จำนวนเงื่อนไขเฉลี่ยต่อฟังก์ชัน
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 11: ตัวอย่างการนับ Functionality -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">ตัวอย่างการนับ Functionality จากงานจริง</h2>
+          <p class="text-xs text-teal-200/80 mb-4">ระบบ Student / Teachers Portal &mdash; แตกจาก 5 โมดูล เป็น 10 กรณีทดสอบ</p>
+
+          <table class="test-table mb-3">
+            <thead>
+              <tr>
+                <th class="w-1/4">โมดูล / หน้าจอ</th>
+                <th class="w-16 text-center">จำนวน</th>
+                <th>ฟังก์ชันย่อยที่ต้องทดสอบ</th>
+                <th class="w-28 text-center">Test Case ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-bold text-white">Login Student , teachers Page</td>
+                <td class="text-center font-bold text-teal-300">3</td>
+                <td>เปิดหน้า Login, เข้าสู่ระบบ, กรอกข้อมูลไม่ถูกต้อง</td>
+                <td class="text-center font-mono text-teal-300">TC01, TC02, TC03</td>
+              </tr>
+              <tr>
+                <td class="font-bold text-white">Change Password Page</td>
+                <td class="text-center font-bold text-teal-300">3</td>
+                <td>เปลี่ยนรหัสผ่าน, ยืนยันไม่ตรง, รหัสเดิมไม่ถูกต้อง</td>
+                <td class="text-center font-mono text-teal-300">TC04, TC05, TC06</td>
+              </tr>
+              <tr>
+                <td class="font-bold text-white">Login ด้วยรหัสผ่านใหม่</td>
+                <td class="text-center font-bold text-teal-300">1</td>
+                <td>เข้าสู่ระบบด้วยรหัสผ่านที่เปลี่ยนแล้ว</td>
+                <td class="text-center font-mono text-teal-300">TC07</td>
+              </tr>
+              <tr>
+                <td class="font-bold text-white">Dashboard Page</td>
+                <td class="text-center font-bold text-teal-300">1</td>
+                <td>เปิดหน้าแดชบอร์ด</td>
+                <td class="text-center font-mono text-teal-300">TC08</td>
+              </tr>
+              <tr>
+                <td class="font-bold text-white">Info Student Page</td>
+                <td class="text-center font-bold text-teal-300">1</td>
+                <td>เปิดหน้าข้อมูลส่วนตัว</td>
+                <td class="text-center font-mono text-teal-300">TC09</td>
+              </tr>
+              <tr>
+                <td class="font-bold text-white">Form Student Page</td>
+                <td class="text-center font-bold text-teal-300">1</td>
+                <td>เปิดหน้าแบบฟอร์มบันทึกข้อมูล</td>
+                <td class="text-center font-mono text-teal-300">TC10</td>
+              </tr>
+              <tr class="bg-teal-900/50 font-bold">
+                <td class="text-teal-200">รวมทั้งสิ้น</td>
+                <td class="text-center text-teal-300">10</td>
+                <td class="text-teal-200">10 กรณีทดสอบ ครอบคลุมทั้งกรณีปกติและกรณีผิดพลาด</td>
+                <td class="text-center font-mono text-emerald-400">TC01 – TC10</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="p-2.5 glass-card-dark text-[11px] text-slate-300">
+            <strong class="text-teal-300">ข้อสังเกต:</strong> โมดูลที่มีเงื่อนไขซับซ้อน (Login, Change Password) ต้องใช้ Test Case มากกว่าโมดูลที่เปิดหน้าจอเฉย ๆ จำนวน Test Case จึงไม่เท่ากับจำนวนหน้าจอ แต่ขึ้นกับ "จำนวนเงื่อนไข"
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 12: 1.2 ตรวจสอบเงื่อนไขการทดสอบ -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">1.2 ตรวจสอบเงื่อนไขการทดสอบ</h2>
+          <p class="text-xs text-teal-200/80 mb-4">แต่ละฟังก์ชันมีเงื่อนไขอะไรบ้างที่ต้องพิสูจน์</p>
+
+          <div class="grid grid-cols-2 gap-5">
+            <div class="glass-card p-4 space-y-2 text-xs">
+              <h4 class="text-xs font-bold text-teal-300 uppercase tracking-wider mb-2">คำถาม 5 ข้อที่ต้องตอบให้ได้ทุกกรณี</h4>
+              <div><strong class="text-teal-200">1. Pre-condition:</strong> ก่อนเริ่ม ระบบต้องอยู่ในสถานะใด (เช่น อยู่หน้า Login)</div>
+              <div><strong class="text-teal-200">2. Input:</strong> ต้องป้อนข้อมูลอะไร ค่าถูก ค่าผิด ค่าขอบเขต</div>
+              <div><strong class="text-teal-200">3. Action:</strong> ผู้ใช้ทำอะไรบ้าง เรียงลำดับอย่างไร</div>
+              <div><strong class="text-teal-200">4. Expected Result:</strong> ระบบต้องตอบสนองอย่างไร ข้อความแจ้งเตือนคืออะไร</div>
+              <div><strong class="text-teal-200">5. Post-condition:</strong> หลังทดสอบ ข้อมูลในระบบเปลี่ยนไปอย่างไร คืนค่าหรือไม่</div>
+            </div>
+
+            <div class="space-y-3">
+              <div class="glass-card p-4 text-xs">
+                <h4 class="text-xs font-bold text-teal-300 uppercase tracking-wider mb-2">ประเภทเงื่อนไขที่ต้องมีให้ครบ</h4>
+                <ul class="space-y-1 text-slate-200">
+                  <li>&bull; <strong class="text-emerald-300">กรณีปกติ (Positive):</strong> ข้อมูลถูกต้อง ระบบทำงานสำเร็จ</li>
+                  <li>&bull; <strong class="text-rose-300">กรณีผิดพลาด (Negative):</strong> ข้อมูลผิด ระบบต้องแจ้งเตือนถูกต้อง</li>
+                  <li>&bull; <strong class="text-amber-300">กรณีขอบเขต (Boundary):</strong> ค่าต่ำสุด สูงสุด และค่าว่าง</li>
+                  <li>&bull; <strong class="text-cyan-300">กรณีสิทธิ์ (Authorization):</strong> แต่ละบทบาทเห็นข้อมูลต่างกัน</li>
+                </ul>
+              </div>
+
+              <div class="glass-card-dark p-3 text-[11px] text-slate-300 border-l-2 border-teal-400">
+                <div class="font-bold text-teal-300 mb-1">ตัวอย่างจาก Change Password:</div>
+                <div>TC04 ปกติ &rarr; รหัสเดิมถูก รหัสใหม่กับยืนยันตรงกัน &rarr; เปลี่ยนสำเร็จ</div>
+                <div>TC05 ผิดพลาด &rarr; รหัสใหม่กับยืนยันไม่ตรงกัน &rarr; แจ้ง "ไม่ตรงกัน"</div>
+                <div>TC06 ผิดพลาด &rarr; รหัสเดิมไม่ถูกต้อง &rarr; แจ้ง "รหัสผ่านเดิมไม่ถูกต้อง"</div>
+                <div>TC07 ต่อเนื่อง &rarr; เข้าสู่ระบบด้วยรหัสใหม่ &rarr; เข้าได้สำเร็จ</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 13: เทคนิคออกแบบเงื่อนไข -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">เทคนิคออกแบบเงื่อนไขการทดสอบ</h2>
+          <p class="text-xs text-teal-200/80 mb-5">3 เทคนิคพื้นฐานที่ช่วยให้ครอบคลุมโดยไม่ต้องทดสอบทุกค่า</p>
+
+          <div class="grid grid-cols-3 gap-4">
+            <div class="glass-card p-4">
+              <div class="text-teal-300 font-bold text-xs uppercase tracking-wider mb-2">เทคนิคที่ 1</div>
+              <h4 class="text-sm font-bold text-white mb-2">Equivalence Partitioning</h4>
+              <p class="text-xs text-slate-300 mb-3">แบ่งข้อมูลนำเข้าเป็นกลุ่มที่ให้ผลเหมือนกัน แล้วเลือกทดสอบกลุ่มละ 1 ค่า</p>
+              <div class="bg-black/30 p-2.5 rounded text-[11px] text-teal-200 border-l-2 border-teal-400">
+                <strong>ตัวอย่าง:</strong> รหัสผ่านกลุ่มถูกต้อง (031192) และกลุ่มไม่ถูกต้อง (1122) &mdash; ทดสอบกลุ่มละ 1 ค่าก็เพียงพอ
+              </div>
+            </div>
+
+            <div class="glass-card p-4">
+              <div class="text-teal-300 font-bold text-xs uppercase tracking-wider mb-2">เทคนิคที่ 2</div>
+              <h4 class="text-sm font-bold text-white mb-2">Boundary Value Analysis</h4>
+              <p class="text-xs text-slate-300 mb-3">ทดสอบที่ค่าขอบเขต เพราะข้อผิดพลาดมักเกิดตรงจุดตัดเงื่อนไข</p>
+              <div class="bg-black/30 p-2.5 rounded text-[11px] text-teal-200 border-l-2 border-teal-400">
+                <strong>ตัวอย่าง:</strong> รหัสผ่านยาว 6 ตัว: ทดสอบที่ 5, 6 และ 7 ตัวอักษร รวมถึงกรณีเว้นว่าง
+              </div>
+            </div>
+
+            <div class="glass-card p-4">
+              <div class="text-teal-300 font-bold text-xs uppercase tracking-wider mb-2">เทคนิคที่ 3</div>
+              <h4 class="text-sm font-bold text-white mb-2">Decision Table</h4>
+              <p class="text-xs text-slate-300 mb-3">ทำตารางเงื่อนไขและผลลัพธ์ ใช้กับฟังก์ชันที่มีหลายเงื่อนไขประกอบกัน</p>
+              <div class="bg-black/30 p-2.5 rounded text-[11px] text-teal-200 border-l-2 border-teal-400">
+                <strong>ตัวอย่าง:</strong> รหัสเดิมถูก/ผิด &times; ยืนยันตรง/ไม่ตรง = 4 ชุดเงื่อนไข ครอบคลุมทุกทางเลือก
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 14: Positive vs Negative Test Case -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">Positive Test Case กับ Negative Test Case</h2>
+          <p class="text-xs text-teal-200/80 mb-5">เปรียบเทียบจากตัวอย่างจริง TC02 และ TC03</p>
+
+          <div class="grid grid-cols-2 gap-5 mb-4">
+            <!-- Positive -->
+            <div class="glass-card p-4 border-t-4 border-t-emerald-400">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="text-xs font-bold text-emerald-300 uppercase">Positive &mdash; TC02</h4>
+                <span class="badge-pill bg-emerald-500/20 text-emerald-300">เข้าสู่ระบบด้วยข้อมูลถูกต้อง</span>
+              </div>
+              <div class="space-y-1.5 text-xs text-slate-200">
+                <div><span class="text-slate-400">Pre-condition:</span> อยู่ในหน้า Login</div>
+                <div><span class="text-slate-400">Test Steps:</span> 1. กรอกชื่อผู้ใช้ 2. กรอกรหัสผ่าน 3. กด Login</div>
+                <div><span class="text-slate-400">Test Data:</span> <span class="font-mono text-emerald-300">username: 031192, password: 031192</span></div>
+                <div><span class="text-slate-400">Expected Result:</span> แสดงหน้าเปลี่ยนรหัสผ่าน</div>
+              </div>
+            </div>
+
+            <!-- Negative -->
+            <div class="glass-card p-4 border-t-4 border-t-rose-400">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="text-xs font-bold text-rose-300 uppercase">Negative &mdash; TC03</h4>
+                <span class="badge-pill bg-rose-500/20 text-rose-300">กรอกข้อมูลไม่ถูกต้อง</span>
+              </div>
+              <div class="space-y-1.5 text-xs text-slate-200">
+                <div><span class="text-slate-400">Pre-condition:</span> อยู่ในหน้า Login</div>
+                <div><span class="text-slate-400">Test Steps:</span> 1. กรอกชื่อผู้ใช้ 2. กรอกรหัสไม่ตรงกับชื่อผู้ใช้ 3. กด Login</div>
+                <div><span class="text-slate-400">Test Data:</span> <span class="font-mono text-rose-300">username: 031192, password: 1122</span></div>
+                <div><span class="text-slate-400">Expected Result:</span> ระบบแจ้งเตือน "Username หรือ Password ไม่ถูกต้อง"</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card-dark p-3 text-xs text-teal-200 border-l-4 border-l-teal-400">
+            <strong>กฎง่าย ๆ:</strong> ทุกฟังก์ชันที่รับข้อมูลจากผู้ใช้ ต้องมีทั้ง Positive และ Negative เสมอ &mdash; <em>ระบบที่ปฏิเสธข้อมูลผิดไม่ได้ ถือว่าไม่ผ่านการทดสอบ</em>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 15: Divider สมรรถนะ 2 -->
+      <section>
+        <div class="h-full flex flex-col justify-center text-left max-w-4xl mx-auto px-6">
+          <span class="text-xs font-bold text-emerald-400 tracking-widest uppercase mb-2">หน่วยสมรรถนะที่ 2</span>
+          <h1 class="text-5xl font-black text-white mb-3">10302.02</h1>
+          <h3 class="text-2xl font-bold text-emerald-300 mb-6">จัดทำรายงาน Unit Test</h3>
+          <div class="flex gap-6 text-sm text-slate-300 font-medium">
+            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> 2.1 เขียน Test Plan ระบุ Timeline คน Resource</div>
+            <div class="flex items-center gap-2"><i class="fa-solid fa-check text-emerald-400"></i> 2.2 วิเคราะห์ผลทดสอบเพื่อ Go live / No go live</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 16: 2.1 แผนการทดสอบ -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">2.1 แผนการทดสอบ (Test Plan)</h2>
+          <p class="text-xs text-teal-200/80 mb-4">เอกสารที่ระบุวัตถุประสงค์ ทรัพยากร และกระบวนการของการทดสอบ</p>
+
+          <div class="grid grid-cols-4 gap-3 text-xs mb-3">
+            <div class="glass-card p-3">
+              <div class="font-bold text-teal-300 mb-1">ขอบเขต</div>
+              <p class="text-[11px] text-slate-300">ทดสอบอะไรบ้าง และไม่ทดสอบอะไร (In / Out of scope)</p>
+            </div>
+            <div class="glass-card p-3">
+              <div class="font-bold text-teal-300 mb-1">วัตถุประสงค์</div>
+              <p class="text-[11px] text-slate-300">ต้องการพิสูจน์อะไร เกณฑ์ผ่านคืออะไร</p>
+            </div>
+            <div class="glass-card p-3">
+              <div class="font-bold text-teal-300 mb-1">Timeline</div>
+              <p class="text-[11px] text-slate-300">ช่วงเวลาแต่ละกิจกรรม วันเริ่ม วันสิ้นสุด</p>
+            </div>
+            <div class="glass-card p-3">
+              <div class="font-bold text-teal-300 mb-1">บุคลากร</div>
+              <p class="text-[11px] text-slate-300">ใครทำอะไร ผู้ทดสอบ ผู้ทบทวน ผู้อนุมัติ</p>
+            </div>
+            <div class="glass-card p-3">
+              <div class="font-bold text-teal-300 mb-1">Resource</div>
+              <p class="text-[11px] text-slate-300">เครื่อง ระบบทดสอบ ข้อมูลทดสอบ เครื่องมือ</p>
+            </div>
+            <div class="glass-card p-3">
+              <div class="font-bold text-teal-300 mb-1">เกณฑ์เข้า-ออก</div>
+              <p class="text-[11px] text-slate-300">Entry / Exit Criteria ของการทดสอบ</p>
+            </div>
+            <div class="glass-card p-3">
+              <div class="font-bold text-teal-300 mb-1">การจัดการข้อบกพร่อง</div>
+              <p class="text-[11px] text-slate-300">พบบั๊กแล้วแจ้งใคร จัดลำดับอย่างไร</p>
+            </div>
+            <div class="glass-card p-3">
+              <div class="font-bold text-teal-300 mb-1">ความเสี่ยง</div>
+              <p class="text-[11px] text-slate-300">อะไรอาจทำให้แผนล่าช้า และแผนสำรอง</p>
+            </div>
+          </div>
+
+          <div class="glass-card-dark p-2.5 text-[11px] text-slate-300 flex justify-between">
+            <div><strong class="text-teal-300">Entry Criteria:</strong> โค้ดพัฒนาเสร็จ ผ่าน Review และติดตั้งบนระบบทดสอบเรียบร้อย</div>
+            <div><strong class="text-emerald-300">Exit Criteria:</strong> รันครบ 100% ไม่มีบั๊ก Critical/High ค้าง</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 17: Timeline การทดสอบ -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">Test Plan: Timeline การทดสอบ</h2>
+          <p class="text-xs text-teal-200/80 mb-4">ตัวอย่างแผน 10 วันทำการ สำหรับระบบ Student / Teachers Portal (10 Test Case)</p>
+
+          <div class="space-y-2 text-xs mb-4">
+            <div class="flex items-center gap-2">
+              <div class="w-48 font-medium text-slate-300 shrink-0">เตรียมและทบทวน Test Case</div>
+              <div class="w-2/12 bg-teal-600 text-white text-[10px] font-bold py-1 text-center rounded">2 วัน</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-48 font-medium text-slate-300 shrink-0">เตรียมข้อมูลและระบบทดสอบ</div>
+              <div class="w-1/12 ml-[16.6%] bg-teal-500 text-white text-[10px] font-bold py-1 text-center rounded">1.5 วัน</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-48 font-medium text-slate-300 shrink-0">ดำเนินการ Unit Test รอบที่ 1</div>
+              <div class="w-3/12 ml-[29%] bg-cyan-600 text-white text-[10px] font-bold py-1 text-center rounded">2.5 วัน</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-48 font-medium text-amber-300 shrink-0 font-bold">แก้ไขข้อบกพร่อง (Developer)</div>
+              <div class="w-2/12 ml-[54%] bg-amber-600 text-white text-[10px] font-bold py-1 text-center rounded">2 วัน</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-48 font-medium text-emerald-300 shrink-0 font-bold">ทดสอบซ้ำ (Retest & Regression)</div>
+              <div class="w-2/12 ml-[70%] bg-emerald-600 text-white text-[10px] font-bold py-1 text-center rounded">2 วัน</div>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-48 font-medium text-slate-300 shrink-0">สรุปผลและจัดทำรายงาน</div>
+              <div class="w-1/12 ml-[86%] bg-teal-700 text-white text-[10px] font-bold py-1 text-center rounded">1.5 วัน</div>
+            </div>
+          </div>
+
+          <div class="glass-card p-3 bg-teal-950/80 border-l-4 border-l-amber-400 text-xs text-slate-200">
+            <strong class="text-amber-300">หลักการวาง Timeline:</strong> ต้องเผื่อเวลาสำหรับ <strong>"รอบแก้ไขและทดสอบซ้ำ"</strong> เสมอ อย่างน้อย 30&ndash;40% ของเวลาทดสอบรอบแรก เพราะการพบข้อบกพร่องคือเรื่องปกติ ไม่ใช่ความล้มเหลวของแผน
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 18: บุคลากรและทรัพยากร -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">Test Plan: บุคลากรและทรัพยากร</h2>
+          <p class="text-xs text-teal-200/80 mb-4">ระบุให้ชัดว่าใครทำอะไร และต้องใช้อะไรบ้าง</p>
+
+          <div class="grid grid-cols-12 gap-5">
+            <div class="col-span-7 glass-card p-3.5">
+              <h4 class="text-xs font-bold text-teal-300 uppercase tracking-wider mb-2">บทบาทและความรับผิดชอบ (รวม 7 คน)</h4>
+              <table class="w-full text-[11px] border-collapse">
+                <thead>
+                  <tr class="border-b border-white/10 text-teal-200 text-left">
+                    <th class="py-1">บทบาท</th>
+                    <th class="py-1">ความรับผิดชอบ</th>
+                    <th class="py-1 text-center">จำนวน</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5 text-slate-200">
+                  <tr><td class="font-bold py-1 text-white">Test Lead</td><td class="py-1">ทำ Test Plan, ติดตาม, สรุปผลเสนอผู้บริหาร</td><td class="text-center font-bold text-teal-300">1</td></tr>
+                  <tr><td class="font-bold py-1 text-white">Tester</td><td class="py-1">เขียนและรัน Test Case, บันทึกผล, แจ้งบั๊ก</td><td class="text-center font-bold text-teal-300">2</td></tr>
+                  <tr><td class="font-bold py-1 text-white">Developer</td><td class="py-1">แก้ไขข้อบกพร่อง และส่งมอบเวอร์ชันแก้ไข</td><td class="text-center font-bold text-teal-300">2</td></tr>
+                  <tr><td class="font-bold py-1 text-white">System Analyst</td><td class="py-1">ยืนยันว่า Test Case ตรงกับ Requirement</td><td class="text-center font-bold text-teal-300">1</td></tr>
+                  <tr><td class="font-bold py-1 text-white">ตัวแทนผู้ใช้งาน</td><td class="py-1">ทบทวนผลลัพธ์ที่คาดหวังในมุมผู้ใช้จริง</td><td class="text-center font-bold text-teal-300">1</td></tr>
+                </tbody>
+              </table>
+              <div class="mt-2 text-[10px] text-teal-300 font-semibold">&bull; สัดส่วนที่แนะนำ: ผู้ทดสอบ 1 คนต่อ Test Case ประมาณ 5&ndash;8 ข้อต่อวัน</div>
+            </div>
+
+            <div class="col-span-5 glass-card p-3.5 space-y-2 text-[11px]">
+              <h4 class="text-xs font-bold text-teal-300 uppercase tracking-wider mb-2">ทรัพยากรที่ต้องเตรียม</h4>
+              <div><strong class="text-white">สภาพแวดล้อม:</strong> เซิร์ฟเวอร์และฐานข้อมูลแยกจากระบบจริง</div>
+              <div><strong class="text-white">ข้อมูลทดสอบ:</strong> บัญชีทดสอบ (เช่น 031192) พร้อมรหัสตั้งต้น</div>
+              <div><strong class="text-white">เครื่องมือบันทึก:</strong> ไฟล์ตาราง Test Case และระบบติดตามบั๊ก</div>
+              <div><strong class="text-white">อุปกรณ์/เบราว์เซอร์:</strong> ทดสอบบนอุปกรณ์และเบราว์เซอร์ที่ผู้ใช้จริงใช้งาน</div>
+              
+              <div class="p-2 bg-rose-950/60 border border-rose-500/30 rounded text-[10px] text-rose-200">
+                <strong>คำเตือน:</strong> ห้ามใช้ข้อมูลจริงของผู้ใช้งานในการทดสอบ ให้สร้างชุดข้อมูลทดสอบแยกและลบทิ้งเมื่อจบงาน
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 19: โครงสร้างตารางบันทึก 8 คอลัมน์ -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">โครงสร้างตารางบันทึก Test Case</h2>
+          <p class="text-xs text-teal-200/80 mb-3">8 คอลัมน์มาตรฐานที่ใช้ในแบบฟอร์มรายงาน Unit Test</p>
+
+          <table class="test-table mb-3">
+            <thead>
+              <tr>
+                <th class="w-12 text-center">คอลัมน์</th>
+                <th class="w-32">ชื่อฟิลด์</th>
+                <th>ความหมาย / สิ่งที่ต้องเขียน</th>
+                <th class="w-48">ตัวอย่างค่า</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td class="text-center font-bold text-teal-300">A</td><td class="font-bold text-white">Test Case ID</td><td>รหัสเรียงลำดับ ไม่ซ้ำกัน</td><td class="font-mono text-teal-300">TC01</td></tr>
+              <tr><td class="text-center font-bold text-teal-300">B</td><td class="font-bold text-white">Feature / Module</td><td>ฟังก์ชันหรือหน้าจอที่ทดสอบ</td><td>Login Student , teachers Page</td></tr>
+              <tr><td class="text-center font-bold text-teal-300">C</td><td class="font-bold text-white">Test Objective</td><td>วัตถุประสงค์ของกรณีทดสอบนี้</td><td>ตรวจสอบการโหลดหน้า</td></tr>
+              <tr><td class="text-center font-bold text-teal-300">D</td><td class="font-bold text-white">Pre-condition</td><td>สถานะระบบก่อนเริ่มทดสอบ</td><td>เปิดเว็บในสถานะปกติ</td></tr>
+              <tr><td class="text-center font-bold text-teal-300">E</td><td class="font-bold text-white">Test Steps</td><td>ขั้นตอนเรียงลำดับ 1, 2, 3</td><td>1. เปิดหน้า Login</td></tr>
+              <tr><td class="text-center font-bold text-teal-300">F</td><td class="font-bold text-white">Test Data</td><td>ข้อมูลที่ใช้ทดสอบ ระบุค่าจริง</td><td class="font-mono text-amber-300">username: 031192</td></tr>
+              <tr><td class="text-center font-bold text-teal-300">G</td><td class="font-bold text-white">Expected Result</td><td>ผลลัพธ์ที่ระบบต้องแสดง</td><td>แสดงหน้าเปลี่ยนรหัสผ่าน</td></tr>
+              <tr><td class="text-center font-bold text-teal-300">H</td><td class="font-bold text-white">Status</td><td>ผลจริง: ผ่าน / ไม่ผ่าน</td><td><span class="status-pass">ผ่าน</span></td></tr>
+            </tbody>
+          </table>
+
+          <div class="glass-card-dark p-2 text-[11px] text-teal-200">
+            <strong>เคล็ดลับ:</strong> หากช่องใดไม่มีข้อมูล ให้ใส่เครื่องหมาย <code>"-"</code> แทนการเว้นว่าง เพื่อให้เห็นว่าพิจารณาแล้ว ไม่ใช่ลืมกรอก
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 20: ตัวอย่างงานจริง (1) TC01 - TC05 -->
+      <section>
+        <div class="max-w-6xl mx-auto text-left px-4">
+          <h2 class="text-xl font-bold text-white mb-1">ตัวอย่างงานจริง (1) Login และ Change Password</h2>
+          <p class="text-xs text-teal-200/80 mb-2">TC01 &ndash; TC05 จากตาราง Unit Test ของระบบ Student / Teachers Portal</p>
+
+          <table class="test-table text-[10px]">
+            <thead>
+              <tr>
+                <th class="w-10">ID</th>
+                <th class="w-28">Feature / Module</th>
+                <th class="w-32">Test Objective</th>
+                <th class="w-24">Pre-condition</th>
+                <th>Test Steps</th>
+                <th class="w-28">Test Data</th>
+                <th>Expected Result</th>
+                <th class="w-12 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-bold text-teal-300">TC01</td>
+                <td>Login Student, teachers Page</td>
+                <td>ตรวจสอบการโหลดหน้า</td>
+                <td>เปิดเว็บในสถานะปกติ</td>
+                <td>1. เปิดหน้า Login</td>
+                <td class="text-center">-</td>
+                <td>แสดงหน้า Login</td>
+                <td class="text-center"><span class="status-pass">ผ่าน</span></td>
+              </tr>
+              <tr>
+                <td class="font-bold text-teal-300">TC02</td>
+                <td>Login Student, teachers Page</td>
+                <td>ตรวจสอบการเข้าสู่ระบบเพื่อเปลี่ยนรหัสผ่าน</td>
+                <td>อยู่ในหน้า Login</td>
+                <td>1. กรอกชื่อผู้ใช้ 2. กรอกรหัสผ่าน 3. กด Login</td>
+                <td class="font-mono text-amber-200">user: 031192<br/>pass: 031192</td>
+                <td>แสดงหน้าเปลี่ยนรหัสผ่าน</td>
+                <td class="text-center"><span class="status-pass">ผ่าน</span></td>
+              </tr>
+              <tr>
+                <td class="font-bold text-teal-300">TC03</td>
+                <td>Login Student, teachers Page</td>
+                <td>ตรวจสอบการกรอกข้อมูลไม่ถูกต้อง</td>
+                <td>อยู่ในหน้า Login</td>
+                <td>1. กรอกชื่อผู้ใช้ 2. กรอกรหัสไม่ตรงกับชื่อ 3. กด Login</td>
+                <td class="font-mono text-rose-300">user: 031192<br/>pass: 1122</td>
+                <td>แจ้งเตือน Username หรือ Password ไม่ถูกต้อง</td>
+                <td class="text-center"><span class="status-pass">ผ่าน</span></td>
+              </tr>
+              <tr>
+                <td class="font-bold text-teal-300">TC04</td>
+                <td>Change Password Page</td>
+                <td>ตรวจสอบการเปลี่ยนรหัสผ่าน</td>
+                <td>อยู่ในหน้า Change password</td>
+                <td>1. กรอกรหัสเดิม 2. กรอกรหัสใหม่ 3. ยืนยันรหัสใหม่ 4. กดยืนยัน</td>
+                <td class="font-mono text-amber-200">เดิม: 031192<br/>ใหม่: 1122<br/>ยืนยัน: 1122</td>
+                <td>แจ้งเตือน เปลี่ยนรหัสผ่านสำเร็จ กรุณาเข้าสู่ระบบใหม่</td>
+                <td class="text-center"><span class="status-pass">ผ่าน</span></td>
+              </tr>
+              <tr>
+                <td class="font-bold text-teal-300">TC05</td>
+                <td>Change Password Page</td>
+                <td>ตรวจสอบการกรอกยืนยันไม่ตรงกับรหัสผ่านใหม่</td>
+                <td>อยู่ในหน้า Change password</td>
+                <td>1. กรอกรหัสเดิม 2. กรอกรหัสใหม่ 3. ยืนยันไม่ตรงกัน 4. กดยืนยัน</td>
+                <td class="font-mono text-rose-300">เดิม: 031192<br/>ใหม่: 1122<br/>ยืนยัน: 5555</td>
+                <td>แจ้งเตือน รหัสผ่านไม่ตรงกันหรือว่าง</td>
+                <td class="text-center"><span class="status-pass">ผ่าน</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SLIDE 21: ตัวอย่างงานจริง (2) TC06 - TC10 -->
+      <section>
+        <div class="max-w-6xl mx-auto text-left px-4">
+          <h2 class="text-xl font-bold text-white mb-1">ตัวอย่างงานจริง (2) ส่วนที่เหลือและสรุปผล</h2>
+          <p class="text-xs text-teal-200/80 mb-2">TC06 &ndash; TC10 พร้อมสรุปภาพรวมของรอบทดสอบ</p>
+
+          <table class="test-table text-[10px] mb-3">
+            <thead>
+              <tr>
+                <th class="w-10">ID</th>
+                <th class="w-28">Feature / Module</th>
+                <th class="w-32">Test Objective</th>
+                <th class="w-24">Pre-condition</th>
+                <th>Test Steps</th>
+                <th class="w-28">Test Data</th>
+                <th>Expected Result</th>
+                <th class="w-12 text-center">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="font-bold text-teal-300">TC06</td>
+                <td>Change Password Page</td>
+                <td>ตรวจสอบการกรอกรหัสผ่านเดิมไม่ถูกต้อง</td>
+                <td>อยู่ในหน้า Change password</td>
+                <td>1. กรอกรหัสเดิม 2. กรอกรหัสใหม่ 3. ยืนยันรหัสใหม่ 4. กดยืนยัน</td>
+                <td class="font-mono text-rose-300">เดิม: 000000<br/>ใหม่: 1122<br/>ยืนยัน: 5555</td>
+                <td>แจ้งเตือน รหัสผ่านไม่ถูกต้อง</td>
+                <td class="text-center"><span class="status-pass">ผ่าน</span></td>
+              </tr>
+              <tr>
+                <td class="font-bold text-teal-300">TC07</td>
+                <td>Login Student, teachers Page</td>
+                <td>ตรวจสอบการเข้าสู่ระบบด้วยรหัสผ่านใหม่</td>
+                <td>อยู่ในหน้า Login</td>
+                <td>1. กรอกชื่อผู้ใช้ 2. กรอกรหัสผ่านใหม่ 3. กด Login</td>
+                <td class="font-mono text-amber-200">user: 031192<br/>pass: 1122</td>
+                <td>แจ้งเตือน เข้าสู่ระบบสำเร็จ และไปหน้าแดชบอร์ด</td>
+                <td class="text-center"><span class="status-pass">ผ่าน</span></td>
+              </tr>
+              <tr>
+                <td class="font-bold text-teal-300">TC08</td>
+                <td>Dashboard Student Page</td>
+                <td>ตรวจสอบการโหลดหน้า</td>
+                <td>อยู่ในหน้า Dashboard</td>
+                <td>1. เปิดหน้าแดชบอร์ด</td>
+                <td class="text-center">-</td>
+                <td>แสดงหน้าแดชบอร์ด</td>
+                <td class="text-center"><span class="status-pass">ผ่าน</span></td>
+              </tr>
+              <tr>
+                <td class="font-bold text-teal-300">TC09</td>
+                <td>Info Student Page</td>
+                <td>ตรวจสอบการโหลดหน้า</td>
+                <td>อยู่ในหน้า Info</td>
+                <td>1. เปิดหน้าข้อมูลส่วนตัว</td>
+                <td class="text-center">-</td>
+                <td>แสดงหน้าข้อมูลส่วนตัว</td>
+                <td class="text-center"><span class="status-pass">ผ่าน</span></td>
+              </tr>
+              <tr>
+                <td class="font-bold text-teal-300">TC10</td>
+                <td>Form Student Page</td>
+                <td>ตรวจสอบการโหลดหน้า</td>
+                <td>อยู่ในหน้า Form</td>
+                <td>1. เปิดหน้าแบบฟอร์มบันทึกข้อมูล</td>
+                <td class="text-center">-</td>
+                <td>แสดงหน้าแบบฟอร์มบันทึกข้อมูล</td>
+                <td class="text-center"><span class="status-pass">ผ่าน</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="grid grid-cols-4 gap-3 text-center">
+            <div class="glass-card p-2.5"><div class="text-xl font-bold text-white">10</div><div class="text-[10px] text-slate-300">Test Case ทั้งหมด</div></div>
+            <div class="glass-card p-2.5"><div class="text-xl font-bold text-emerald-400">10</div><div class="text-[10px] text-slate-300">ผ่าน (Pass)</div></div>
+            <div class="glass-card p-2.5"><div class="text-xl font-bold text-rose-400">0</div><div class="text-[10px] text-slate-300">ไม่ผ่าน (Fail)</div></div>
+            <div class="glass-card p-2.5"><div class="text-xl font-bold text-teal-300">100%</div><div class="text-[10px] text-slate-300">อัตราการผ่าน</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 22: 2.2 วิเคราะห์ผลการทดสอบ -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">2.2 วิเคราะห์ผลการทดสอบ</h2>
+          <p class="text-xs text-teal-200/80 mb-4">เปลี่ยนตารางผลทดสอบให้เป็นข้อมูลสำหรับตัดสินใจ</p>
+
+          <div class="grid grid-cols-12 gap-5 items-center">
+            <div class="col-span-7 space-y-2.5 text-xs">
+              <div class="glass-card p-3">
+                <div class="font-bold text-emerald-300 mb-0.5">อัตราการผ่าน (Pass Rate)</div>
+                <div class="text-[11px] text-slate-300">จำนวนที่ผ่าน &divide; จำนวนทั้งหมด &times; 100 &rarr; บอกความสมบูรณ์โดยรวมของรอบทดสอบ</div>
+              </div>
+
+              <div class="glass-card p-3">
+                <div class="font-bold text-teal-300 mb-0.5">ความครอบคลุม (Coverage)</div>
+                <div class="text-[11px] text-slate-300">จำนวน Requirement ที่มี Test Case &divide; ทั้งหมด &rarr; ป้องกันการทดสอบไม่ครบขอบเขต</div>
+              </div>
+
+              <div class="glass-card p-3">
+                <div class="font-bold text-amber-300 mb-0.5">ระดับความรุนแรง (Severity)</div>
+                <div class="text-[11px] text-slate-300">จัดกลุ่ม Critical / High / Medium / Low &rarr; ตัวชี้ขาดว่าขึ้นระบบได้หรือไม่</div>
+              </div>
+
+              <div class="glass-card p-3">
+                <div class="font-bold text-cyan-300 mb-0.5">ข้อบกพร่องตกค้าง (Open Defects)</div>
+                <div class="text-[11px] text-slate-300">จำนวนที่ยังไม่ถูกแก้ไข ณ วันสรุปผล &rarr; ใช้ประเมินความเสี่ยงที่เหลืออยู่</div>
+              </div>
+            </div>
+
+            <div class="col-span-5 glass-card p-5 text-center border-2 border-teal-400/40">
+              <div class="text-5xl font-black text-emerald-400 mb-2">100%</div>
+              <div class="text-xs font-bold text-teal-200 mb-4">อัตราการผ่านของรอบทดสอบตัวอย่าง (10 จาก 10 กรณี)</div>
+              
+              <div class="p-3 bg-black/40 rounded-lg text-left text-[11px] text-slate-200 space-y-1.5 border border-white/5">
+                <div class="font-bold text-amber-300 flex items-center gap-1">
+                  <i class="fa-solid fa-triangle-exclamation"></i> อ่านตัวเลขอย่างระมัดระวัง:
+                </div>
+                <div>&bull; ผ่าน 100% อาจแปลว่า Test Case ยังครอบคลุมไม่พอ ไม่ใช่ว่าระบบไม่มีข้อบกพร่อง</div>
+                <div>&bull; ต้องตรวจ Coverage คู่กับ Pass Rate เสมอ</div>
+                <div>&bull; บั๊ก Critical 1 ตัว สำคัญกว่า Low 20 ตัว</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 23: เกณฑ์ตัดสิน Go live / No go live -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">เกณฑ์ตัดสิน Go live / No go live</h2>
+          <p class="text-xs text-teal-200/80 mb-4">ข้อเสนอต่อผู้บริหารต้องมีเกณฑ์รองรับ ไม่ใช่ความรู้สึก</p>
+
+          <div class="grid grid-cols-2 gap-5 mb-3">
+            <div class="glass-card p-4 border-t-4 border-t-emerald-400">
+              <div class="flex items-center gap-2 mb-2 font-bold text-emerald-300 text-sm">
+                <i class="fa-solid fa-circle-check"></i> GO LIVE &mdash; พร้อมขึ้นระบบจริง
+              </div>
+              <ul class="text-[11px] text-slate-200 space-y-1.5 list-disc list-inside">
+                <li>รัน Test Case ครบ 100% ตามที่วางแผนไว้</li>
+                <li>ไม่มีข้อบกพร่องระดับ Critical และ High ค้างอยู่</li>
+                <li>อัตราการผ่านเป็นไปตามเกณฑ์ที่ตกลงไว้ใน Test Plan</li>
+                <li>ความครอบคลุมของ Requirement ครบทุกข้อ</li>
+                <li>ข้อบกพร่องที่เหลือระดับ Medium/Low มีแผนแก้ไขชัดเจน</li>
+                <li>มีแผนย้อนกลับ (Rollback Plan) หากเกิดปัญหาหลังขึ้นระบบ</li>
+              </ul>
+            </div>
+
+            <div class="glass-card p-4 border-t-4 border-t-rose-400">
+              <div class="flex items-center gap-2 mb-2 font-bold text-rose-300 text-sm">
+                <i class="fa-solid fa-circle-xmark"></i> NO GO LIVE &mdash; ยังไม่พร้อม
+              </div>
+              <ul class="text-[11px] text-slate-200 space-y-1.5 list-disc list-inside">
+                <li>ยังมีข้อบกพร่องระดับ Critical หรือ High ที่ยังไม่ถูกแก้</li>
+                <li>รัน Test Case ไม่ครบตามแผน หรือถูกข้ามโดยไม่มีเหตุผล</li>
+                <li>ฟังก์ชันหลักที่ผู้ใช้ต้องใช้ทุกวันยังทำงานไม่ถูกต้อง</li>
+                <li>พบข้อบกพร่องด้านความปลอดภัยหรือความถูกต้องข้อมูล</li>
+                <li>ผลทดสอบไม่ตรงกับ Requirement ในสาระสำคัญ</li>
+                <li>ไม่มีสภาพแวดล้อมหรือข้อมูลพร้อมสำหรับใช้งานจริง</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="glass-card-dark p-2.5 text-[11px] text-slate-300 text-center">
+            <strong class="text-teal-300">บทบาทของผู้ทดสอบคือ</strong> "ให้ข้อมูลและข้อเสนอแนะที่มีหลักฐานรองรับ" ส่วนการตัดสินใจขั้นสุดท้ายเป็นของผู้บริหารโครงการหรือเจ้าของระบบ
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 24: ข้อผิดพลาดที่พบบ่อย และวิธีแก้ -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">ข้อผิดพลาดที่พบบ่อย และวิธีแก้</h2>
+          <p class="text-xs text-teal-200/80 mb-3">สิ่งที่ควรหลีกเลี่ยงเมื่อเขียน Test Case และรายงานผล</p>
+
+          <table class="test-table text-[11px]">
+            <thead>
+              <tr>
+                <th class="w-1/2 bg-rose-900/80 border-rose-700">สิ่งที่ควรหลีกเลี่ยง</th>
+                <th class="w-1/2 bg-emerald-900/80 border-emerald-700">สิ่งที่ควรทำแทน</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="text-rose-200">เขียนขั้นตอนกำกวม เช่น "ทดสอบการ Login"</td>
+                <td class="text-emerald-200">แยกเป็นขั้นตอนย่อยที่ทำตามได้ พร้อมระบุค่าที่ป้อนจริง</td>
+              </tr>
+              <tr>
+                <td class="text-rose-200">ไม่ระบุ Test Data ใช้คำว่า "ข้อมูลใด ๆ"</td>
+                <td class="text-emerald-200">ระบุค่าจริง เช่น username: 031192 , password: 031192</td>
+              </tr>
+              <tr>
+                <td class="text-rose-200">Expected Result เขียนว่า "ระบบทำงานถูกต้อง"</td>
+                <td class="text-emerald-200">ระบุสิ่งที่เห็นบนหน้าจอ เช่น ข้อความแจ้งเตือนที่แน่นอน</td>
+              </tr>
+              <tr>
+                <td class="text-rose-200">ทดสอบเฉพาะกรณีปกติ ไม่มีกรณีผิดพลาด</td>
+                <td class="text-emerald-200">ทุกฟังก์ชันรับข้อมูลต้องมี Negative Test Case คู่กันเสมอ</td>
+              </tr>
+              <tr>
+                <td class="text-rose-200">Test Case ผูกกันจนรันข้ามข้อไม่ได้</td>
+                <td class="text-emerald-200">ให้แต่ละข้อมี Pre-condition ของตัวเอง รันแยกได้</td>
+              </tr>
+              <tr>
+                <td class="text-rose-200">รายงานแค่ ผ่าน / ไม่ผ่าน ไม่มีการวิเคราะห์</td>
+                <td class="text-emerald-200">สรุปเป็นตัวชี้วัดและข้อเสนอแนะ Go live / No go live</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SLIDE 25: สรุปและเช็กลิสต์ก่อนส่งมอบ -->
+      <section>
+        <div class="max-w-5xl mx-auto text-left px-6">
+          <h2 class="text-2xl font-bold text-white mb-1">สรุปและเช็กลิสต์ก่อนส่งมอบ</h2>
+          <p class="text-xs text-teal-200/80 mb-4">ใช้ตรวจงานของตนเองก่อนส่งรายงาน Unit Test ทุกครั้ง</p>
+
+          <div class="grid grid-cols-2 gap-5 mb-4">
+            <div class="glass-card p-4 border-l-4 border-l-teal-400 space-y-2 text-xs">
+              <div class="font-bold text-teal-300 text-sm mb-1">10302.01</div>
+              <div class="flex items-center gap-2"><i class="fa-solid fa-square-check text-teal-400"></i> นับจำนวน Functionality ครบทุกโมดูลแล้ว</div>
+              <div class="flex items-center gap-2"><i class="fa-solid fa-square-check text-teal-400"></i> แต่ละฟังก์ชันมีทั้งกรณีปกติและกรณีผิดพลาด</div>
+              <div class="flex items-center gap-2"><i class="fa-solid fa-square-check text-teal-400"></i> ระบุ Pre-condition, Test Data, Expected ครบ</div>
+              <div class="flex items-center gap-2"><i class="fa-solid fa-square-check text-teal-400"></i> Test Case ทุกข้อโยงกลับไปยัง Requirement ได้</div>
+            </div>
+
+            <div class="glass-card p-4 border-l-4 border-l-emerald-400 space-y-2 text-xs">
+              <div class="font-bold text-emerald-300 text-sm mb-1">10302.02</div>
+              <div class="flex items-center gap-2"><i class="fa-solid fa-square-check text-emerald-400"></i> Test Plan ระบุ Timeline, ผู้รับผิดชอบ, Resource</div>
+              <div class="flex items-center gap-2"><i class="fa-solid fa-square-check text-emerald-400"></i> บันทึกผลจริงลงคอลัมน์ Status ครบทุกข้อ</div>
+              <div class="flex items-center gap-2"><i class="fa-solid fa-square-check text-emerald-400"></i> สรุปเป็นตัวชี้วัด Pass Rate และ Coverage</div>
+              <div class="flex items-center gap-2"><i class="fa-solid fa-square-check text-emerald-400"></i> มีข้อเสนอแนะ Go live / No go live พร้อมเหตุผล</div>
+            </div>
+          </div>
+
+          <div class="text-center p-3 glass-card-dark border border-teal-400/40">
+            <span class="text-sm font-bold text-white">
+              "Test Case ที่ดี ไม่ได้พิสูจน์ว่าระบบ <span class="text-rose-300">'ใช้งานได้'</span> แต่พิสูจน์ว่าระบบ <span class="text-emerald-300">'ทำงานตรงตามที่ตกลงไว้'</span>"
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 26: Thank You / Q&A -->
+      <section>
+        <div class="h-full flex flex-col justify-center text-center max-w-3xl mx-auto px-6">
+          <div class="w-16 h-16 rounded-2xl bg-teal-500/20 text-teal-300 text-3xl flex items-center justify-center mx-auto mb-4 border border-teal-500/30">
+            <i class="fa-solid fa-clipboard-check"></i>
+          </div>
+          <h1 class="text-4xl font-extrabold text-white mb-2">ขอบคุณครับ / ค่ะ</h1>
+          <p class="text-teal-200 text-sm mb-6">ช่วงถาม-ตอบ (Q&A) &bull; แลกเปลี่ยนความคิดเห็น</p>
+          
+          <div class="flex justify-center gap-4">
+            <a href="test-case-report.html" class="nav-btn bg-teal-600 hover:bg-teal-500 text-white font-bold py-2 px-5 text-sm">
+              <i class="fa-solid fa-file-invoice"></i> ดูเอกสารรายงานฉบับเต็ม & พิมพ์
+            </a>
+            <a href="index.html" class="nav-btn py-2 px-5 text-sm">
+              <i class="fa-solid fa-house"></i> กลับสู่หน้าหลัก Portal
+            </a>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Reveal.js scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: 'c/t',
+      controls: true,
+      progress: true,
+      center: true,
+      transition: 'slide',
+      backgroundTransition: 'fade',
+      width: 1200,
+      height: 700,
+      margin: 0.04,
+      minScale: 0.2,
+      maxScale: 2.0
+    });
+  </script>
+</body>
+</html>

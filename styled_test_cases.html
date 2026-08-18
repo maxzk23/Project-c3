@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Cases - Modern LMS & Gamification</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
+  
+  body {
+    font-family: 'Sarabun', Tahoma, sans-serif;
+    margin: 20px;
+    background-color: #ffffff;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    border-radius: 4px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    color: #333333;
+    white-space: pre-wrap;
+  }
+
+  th, td {
+    border: 1px solid #e0e0e0;
+    padding: 12px 16px;
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    background-color: #00808b;
+    color: #ffffff;
+    font-weight: 700;
+    border-bottom: 2px solid #006c75;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f7f9fa;
+  }
+  tr:nth-child(odd) {
+    background-color: #ffffff;
+  }
+
+  td:first-child {
+    color: #00808b;
+    font-weight: 700;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  td:last-child {
+    background-color: #00a896;
+    color: #ffffff;
+    font-weight: 700;
+    text-align: center;
+    vertical-align: middle;
+  }
+  
+  th:last-child {
+    background-color: #00808b; 
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Feature / Module</th>
+        <th>Test Objective</th>
+        <th>Pre-condition</th>
+        <th>Test Steps</th>
+        <th>Test Data</th>
+        <th>Expected Result</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- หมวด 1: Authentication -->
+      <tr><td>TC01</td><td>1. Authentication</td><td>ล็อกอินสำเร็จ (ครู)</td><td>เปิดหน้า Login</td><td>1. กรอกชื่อ<br>2. กรอกรหัส</td><td>user: คุณครูสมชาย รักเรียน<br>pass: teacher</td><td>เข้าสู่หน้า Dashboard ครู</td><td>ผ่าน</td></tr>
+      <tr><td>TC02</td><td>1. Authentication</td><td>ล็อกอินสำเร็จ (นักเรียน)</td><td>เปิดหน้า Login</td><td>1. กรอกชื่อ<br>2. กรอกรหัส</td><td>user: ภัทรพล เรียนดี<br>pass: 1234</td><td>เข้าสู่หน้า Dashboard นักเรียน</td><td>ผ่าน</td></tr>
+      <tr><td>TC03</td><td>1. Authentication</td><td>กรอกรหัสผ่านผิด</td><td>เปิดหน้า Login</td><td>1. กรอกชื่อ<br>2. กรอกรหัสผิด</td><td>pass: wrongpass</td><td>แจ้งเตือนรหัสผ่านไม่ถูกต้อง</td><td>ผ่าน</td></tr>
+      <tr><td>TC04</td><td>1. Authentication</td><td>ไม่กรอกข้อมูล (Empty)</td><td>เปิดหน้า Login</td><td>1. กด Login ทันที</td><td>(ว่าง)</td><td>แจ้งเตือนกรุณากรอกข้อมูลให้ครบ</td><td>ผ่าน</td></tr>
+      <tr><td>TC05</td><td>1. Authentication</td><td>ล็อกอินบัญชีที่ถูกระงับ</td><td>เปิดหน้า Login</td><td>1. กรอกบัญชีที่ถูกแบน</td><td>status: SUSPENDED</td><td>แจ้งเตือนบัญชีถูกระงับการใช้งาน</td><td>ผ่าน</td></tr>
+      <tr><td>TC06</td><td>1. Authentication</td><td>Session หมดอายุ</td><td>ล็อกอินทิ้งไว้หลายชั่วโมง</td><td>1. รีเฟรชหน้าเว็บ</td><td>Session Expired</td><td>เด้งกลับมาหน้า Login อัตโนมัติ</td><td>ผ่าน</td></tr>
+      <tr><td>TC07</td><td>1. Authentication</td><td>ล็อกเอาท์ออกจากระบบ</td><td>อยู่หน้า Dashboard</td><td>1. คลิกเมนูมุมขวา<br>2. เลือกล็อกเอาท์</td><td>-</td><td>ระบบเคลียร์ Session และกลับหน้า Login</td><td>ผ่าน</td></tr>
+      <tr><td>TC08</td><td>Security</td><td>ป้องกัน SQL Injection</td><td>เปิดหน้า Login</td><td>1. กรอก SQL injection ลงช่องชื่อ</td><td>' OR 1=1 --</td><td>ระบบไม่อนุญาตและแจ้งเตือนข้อมูลผิด</td><td>ผ่าน</td></tr>
+      <tr><td>TC09</td><td>Security</td><td>นร.แอบเข้าหน้าครู</td><td>ล็อกอินนักเรียน</td><td>1. พิมพ์ URL /teacher</td><td>Role: STUDENT</td><td>เด้งกลับหน้าเดิม (Access Denied)</td><td>ผ่าน</td></tr>
+      <tr><td>TC10</td><td>Security</td><td>คนนอกแอบเข้าเว็บ</td><td>ไม่ได้ล็อกอิน</td><td>1. พิมพ์ URL /student</td><td>-</td><td>เด้งกลับหน้า Login ทันที</td><td>ผ่าน</td></tr>
+
+      <!-- หมวด 2: Profile -->
+      <tr><td>TC11</td><td>2. Profile</td><td>เปลี่ยนรหัสผ่านสำเร็จ</td><td>อยู่หน้า Profile</td><td>1. กรอกรหัสเดิม<br>2. ใหม่<br>3. ยืนยัน</td><td>เดิม: 1234<br>ใหม่: 555555</td><td>เปลี่ยนรหัสผ่านสำเร็จ</td><td>ผ่าน</td></tr>
+      <tr><td>TC12</td><td>2. Profile</td><td>กรอกรหัสเดิมไม่ถูกต้อง</td><td>อยู่หน้า Profile</td><td>1. กรอกรหัสเดิมผิด<br>2. ใหม่<br>3. ยืนยัน</td><td>เดิม: wrong<br>ใหม่: 555555</td><td>แจ้งเตือนรหัสผ่านเดิมไม่ถูกต้อง</td><td>ผ่าน</td></tr>
+      <tr><td>TC13</td><td>2. Profile</td><td>รหัสใหม่สั้นเกินไป</td><td>อยู่หน้า Profile</td><td>1. กรอกรหัสผ่านใหม่ &lt; 6 ตัว</td><td>รหัสใหม่: 123</td><td>แจ้งเตือนความยาวขั้นต่ำ 6 ตัว</td><td>ผ่าน</td></tr>
+      <tr><td>TC14</td><td>2. Profile</td><td>รหัสยืนยันไม่ตรงกัน</td><td>อยู่หน้า Profile</td><td>1. ยืนยันรหัสใหม่ผิด</td><td>ใหม่: 555555<br>ยืนยัน: 666666</td><td>แจ้งเตือนรหัสยืนยันไม่ตรง</td><td>ผ่าน</td></tr>
+      <tr><td>TC15</td><td>2. Profile</td><td>เปลี่ยนรูป Avatar</td><td>อยู่หน้า Profile</td><td>1. เลือก Avatar Preset ใหม่</td><td>Preset: 4</td><td>รูปโปรไฟล์อัปเดตเรียลไทม์</td><td>ผ่าน</td></tr>
+
+      <!-- หมวด 3: Academic Year -->
+      <tr><td>TC16</td><td>3. Academic Year</td><td>เลื่อนชั้นปีสำเร็จ (ไม่มีคนซ้ำชั้น)</td><td>อยู่หน้าจัดการปีการศึกษา</td><td>1. กดปุ่ม 'เลื่อนปี'<br>2. ยอมรับคำเตือน<br>3. ข้ามซ้ำชั้น<br>4. ใส่รหัสผ่าน</td><td>ซ้ำชั้น: 0 คน<br>รหัส: ถูก</td><td>อัปเดตข้อมูลนักเรียนเป็นชั้นปีถัดไปสำเร็จ</td><td>ผ่าน</td></tr>
+      <tr><td>TC17</td><td>3. Academic Year</td><td>เลื่อนชั้นปีสำเร็จ (มีคนซ้ำชั้น)</td><td>อยู่หน้าจัดการปีการศึกษา</td><td>1. กด 'เลื่อนปี'<br>2. ยอมรับ<br>3. เลือกนร.ซ้ำชั้น<br>4. ใส่รหัสผ่าน</td><td>ซ้ำชั้น: 2 คน<br>รหัส: ถูก</td><td>นร.ปกติเลื่อนชั้น แต่นร.ที่เลือกอยู่ชั้นเดิม</td><td>ผ่าน</td></tr>
+      <tr><td>TC18</td><td>3. Academic Year</td><td>ยืนยันรหัสผ่านผิด</td><td>อยู่หน้าจัดการปีการศึกษา</td><td>1. กด 'เลื่อนปี'<br>2. ยอมรับ<br>3. ข้ามซ้ำชั้น<br>4. กรอกรหัสผิด</td><td>รหัสผ่าน: 1111 (ผิด)</td><td>แจ้งเตือนรหัสผ่านไม่ถูกต้อง และยกเลิกทำรายการ</td><td>ผ่าน</td></tr>
+      <tr><td>TC19</td><td>3. Academic Year</td><td>ไม่กรอกรหัสผ่านยืนยัน</td><td>อยู่หน้าจัดการปีการศึกษา</td><td>1. กด 'เลื่อนปี'<br>2. ปล่อยช่องรหัสผ่านว่าง</td><td>รหัสผ่าน: (ว่างเปล่า)</td><td>ระบบแจ้งเตือนให้กรอกรหัสผ่าน</td><td>ผ่าน</td></tr>
+      <tr><td>TC20</td><td>3. Academic Year</td><td>ยกเลิกการทำรายการ</td><td>อยู่หน้าจัดการปีการศึกษา</td><td>1. กด 'เลื่อนปี'<br>2. กดปุ่ม 'ยกเลิก' หรือปิดหน้าต่าง</td><td>-</td><td>หน้าต่างปิดลง ไม่มีการเปลี่ยนแปลงข้อมูล</td><td>ผ่าน</td></tr>
+
+      <!-- หมวด 4: Attendance -->
+      <tr><td>TC21</td><td>4. Attendance</td><td>ครูบันทึกสถานะ 'มาเรียน'</td><td>แท็บ 'บันทึกเช็คชื่อ'</td><td>1. เลือกสถานะนักเรียน 'มา'<br>2. กดบันทึก</td><td>status: PRESENT</td><td>บันทึกข้อมูลสำเร็จและฟอร์มถูกล็อกทันที</td><td>ผ่าน</td></tr>
+      <tr><td>TC22</td><td>4. Attendance</td><td>ครูบันทึกสถานะ 'มาสาย'</td><td>แท็บ 'บันทึกเช็คชื่อ'</td><td>1. เลือกสถานะ 'สาย'<br>2. ระบุเหตุผล<br>3. กดบันทึก</td><td>status: LATE<br>note: รถติด</td><td>บันทึกสถานะสายพร้อมเหตุผล และฟอร์มถูกล็อก</td><td>ผ่าน</td></tr>
+      <tr><td>TC23</td><td>4. Attendance</td><td>ครูบันทึกสถานะ 'ลา'</td><td>แท็บ 'บันทึกเช็คชื่อ'</td><td>1. เลือกสถานะ 'ลา'<br>2. ระบุเหตุผล<br>3. กดบันทึก</td><td>status: LEAVE<br>note: ป่วย</td><td>บันทึกสถานะลาพร้อมเหตุผล และฟอร์มถูกล็อก</td><td>ผ่าน</td></tr>
+      <tr><td>TC24</td><td>4. Attendance</td><td>ครูบันทึกสถานะ 'ขาดเรียน'</td><td>แท็บ 'บันทึกเช็คชื่อ'</td><td>1. เลือกสถานะ 'ขาด'<br>2. กดบันทึก</td><td>status: ABSENT</td><td>บันทึกสถานะขาดเรียน และฟอร์มถูกล็อก</td><td>ผ่าน</td></tr>
+      <tr><td>TC25</td><td>4. Attendance</td><td>ปลดล็อกการแก้ไขเช็คชื่อสำเร็จ</td><td>ฟอร์มเช็คชื่อถูกล็อกอยู่</td><td>1. กดปุ่มปลดล็อก<br>2. กรอกรหัสผ่านครู<br>3. กดยืนยัน</td><td>password: ถูกต้อง</td><td>แจ้งเตือนปลดล็อกสำเร็จ และคลิกแก้ไขสถานะได้</td><td>ผ่าน</td></tr>
+      <tr><td>TC26</td><td>4. Attendance</td><td>กรอกรหัสปลดล็อกผิด</td><td>เปิดหน้า UnlockModal</td><td>1. กรอกรหัสผ่านผิด<br>2. กดยืนยัน</td><td>password: ผิด</td><td>แจ้งเตือน "รหัสผ่านไม่ถูกต้อง"</td><td>ผ่าน</td></tr>
+      <tr><td>TC27</td><td>4. Attendance</td><td>ดูประวัติเช็คชื่อย้อนหลัง</td><td>หน้าเช็คชื่อครู</td><td>1. คลิกแท็บ 'ประวัติย้อนหลัง'</td><td>-</td><td>แสดงรายการที่เคยเช็คชื่อไปแล้ว</td><td>ผ่าน</td></tr>
+      <tr><td>TC28</td><td>4. Attendance</td><td>นร.ตรวจสอบสถานะก่อนเช็คชื่อ</td><td>หน้า Dashboard นักเรียน</td><td>1. สังเกตการ์ดสถานะการเข้าเรียน</td><td>ครูยังไม่เช็คชื่อ</td><td>แสดงข้อความ "รอคุณครูเรียกเช็คชื่อ..." (สีส้ม)</td><td>ผ่าน</td></tr>
+      <tr><td>TC29</td><td>4. Attendance</td><td>นร.ตรวจสอบสถานะหลังถูกเช็คชื่อ</td><td>หน้า Dashboard นักเรียน</td><td>1. สังเกตการ์ดสถานะการเข้าเรียน</td><td>ครูเช็คสถานะ 'มา'</td><td>แสดงข้อความ "เช็คชื่อมาเรียนเรียบร้อยแล้ววันนี้"</td><td>ผ่าน</td></tr>
+      <tr><td>TC30</td><td>4. Attendance</td><td>นร.ดูรายงานเช็คชื่อย้อนหลัง</td><td>หน้า Dashboard นักเรียน</td><td>1. กดปุ่ม 'ดูรายงานเช็คชื่อย้อนหลัง'</td><td>-</td><td>นำทางไปหน้ารายงานประวัติการเข้าเรียน</td><td>ผ่าน</td></tr>
+
+      <!-- หมวด 5: Materials -->
+      <tr><td>TC31</td><td>5. Materials</td><td>อัปโหลด PDF ผ่าน</td><td>หน้าจัดการสื่อ</td><td>1. แนบ PDF</td><td>2MB PDF</td><td>อัปโหลดสำเร็จและแสดงในรายการ</td><td>ผ่าน</td></tr>
+      <tr><td>TC32</td><td>5. Materials</td><td>อัปโหลดไฟล์ .exe (ไม่อนุญาต)</td><td>หน้าจัดการสื่อ</td><td>1. แนบ .exe</td><td>virus.exe</td><td>แจ้งเตือนประเภทไฟล์ไม่ถูกต้อง</td><td>ผ่าน</td></tr>
+      <tr><td>TC33</td><td>5. Materials</td><td>ครูเปิดสื่อการสอน</td><td>หน้าจัดการสื่อ</td><td>1. เปิดสวิตช์</td><td>isLocked: false</td><td>สถานะเปลี่ยนเป็นปลดล็อก</td><td>ผ่าน</td></tr>
+      <tr><td>TC34</td><td>5. Materials</td><td>ครูล็อกสื่อการสอน</td><td>หน้าจัดการสื่อ</td><td>1. ปิดสวิตช์</td><td>isLocked: true</td><td>สถานะเปลี่ยนเป็นล็อก</td><td>ผ่าน</td></tr>
+      <tr><td>TC35</td><td>5. Materials</td><td>นร.ดูสื่อเปิดปกติ</td><td>หน้าดูสื่อนักเรียน</td><td>1. คลิกดูสื่อ</td><td>public</td><td>แจ้งเตือนสื่อการสอนเปิดแล้วและดูไฟล์ได้</td><td>ผ่าน</td></tr>
+      <tr><td>TC36</td><td>5. Materials</td><td>นร.ดูสื่อที่ถูกล็อก</td><td>หน้าดูสื่อนักเรียน</td><td>1. คลิกดูสื่อที่ถูกล็อก</td><td>Locked</td><td>แจ้งเตือนว่าบทเรียนยังไม่เปิดให้เข้าดู</td><td>ผ่าน</td></tr>
+
+      <!-- หมวด 6: Assignments & Submissions -->
+      <tr><td>TC37</td><td>6. Assignments</td><td>สั่งการบ้านปกติ</td><td>หน้าสั่งงาน</td><td>1. กรอกหัวข้อ<br>2. กำหนดวัน</td><td>วันที่อนาคต</td><td>สร้างการบ้านสำเร็จ</td><td>ผ่าน</td></tr>
+      <tr><td>TC39</td><td>6. Assignments</td><td>สั่งแบบฟอร์ม Google Form</td><td>หน้าสั่งงาน</td><td>1. ใส่ลิงก์</td><td>ลิงก์ G-Form</td><td>แสดงฟอร์มในแดชบอร์ดนักเรียน</td><td>ผ่าน</td></tr>
+      <tr><td>TC40</td><td>7. Submissions</td><td>ส่งงานไฟล์ปกติ</td><td>หน้าส่งงานนักเรียน</td><td>1. แนบ PDF</td><td>5MB</td><td>สถานะเปลี่ยนเป็นส่งแล้ว</td><td>ผ่าน</td></tr>
+      <tr><td>TC42</td><td>7. Submissions</td><td>ไฟล์เกินขนาดขอบเขตสูงสุด</td><td>หน้าส่งงานนักเรียน</td><td>1. แนบไฟล์ใหญ่</td><td>12MB</td><td>แจ้งเตือนไฟล์ห้ามเกิน 10MB</td><td>ผ่าน</td></tr>
+
+      <!-- หมวด 7: Grading (แก้ไขใหม่ให้ตรงเป๊ะ) -->
+      <tr><td>TC43</td><td>8. Grading</td><td>กรองดูเฉพาะงานที่รอตรวจ</td><td>หน้าตรวจงานครู</td><td>1. คลิกการ์ด 'รอตรวจ' ด้านบน</td><td>-</td><td>แสดงรายการเฉพาะงานที่มีนักเรียนส่งแล้วและรอตรวจ</td><td>ผ่าน</td></tr>
+      <tr><td>TC44</td><td>8. Grading</td><td>เปิดดูไฟล์ผลงานของนักเรียน</td><td>หน้าตรวจงานครู</td><td>1. กด 'ตรวจผลงาน' ท้ายชื่อนักเรียน<br>2. คลิกที่ลิงก์/ชื่อไฟล์งานนักเรียน</td><td>มีไฟล์แนบ</td><td>ระบบเปิดแท็บใหม่แสดงไฟล์งานของนักเรียนให้ครูดู</td><td>ผ่าน</td></tr>
+      <tr><td>TC45</td><td>8. Grading</td><td>ตรวจงานพร้อมใส่ข้อเสนอแนะ</td><td>หน้าต่างตรวจผลงาน</td><td>1. พิมพ์คำแนะนำในช่อง Feedback<br>2. กด 'ยืนยันตรวจผลงาน'</td><td>Feedback: "ทำดีมาก"</td><td>ระบบบันทึกงานเป็น "ตรวจแล้ว" (GRADED) และแจ้งเตือนนักเรียน</td><td>ผ่าน</td></tr>
+
+      <!-- หมวด 8: Gamification & Leaderboard -->
+      <tr><td>TC46</td><td>9. Games</td><td>เล่นจบได้คะแนน</td><td>หน้ามินิเกม</td><td>1. เล่นชนะ</td><td>ชนะ</td><td>ระบบแจก 50 คะแนน</td><td>ผ่าน</td></tr>
+      <tr><td>TC47</td><td>9. Games</td><td>เล่นแพ้ไม่ได้คะแนน</td><td>หน้ามินิเกม</td><td>1. เล่นแพ้หมด</td><td>แพ้</td><td>คะแนน = 0 ให้เล่นใหม่</td><td>ผ่าน</td></tr>
+      <tr><td>TC48</td><td>9. Games</td><td>เล่นด่านเดิมซ้ำเพื่อปั๊มคะแนน</td><td>หน้ามินิเกม</td><td>1. เล่นด่านที่เคยได้คะแนนแล้ว</td><td>ด่านที่เคยผ่าน</td><td>จำกัดไม่ให้ได้คะแนนซ้ำ (กันโกง)</td><td>ผ่าน</td></tr>
+      <tr><td>TC49</td><td>10. Leaderboard</td><td>ดูอันดับเรียลไทม์</td><td>หน้า Leaderboard</td><td>1. ดูตาราง</td><td>โหลดหน้า</td><td>ข้อมูลเรียงตามคะแนนมากไปน้อยทันที</td><td>ผ่าน</td></tr>
+      <tr><td>TC50</td><td>10. Leaderboard</td><td>คะแนนเท่ากัน (Tie-breaker)</td><td>หน้า Leaderboard</td><td>1. ดูนักเรียน 2 คนที่คะแนนเท่ากัน</td><td>คะแนนเท่ากัน</td><td>เรียงตามตัวอักษรชื่อ หรือคนที่ทำแต้มถึงก่อน</td><td>ผ่าน</td></tr>
+      <tr><td>TC51</td><td>10. Leaderboard</td><td>รีเซ็ตกระดานรายปี</td><td>หลังทำการเลื่อนชั้นปี</td><td>1. เปิดตารางปีการศึกษาใหม่</td><td>ปีใหม่</td><td>คะแนนของทุกคนเริ่มต้นที่ 0 ใหม่หมด</td><td>ผ่าน</td></tr>
+
+      <!-- หมวด 9: Notifications -->
+      <tr><td>TC52</td><td>11. Notifications</td><td>แจ้งเตือนมีงานใหม่</td><td>หน้านักเรียน</td><td>1. ครูสั่งงานใหม่</td><td>งานใหม่</td><td>กระดิ่งมีจุดแดงขึ้นแจ้งเตือน</td><td>ผ่าน</td></tr>
+      <tr><td>TC53</td><td>11. Notifications</td><td>แจ้งเตือนเกรด/ข้อเสนอแนะออก</td><td>หน้านักเรียน</td><td>1. ครูตรวจงาน</td><td>ตรวจสำเร็จ</td><td>แจ้งเตือนว่างานถูกตรวจแล้วและดู Feedback ได้</td><td>ผ่าน</td></tr>
+      <tr><td>TC54</td><td>11. Notifications</td><td>กดอ่านแจ้งเตือน</td><td>หน้ารายการแจ้งเตือน</td><td>1. คลิกที่แจ้งเตือนเพื่ออ่าน</td><td>UNREAD -> READ</td><td>จุดแดงหายไปและสถานะเป็นอ่านแล้ว</td><td>ผ่าน</td></tr>
+      <tr><td>TC55</td><td>11. Notifications</td><td>กดอ่านทั้งหมด (Mark All Read)</td><td>หน้ารายการแจ้งเตือน</td><td>1. กดปุ่ม Mark All Read</td><td>มี 5 แจ้งเตือนใหม่</td><td>การแจ้งเตือนทั้งหมดถูกอัปเดตเป็นอ่านแล้ว</td><td>ผ่าน</td></tr>
+    </tbody>
+  </table>
+</div>
+
+</body>
+</html>
