@@ -73,8 +73,8 @@
 
         const game = new Phaser.Game(config);
 
-        const HARDWARE_ICONS = ['💻', '🖱️', '⌨️', '🖨️', '📱'];
-        const SOFTWARE_ICONS = ['🌐', '👾', '💬', '🎵', '☁️'];
+        const HARDWARE_ICONS = ['CPU', 'GPU', 'RAM', 'SSD', 'USB'];
+        const SOFTWARE_ICONS = ['APP', 'API', 'SYS', 'OS', 'EXE'];
 
         let score = 0;
         let scoreText, timeText;
@@ -222,9 +222,20 @@
             
             let box = this.add.container(400, -60);
             let bg = this.add.sprite(0, 0, 'cargo_box');
-            let icon = this.add.text(0, 0, iconText, { fontSize: '38px' }).setOrigin(0.5);
             
-            box.add([bg, icon]);
+            // ใช้คำศัพท์แทนอิโมจิ พร้อมใส่ขอบสีให้ดูเป็น Hologram
+            let iconColor = isHardware ? '#e0f2fe' : '#d1fae5';
+            let iconStroke = isHardware ? '#0284c7' : '#059669';
+            let icon = this.add.text(0, -10, iconText, { 
+                fontSize: '22px', fill: iconColor, fontFamily: 'Orbitron', fontStyle: 'bold',
+                stroke: iconStroke, strokeThickness: 3, letterSpacing: 1
+            }).setOrigin(0.5);
+            
+            let typeText = isHardware ? 'HARD' : 'SOFT';
+            let typeColor = isHardware ? '#38bdf8' : '#34d399';
+            let label = this.add.text(0, 18, typeText, { fontSize: '14px', fill: typeColor, fontFamily: 'Orbitron', fontStyle: 'bold' }).setOrigin(0.5);
+            
+            box.add([bg, icon, label]);
             this.physics.world.enable(box);
             box.body.setVelocityY(currentSpeed);
             

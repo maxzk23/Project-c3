@@ -28,6 +28,7 @@ import {
   FaHashtag,
   FaSave
 } from "react-icons/fa";
+import { renderAvatarHelper } from "@/components/profile/ProfileSettings";
 
 interface Student {
   id: string;
@@ -388,7 +389,7 @@ export default function StudentRegistryPage() {
     <div className="space-y-8 text-left">
       {/* Toast แจ้งเตือน */}
       {toastMsg && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg border flex items-center gap-3 animate-in slide-in-from-top-4 duration-300 ${
+        <div className={`fixed top-4 right-4 z-[9999] p-4 rounded-xl shadow-lg border flex items-center gap-3 animate-in slide-in-from-top-4 duration-300 ${
           toastMsg.type === "success" 
             ? "bg-emerald-50 border-emerald-200 text-emerald-800" 
             : "bg-rose-50 border-rose-200 text-rose-800"
@@ -554,10 +555,14 @@ export default function StudentRegistryPage() {
               {/* ซีกซ้าย: รายละเอียดและอวตาร */}
               <div className="flex items-center gap-4">
                 
-                {/* สัญลักษณ์อวตารเดโม่ */}
-                <div className="w-11 h-11 bg-sky-50 text-sky-600 border border-sky-100 rounded-full flex items-center justify-center font-bold text-base shrink-0">
-                  {std.name.charAt(0)}
-                </div>
+                {/* สัญลักษณ์อวตาร */}
+                {std.avatarUrl ? (
+                  renderAvatarHelper(std.avatarUrl, std.name, "w-11 h-11 text-base")
+                ) : (
+                  <div className="w-11 h-11 bg-sky-50 text-sky-600 border border-sky-100 rounded-full flex items-center justify-center font-bold text-base shrink-0">
+                    {std.name.charAt(0)}
+                  </div>
+                )}
 
                 <div>
                   <div className="flex items-center gap-2">

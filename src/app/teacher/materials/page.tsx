@@ -466,7 +466,7 @@ export default function TeacherMaterialsPage() {
       
       {/* Toast Alert */}
       {toastMsg && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg border flex items-center gap-3 animate-in slide-in-from-top-4 duration-300 ${
+        <div className={`fixed top-4 right-4 z-[9999] p-4 rounded-xl shadow-lg border flex items-center gap-3 animate-in slide-in-from-top-4 duration-300 ${
           toastMsg.type === "success" 
             ? "bg-emerald-50 border-emerald-200 text-emerald-800" 
             : "bg-rose-50 border-rose-200 text-rose-800"

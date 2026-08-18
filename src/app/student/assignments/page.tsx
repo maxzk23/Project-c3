@@ -207,7 +207,7 @@ export default function StudentAssignmentsPage() {
 
       {/* Toast */}
       {toastMsg && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-2xl shadow-xl border flex items-center gap-3 animate-in slide-in-from-top-4 duration-300 max-w-sm ${toastMsg.type === "success" ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-rose-50 border-rose-200 text-rose-800"}`}>
+        <div className={`fixed top-4 right-4 z-[9999] p-4 rounded-2xl shadow-xl border flex items-center gap-3 animate-in slide-in-from-top-4 duration-300 max-w-sm ${toastMsg.type === "success" ? "bg-emerald-50 border-emerald-200 text-emerald-800" : "bg-rose-50 border-rose-200 text-rose-800"}`}>
           {toastMsg.type === "success" ? <FaCheckCircle className="shrink-0" /> : <FaExclamationCircle className="shrink-0" />}
           <span className="text-sm font-semibold flex-1">{toastMsg.text}</span>
           <button onClick={() => setToastMsg(null)} className="opacity-60 hover:opacity-100 transition"><FaTimes className="text-xs" /></button>

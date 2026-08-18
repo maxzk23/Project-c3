@@ -21,6 +21,7 @@ import {
   FaHashtag,
   FaPhone
 } from "react-icons/fa";
+import { renderAvatarHelper } from "@/components/profile/ProfileSettings";
 
 interface Student {
   id: string;
@@ -300,7 +301,7 @@ export default function ClassroomDetailPage() {
       
       {/* Toast Alert แจ้งเตือน */}
       {toastMsg && (
-        <div className={`fixed top-4 right-4 z-50 p-4 rounded-xl shadow-lg border flex items-center gap-3 animate-in slide-in-from-top-4 duration-300 ${
+        <div className={`fixed top-4 right-4 z-[9999] p-4 rounded-xl shadow-lg border flex items-center gap-3 animate-in slide-in-from-top-4 duration-300 ${
           toastMsg.type === "success" 
             ? "bg-emerald-50 border-emerald-200 text-emerald-800" 
             : "bg-rose-50 border-rose-200 text-rose-800"
@@ -380,9 +381,13 @@ export default function ClassroomDetailPage() {
                     <td className="py-4 pl-2 font-medium text-slate-500">{idx + 1}</td>
                     <td className="py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center font-bold text-xs">
-                          {std.name.charAt(0)}
-                        </div>
+                        {std.avatarUrl ? (
+                          renderAvatarHelper(std.avatarUrl, std.name, "w-9 h-9 text-xs")
+                        ) : (
+                          <div className="w-9 h-9 rounded-full bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center font-bold text-xs">
+                            {std.name.charAt(0)}
+                          </div>
+                        )}
                         <span className="font-bold text-slate-700">{std.name}</span>
                       </div>
                     </td>
