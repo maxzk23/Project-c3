@@ -82,8 +82,12 @@ export default function TeacherDashboard() {
   // โหลดห้องเรียนทั้งหมดในการเปิดหน้าแรก
   useEffect(() => {
     const fetchClasses = async () => {
-      const classes = await getTeacherClassrooms();
-      setClassrooms(classes);
+      try {
+        const classes = await getTeacherClassrooms();
+        setClassrooms(classes || []);
+      } catch (e) {
+        setClassrooms([]);
+      }
       setSelectedClassId("ALL");
       setSelectedYearLevel("ALL");
     };
